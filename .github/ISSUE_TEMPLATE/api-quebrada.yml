@@ -1,0 +1,13 @@
+name: "🧯 API quebrada / dado errado"
+description: Um endpoint parou, mudou ou um número está errado no site
+title: "[bug-dado] "
+labels: ["bug", "dado"]
+body:
+  - type: input
+    id: onde
+    attributes: { label: URL da página do Monitor }
+    validations: { required: true }
+  - type: textarea
+    id: oque
+    attributes: { label: O que aparece vs. o que deveria (com link da fonte oficial) }
+    validations: { required: true }

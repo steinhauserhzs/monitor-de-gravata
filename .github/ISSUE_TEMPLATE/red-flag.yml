@@ -1,0 +1,32 @@
+name: "🚩 Proposta de red flag"
+description: Propor uma regra objetiva (fórmula + limiar + fonte metodológica)
+title: "[red-flag] "
+labels: ["red-flag"]
+body:
+  - type: input
+    id: nome
+    attributes: { label: Nome curto da regra }
+    validations: { required: true }
+  - type: dropdown
+    id: categoria
+    attributes:
+      label: Categoria
+      options: [contratacao, parlamentar, eleitoral, empresa, servidor, obra, municipal]
+    validations: { required: true }
+  - type: textarea
+    id: logica
+    attributes:
+      label: Lógica (pseudocódigo) e limiar
+      placeholder: "sum(dispensas mesmo objeto/fornecedor/ano) > limite art. 75 → alta"
+    validations: { required: true }
+  - type: textarea
+    id: dados
+    attributes: { label: Dados necessários e APIs (ids do /apis) }
+  - type: input
+    id: fonte
+    attributes: { label: Fonte metodológica (OCP, Rosie, OPS, TCU acórdão, CGU, lei…) }
+    validations: { required: true }
+  - type: textarea
+    id: naosignifica
+    attributes: { label: O que o sinal NÃO significa (falsos positivos conhecidos) }
+    validations: { required: true }

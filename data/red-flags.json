@@ -1,0 +1,1480 @@
+[
+  {
+    "id": "contrato-valor-global-elevado",
+    "nome": "Contrato de valor global elevado",
+    "categoria": "contratacao",
+    "descricao": "Contratos acima de R$ 10 mi merecem leitura do objeto, itens e vigência. Acima de R$ 100 mi, prioridade.",
+    "fonte": "Monitor de Gravata",
+    "dados_necessarios": [
+      "valorGlobal",
+      "orgaoEntidade"
+    ],
+    "apis": [
+      "pncp-consulta-v1"
+    ],
+    "severidade": "baixa",
+    "logica": "valorGlobal >= 10_000_000",
+    "implementada": true
+  },
+  {
+    "id": "contrato-fruto-de-adesao",
+    "nome": "Contrato fruto de adesão a ata de outro órgão (carona)",
+    "categoria": "contratacao",
+    "descricao": "'Carona' em ata de registro de preços é legal, mas dispensa nova disputa — vale checar preço e pertinência.",
+    "fonte": "OCP Red Flags for Integrity",
+    "dados_necessarios": [
+      "frutoAdesao"
+    ],
+    "apis": [
+      "pncp-consulta-v1"
+    ],
+    "severidade": "baixa",
+    "logica": "frutoAdesao == true",
+    "implementada": true
+  },
+  {
+    "id": "contrato-multiplas-retificacoes",
+    "nome": "Contrato com múltiplas retificações",
+    "categoria": "contratacao",
+    "descricao": "Muitas retificações do registro podem indicar alteração de valor/objeto após publicação.",
+    "fonte": "Monitor de Gravata",
+    "dados_necessarios": [
+      "numeroRetificacao"
+    ],
+    "apis": [
+      "pncp-consulta-v1"
+    ],
+    "severidade": "baixa",
+    "logica": "numeroRetificacao >= 3",
+    "implementada": true
+  },
+  {
+    "id": "contrato-vigencia-superior-5-anos",
+    "nome": "Vigência superior a 5 anos",
+    "categoria": "contratacao",
+    "descricao": "Lei 14.133 limita a 5 anos (10 em casos específicos). Vigências longas concentram mercado.",
+    "fonte": "Lei 14.133/2021 art. 105-108",
+    "dados_necessarios": [
+      "dataVigenciaInicio",
+      "dataVigenciaFim"
+    ],
+    "apis": [
+      "pncp-consulta-v1"
+    ],
+    "severidade": "baixa",
+    "logica": "(fim - inicio) > 5 anos",
+    "implementada": true
+  },
+  {
+    "id": "fornecedor-cnpj-recem-aberto",
+    "nome": "Fornecedor com CNPJ aberto há menos de 12 meses na assinatura",
+    "categoria": "empresa",
+    "descricao": "Empresas criadas pouco antes de vencer contrato público são um clássico das fraudes (empresa de fachada).",
+    "fonte": "Rosie (Serenata de Amor) / OCP",
+    "dados_necessarios": [
+      "dataAssinatura",
+      "data_inicio_atividade do CNPJ"
+    ],
+    "apis": [
+      "pncp-consulta-v1",
+      "brasilapi-cnpj"
+    ],
+    "severidade": "media",
+    "logica": "dias(dataAssinatura - data_inicio_atividade) < 365 (alta se < 180)",
+    "implementada": true
+  },
+  {
+    "id": "fornecedor-situacao-cadastral-irregular",
+    "nome": "Fornecedor com situação cadastral diferente de ATIVA",
+    "categoria": "empresa",
+    "descricao": "Empresa baixada/inapta/suspensa não deveria contratar com o poder público.",
+    "fonte": "Receita Federal / Rosie",
+    "dados_necessarios": [
+      "descricao_situacao_cadastral"
+    ],
+    "apis": [
+      "brasilapi-cnpj"
+    ],
+    "severidade": "alta",
+    "logica": "situacao != 'ATIVA'",
+    "implementada": true
+  },
+  {
+    "id": "fornecedor-sancionado-ceis-cnep",
+    "nome": "Fornecedor consta em CEIS/CNEP",
+    "categoria": "empresa",
+    "descricao": "Empresa inidônea/suspensa (CEIS) ou punida pela Lei Anticorrupção (CNEP) contratando é ilegal.",
+    "fonte": "CGU",
+    "dados_necessarios": [
+      "cnpj fornecedor",
+      "CEIS",
+      "CNEP"
+    ],
+    "apis": [
+      "portal-transparencia-federal"
+    ],
+    "severidade": "alta",
+    "logica": "count(ceis)+count(cnep) > 0",
+    "implementada": true
+  },
+  {
+    "id": "fornecedor-capital-social-incompativel",
+    "nome": "Capital social muito inferior ao valor do contrato",
+    "categoria": "empresa",
+    "descricao": "Capital social < 1% do contrato sugere empresa sem lastro (ou de fachada). Sinal, não prova.",
+    "fonte": "TCU / CGU (análise de risco em contratações)",
+    "dados_necessarios": [
+      "capital_social",
+      "valorGlobal"
+    ],
+    "apis": [
+      "pncp-consulta-v1",
+      "brasilapi-cnpj"
+    ],
+    "severidade": "media",
+    "logica": "valor >= 500k && capital_social/valor < 0.01",
+    "implementada": true
+  },
+  {
+    "id": "fornecedor-outra-uf-servico-local",
+    "nome": "Fornecedor sediado em outra UF para serviço local",
+    "categoria": "contratacao",
+    "descricao": "Empresa de fora do estado vencendo serviço local (limpeza, merenda, obra) pode indicar intermediação.",
+    "fonte": "OCP Red Flags",
+    "dados_necessarios": [
+      "uf empresa",
+      "uf órgão",
+      "categoria"
+    ],
+    "apis": [
+      "pncp-consulta-v1",
+      "brasilapi-cnpj"
+    ],
+    "severidade": "baixa",
+    "logica": "categoria local && uf_empresa != uf_orgao",
+    "implementada": true
+  },
+  {
+    "id": "fornecedor-mei-contrato-acima-do-limite",
+    "nome": "Fornecedor MEI com contrato acima do limite anual do MEI",
+    "categoria": "empresa",
+    "descricao": "MEI fatura no máximo R$ 81 mil/ano. Contrato acima disso é incompatível com o enquadramento.",
+    "fonte": "LC 123/2006",
+    "dados_necessarios": [
+      "opcao_pelo_mei",
+      "valorGlobal"
+    ],
+    "apis": [
+      "pncp-consulta-v1",
+      "brasilapi-cnpj"
+    ],
+    "severidade": "media",
+    "logica": "mei && valor > 81_000",
+    "implementada": true
+  },
+  {
+    "id": "dispensa-emergencial",
+    "nome": "Dispensa por emergência/calamidade",
+    "categoria": "contratacao",
+    "descricao": "Emergência dispensa disputa. Uso recorrente ou valores altos exigem justificativa forte (art. 75, VIII).",
+    "fonte": "Lei 14.133 art. 75 / TCU",
+    "dados_necessarios": [
+      "modalidadeId",
+      "amparoLegal"
+    ],
+    "apis": [
+      "pncp-consulta-v1"
+    ],
+    "severidade": "media",
+    "logica": "modalidade == 8 && amparo ~ /emerg|calamidade/",
+    "implementada": true
+  },
+  {
+    "id": "dispensa-valor-alto",
+    "nome": "Dispensa/inexigibilidade de valor elevado",
+    "categoria": "contratacao",
+    "descricao": "Sem licitação acima de R$ 1 mi merece leitura do amparo legal e do fornecedor.",
+    "fonte": "OCP / TCU",
+    "dados_necessarios": [
+      "modalidadeId",
+      "valorTotalEstimado"
+    ],
+    "apis": [
+      "pncp-consulta-v1"
+    ],
+    "severidade": "media",
+    "logica": "modalidade in (8,9) && valor >= 1_000_000",
+    "implementada": true
+  },
+  {
+    "id": "licitacao-prazo-proposta-curto",
+    "nome": "Prazo entre publicação e encerramento de propostas muito curto",
+    "categoria": "contratacao",
+    "descricao": "Prazo curto restringe concorrência (direcionamento). Lei 14.133 art. 55 fixa mínimos por modalidade.",
+    "fonte": "OCP Red Flags / Lei 14.133 art. 55",
+    "dados_necessarios": [
+      "dataPublicacaoPncp",
+      "dataEncerramentoProposta"
+    ],
+    "apis": [
+      "pncp-consulta-v1"
+    ],
+    "severidade": "media",
+    "logica": "dias(encerramento - publicacao) < 8",
+    "implementada": true
+  },
+  {
+    "id": "ceap-fornecedor-dominante",
+    "nome": "Um único fornecedor concentra grande parte da cota parlamentar",
+    "categoria": "parlamentar",
+    "descricao": "Concentração > 40% da CEAP em 1 CNPJ é atípica (exceto locação). Sinal para olhar quem é o fornecedor.",
+    "fonte": "OPS / Rosie",
+    "dados_necessarios": [
+      "despesas CEAP do ano"
+    ],
+    "apis": [
+      "camara-dados-abertos-v2"
+    ],
+    "severidade": "media",
+    "logica": "share(top1) > 0.4",
+    "implementada": true
+  },
+  {
+    "id": "ceap-divulgacao-acima-de-50",
+    "nome": "Divulgação da atividade parlamentar consome mais da metade da cota",
+    "categoria": "parlamentar",
+    "descricao": "'Divulgação' é a rubrica mais elástica da CEAP e a mais associada a irregularidades históricas.",
+    "fonte": "OPS",
+    "dados_necessarios": [
+      "despesas CEAP por tipo"
+    ],
+    "apis": [
+      "camara-dados-abertos-v2"
+    ],
+    "severidade": "baixa",
+    "logica": "share(divulgacao) > 0.5",
+    "implementada": true
+  },
+  {
+    "id": "ceap-nota-unica-elevada",
+    "nome": "Nota fiscal única de valor elevado",
+    "categoria": "parlamentar",
+    "descricao": "Documento acima de R$ 20 mil na CEAP merece leitura (o que foi comprado, de quem).",
+    "fonte": "Rosie",
+    "dados_necessarios": [
+      "despesas CEAP"
+    ],
+    "apis": [
+      "camara-dados-abertos-v2"
+    ],
+    "severidade": "baixa",
+    "logica": "max(valorLiquido) > 20_000",
+    "implementada": true
+  },
+  {
+    "id": "ceap-combustivel-elevado",
+    "nome": "Gasto com combustível acima de R$ 6 mil/mês em média",
+    "categoria": "parlamentar",
+    "descricao": "Média mensal alta de combustível é o clássico da OPS/Rosie (equivale a rodar milhares de km/mês).",
+    "fonte": "OPS / Rosie",
+    "dados_necessarios": [
+      "despesas CEAP tipo combustível"
+    ],
+    "apis": [
+      "camara-dados-abertos-v2"
+    ],
+    "severidade": "media",
+    "logica": "media_mensal(combustivel) > 6_000",
+    "implementada": true
+  },
+  {
+    "id": "ceap-acima-da-media-da-bancada",
+    "nome": "Gasto anual acima da média da bancada",
+    "categoria": "parlamentar",
+    "descricao": "Comparação objetiva com pares do mesmo estado (a cota varia por UF).",
+    "fonte": "Monitor de Gravata",
+    "dados_necessarios": [
+      "total CEAP do deputado",
+      "média da bancada da UF"
+    ],
+    "apis": [
+      "camara-dados-abertos-v2"
+    ],
+    "severidade": "baixa",
+    "logica": "total / media_bancada > 1.3",
+    "implementada": true
+  },
+  {
+    "id": "empresa-capital-social-simbolico-com-contratos",
+    "nome": "Capital social simbólico com contratos públicos relevantes",
+    "categoria": "empresa",
+    "descricao": "Capital social ≤ R$ 10 mil e soma de contratos públicos > R$ 1 mi.",
+    "fonte": "TCU / CGU",
+    "dados_necessarios": [
+      "capital_social",
+      "contratos por fornecedor"
+    ],
+    "apis": [
+      "brasilapi-cnpj",
+      "pncp-search",
+      "portal-transparencia-federal"
+    ],
+    "severidade": "media",
+    "logica": "capital <= 10k && soma_contratos > 1M",
+    "implementada": true
+  },
+  {
+    "id": "empresa-sancionada",
+    "nome": "Empresa consta em cadastros de sanção (CEIS/CNEP)",
+    "categoria": "empresa",
+    "descricao": "Registro em CEIS (inidônea/suspensa) ou CNEP (Lei Anticorrupção).",
+    "fonte": "CGU",
+    "dados_necessarios": [
+      "cnpj"
+    ],
+    "apis": [
+      "portal-transparencia-federal"
+    ],
+    "severidade": "alta",
+    "logica": "count(ceis)+count(cnep) > 0",
+    "implementada": true
+  },
+  {
+    "id": "candidato-patrimonio-salto",
+    "nome": "Patrimônio declarado cresceu mais de 100% desde a eleição anterior",
+    "categoria": "eleitoral",
+    "descricao": "Salto patrimonial entre declarações ao TSE é sinal para pedir explicação (não é prova de nada).",
+    "fonte": "TSE / jornalismo de dados",
+    "dados_necessarios": [
+      "totalDeBens por eleição (mesmo CPF)"
+    ],
+    "apis": [
+      "tse-divulgacandcontas"
+    ],
+    "severidade": "media",
+    "logica": "bens_atual / bens_anterior > 2 (alta se > 5)",
+    "implementada": true
+  },
+  {
+    "id": "candidato-sem-bens-declarados",
+    "nome": "Candidato não declarou nenhum bem",
+    "categoria": "eleitoral",
+    "descricao": "Declaração zerada é legal, mas frequente em laranjas e em quem esconde patrimônio em terceiros.",
+    "fonte": "TSE",
+    "dados_necessarios": [
+      "totalDeBens"
+    ],
+    "apis": [
+      "tse-divulgacandcontas"
+    ],
+    "severidade": "baixa",
+    "logica": "totalDeBens == 0",
+    "implementada": true
+  },
+  {
+    "id": "candidato-processos-cassacao",
+    "nome": "Candidatura com processo de cassação/desconstituição registrado",
+    "categoria": "eleitoral",
+    "descricao": "O TSE registra processos que podem levar à perda do registro. Ler o processo antes de concluir.",
+    "fonte": "TSE",
+    "dados_necessarios": [
+      "processosCassacao",
+      "processosDesconstituicao"
+    ],
+    "apis": [
+      "tse-divulgacandcontas"
+    ],
+    "severidade": "alta",
+    "logica": "len(processos) > 0",
+    "implementada": true
+  },
+  {
+    "id": "candidato-financiado-100-por-fundo",
+    "nome": "Campanha financiada 100% por fundo partidário/FEFC",
+    "categoria": "eleitoral",
+    "descricao": "Sem nenhuma doação de pessoa física, toda a campanha vem de dinheiro público via partido. Não é irregular; é informação.",
+    "fonte": "TSE",
+    "dados_necessarios": [
+      "dadosConsolidados.totalPartidos",
+      "totalRecebido"
+    ],
+    "apis": [
+      "tse-divulgacandcontas"
+    ],
+    "severidade": "baixa",
+    "logica": "totalPartidos / totalRecebido >= 0.999",
+    "implementada": true
+  },
+  {
+    "id": "doador-fornecedor-do-governo",
+    "nome": "Doador de campanha (PJ ou sócio) é fornecedor do governo",
+    "categoria": "eleitoral",
+    "descricao": "Cruzar CNPJ do doador (ou CNPJs em que o doador PF é sócio) com contratos no PNCP/Portal da Transparência.",
+    "fonte": "Serenata / jornalismo de dados",
+    "dados_necessarios": [
+      "receitas detalhadas TSE",
+      "QSA",
+      "contratos por fornecedor"
+    ],
+    "apis": [
+      "tse-divulgacandcontas",
+      "brasilapi-cnpj",
+      "pncp-search",
+      "portal-transparencia-federal"
+    ],
+    "severidade": "alta",
+    "logica": "cnpj_doador ∈ fornecedores(contratos)",
+    "implementada": false
+  },
+  {
+    "id": "fracionamento-de-despesa",
+    "nome": "Fracionamento de despesa para fugir de licitação",
+    "categoria": "municipal",
+    "descricao": "Várias dispensas do mesmo órgão, mesmo objeto/fornecedor, somando acima do limite de dispensa no mesmo exercício.",
+    "fonte": "TCU / TCEs / OCP",
+    "dados_necessarios": [
+      "contratacoes por órgão e fornecedor no ano"
+    ],
+    "apis": [
+      "pncp-consulta-v1"
+    ],
+    "severidade": "alta",
+    "logica": "sum(dispensas mesmo objeto/fornecedor/ano) > limite art. 75",
+    "implementada": false
+  },
+  {
+    "id": "aditivo-acima-de-25",
+    "nome": "Aditivos elevam o contrato acima de 25% (50% em reforma)",
+    "categoria": "contratacao",
+    "descricao": "Limite legal de acréscimo (Lei 14.133 art. 125). Ultrapassar exige nova licitação.",
+    "fonte": "Lei 14.133 art. 125 / TCU",
+    "dados_necessarios": [
+      "valorInicial",
+      "valorGlobal atual/termos aditivos"
+    ],
+    "apis": [
+      "pncp-api-detalhe"
+    ],
+    "severidade": "alta",
+    "logica": "(valorGlobal - valorInicial) / valorInicial > 0.25",
+    "implementada": false
+  },
+  {
+    "id": "licitacao-participante-unico",
+    "nome": "Licitação com um único participante",
+    "categoria": "contratacao",
+    "descricao": "Um licitante só é o indicador clássico de direcionamento (OCP, DoZorro).",
+    "fonte": "OCP / DoZorro",
+    "dados_necessarios": [
+      "resultados por item (nº propostas)"
+    ],
+    "apis": [
+      "pncp-api-detalhe"
+    ],
+    "severidade": "media",
+    "logica": "n_propostas == 1",
+    "implementada": false
+  },
+  {
+    "id": "sobrepreco-vs-painel-de-precos",
+    "nome": "Preço unitário muito acima da referência",
+    "categoria": "contratacao",
+    "descricao": "Preço unitário muito acima da mediana dos preços homologados por outros órgãos para o mesmo padrão CATMAT (Compras.gov.br). Implementada no Comparador de preços (/precos): ≤1,3× normal · ≤1,7× atenção · ≤2,5× alto · >2,5× muito alto.",
+    "fonte": "CGU Alice / TCU",
+    "dados_necessarios": [
+      "itens homologados",
+      "referência de preços"
+    ],
+    "apis": [
+      "compras-gov-dados-abertos",
+      "pncp-api-detalhe"
+    ],
+    "severidade": "alta",
+    "logica": "precoUnitario / mediana(precos_homologados_mesmo_PDM_periodo) > 1.3",
+    "implementada": true
+  },
+  {
+    "id": "servidor-socio-de-fornecedor",
+    "nome": "Servidor público é sócio de empresa fornecedora do próprio órgão",
+    "categoria": "servidor",
+    "descricao": "Conflito de interesses e vedação legal (Lei 14.133 art. 14; Lei 8.112 art. 117).",
+    "fonte": "CGU / TCU",
+    "dados_necessarios": [
+      "QSA do fornecedor",
+      "cadastro de servidores"
+    ],
+    "apis": [
+      "brasilapi-cnpj",
+      "portal-transparencia-federal"
+    ],
+    "severidade": "alta",
+    "logica": "socio.nome ∈ servidores(orgao)",
+    "implementada": false
+  },
+  {
+    "id": "secretario-parlamentar-homonimo",
+    "nome": "Servidor de gabinete com sobrenome do parlamentar (hipótese de nepotismo)",
+    "categoria": "parlamentar",
+    "descricao": "Sobrenome igual não prova parentesco. É uma HIPÓTESE que exige verificação humana antes de qualquer publicação.",
+    "fonte": "Súmula Vinculante 13 / jornalismo",
+    "dados_necessarios": [
+      "lista de secretários parlamentares"
+    ],
+    "apis": [
+      "camara-dados-abertos-v2",
+      "senado-dados-abertos"
+    ],
+    "severidade": "baixa",
+    "logica": "sobrenome(servidor) == sobrenome(parlamentar) → marcar para revisão",
+    "implementada": false
+  },
+  {
+    "id": "presenca-abaixo-de-50",
+    "nome": "Presença em sessões deliberativas abaixo de 50%",
+    "categoria": "parlamentar",
+    "descricao": "Faltas não justificadas em mais da metade das sessões deliberativas do plenário.",
+    "fonte": "Ranking dos Políticos / Câmara",
+    "dados_necessarios": [
+      "eventos/sessões deliberativas",
+      "presenças"
+    ],
+    "apis": [
+      "camara-dados-abertos-v2"
+    ],
+    "severidade": "media",
+    "logica": "presentes / sessoes_deliberativas < 0.5",
+    "implementada": false
+  },
+  {
+    "id": "emenda-para-fornecedor-unico",
+    "nome": "Emenda parlamentar executada com fornecedor único recorrente",
+    "categoria": "parlamentar",
+    "descricao": "Emendas do mesmo autor pagas sempre ao mesmo CNPJ em vários municípios.",
+    "fonte": "CGU / TCU (emendas Pix)",
+    "dados_necessarios": [
+      "emendas por autor",
+      "pagamentos por favorecido"
+    ],
+    "apis": [
+      "portal-transparencia-federal"
+    ],
+    "severidade": "alta",
+    "logica": "count(distinct municipio) > 3 && fornecedor único",
+    "implementada": false
+  },
+  {
+    "id": "diario-oficial-fim-de-semana",
+    "nome": "Ato publicado em diário oficial no fim de semana/feriado",
+    "categoria": "municipal",
+    "descricao": "Publicação em data atípica reduz a chance de alguém ler (dispensa, nomeação, aditivo).",
+    "fonte": "Querido Diário / jornalismo",
+    "dados_necessarios": [
+      "data de publicação do diário"
+    ],
+    "apis": [
+      "querido-diario-api"
+    ],
+    "severidade": "baixa",
+    "logica": "weekday(date) in (sab, dom) || feriado",
+    "implementada": false
+  },
+  {
+    "id": "ceap-cnpj-cpf-invalido",
+    "nome": "CNPJ/CPF do fornecedor inválido (dígito verificador)",
+    "categoria": "parlamentar",
+    "descricao": "Reembolso de cota parlamentar (CEAP/CEAPS) cujo documento fiscal aponta um CNPJ ou CPF de fornecedor que não passa na validação de dígitos verificadores. Regra 'invalid_cnpj_cpf' da Rosie (Serenata de Amor), aplicada a notas fiscais, recibos simples e (Senado) tipo desconhecido.",
+    "fonte": "Rosie",
+    "dados_necessarios": [
+      "despesas CEAP Câmara (documento, cnpj_cpf_fornecedor, tipo_documento)",
+      "despesas CEAPS Senado"
+    ],
+    "apis": [
+      "https://dadosabertos.camara.leg.br/api/v2/deputados/{id}/despesas",
+      "https://www12.senado.leg.br/transparencia/dados-abertos/dados-abertos-ceaps"
+    ],
+    "severidade": "media",
+    "logica": "PARA cada despesa d: id = somente_digitos(d.cnpj_cpf); SE tipo_documento IN (nota_fiscal, recibo, desconhecido) E NOT (valida_cpf(id.zfill(11)) OU valida_cnpj(id.zfill(14))) ENTAO flag('cnpj_cpf_invalido', d)",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "ceap-fornecedor-inapto-baixado",
+    "nome": "Fornecedor com CNPJ baixado/nulo/suspenso/inapto na data da despesa",
+    "categoria": "parlamentar",
+    "descricao": "Reembolso pago a empresa cuja situação cadastral na Receita Federal já era BAIXADA, NULA, SUSPENSA ou INAPTA antes da data de emissão do documento (regra 'irregular_companies_classifier' da Rosie).",
+    "fonte": "Rosie",
+    "dados_necessarios": [
+      "despesas CEAP (cnpj, data_emissao)",
+      "cadastro CNPJ (situacao_cadastral, data_situacao_cadastral)"
+    ],
+    "apis": [
+      "https://minhareceita.org/{cnpj}",
+      "https://brasilapi.com.br/api/cnpj/v1/{cnpj}",
+      "https://api.queridodiario.ok.org.br/company/info/{cnpj}"
+    ],
+    "severidade": "alta",
+    "logica": "PARA cada despesa d com CNPJ: c = consulta_cnpj(d.cnpj); SE c.situacao IN ('BAIXADA','NULA','SUSPENSA','INAPTA') E c.data_situacao < d.data_emissao ENTAO flag('fornecedor_irregular', d, c.situacao)",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "ceap-refeicao-preco-outlier",
+    "nome": "Refeição com preço fora do padrão do estabelecimento",
+    "categoria": "parlamentar",
+    "descricao": "Reembolso de alimentação com valor muito acima do padrão do próprio restaurante (média + 3 desvios) ou do cluster de restaurantes semelhantes (média + 4 desvios). Regra 'meal_price_outlier' da Rosie: usa K-Means (k=3) sobre (média, desvio) por CNPJ, considerando apenas CNPJs (14 dígitos), excluindo hotéis, e só empresas com >3 parlamentares e >20 registros para threshold próprio.",
+    "fonte": "Rosie",
+    "dados_necessarios": [
+      "despesas CEAP categoria alimentação (parlamentar, cnpj, nome_fornecedor, valor_liquido)"
+    ],
+    "apis": [
+      "https://dadosabertos.camara.leg.br/api/v2/deputados/{id}/despesas"
+    ],
+    "severidade": "media",
+    "logica": "base = despesas WHERE categoria=='Alimentação' AND len(cnpj)==14 AND NOT regex('hote(ls?|is)', nome). stats por cnpj = {mean, std, n_parlamentares, n_registros}. conhecidos = stats WHERE n_parlamentares>3 AND n_registros>20. km = KMeans(k=3).fit(conhecidos[mean,std]); threshold_cluster = mean_cluster + 4*std_cluster; threshold_cnpj = mean + 3*std (se conhecido, sobrescreve). flag SE valor > threshold.",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "ceap-limite-mensal-subcota",
+    "nome": "Estouro do limite mensal da subcota",
+    "categoria": "parlamentar",
+    "descricao": "Soma acumulada de reembolsos de uma subcota no mês/ano ultrapassa o teto regulamentar (regra 'over_monthly_subquota_limit' da Rosie). Tetos históricos usados pela Rosie: locação de veículos (subcota 120) R$10.000/10.900/12.713; táxi/pedágio/estacionamento (122) R$2.500/2.700; combustíveis (3) R$4.500/4.900/6.000; segurança (8) R$4.500/8.000/8.700; cursos/eventos (137) R$7.697,16. Os tetos precisam ser atualizados pelo Ato da Mesa vigente.",
+    "fonte": "Rosie",
+    "dados_necessarios": [
+      "despesas CEAP (parlamentar, ano, mes, subcota, valor_liquido, data_emissao)",
+      "tabela de tetos por subcota e período"
+    ],
+    "apis": [
+      "https://dadosabertos.camara.leg.br/api/v2/deputados/{id}/despesas"
+    ],
+    "severidade": "alta",
+    "logica": "ordena por data_emissao; PARA cada (parlamentar, ano, mes, subcota): acumulado = cumsum(valor); flag despesas cujo acumulado > teto(subcota, ano-mes)",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "ceap-velocidade-deslocamento-suspeita",
+    "nome": "Refeições no mesmo dia em locais fisicamente incompatíveis",
+    "categoria": "parlamentar",
+    "descricao": "Parlamentar apresenta, no mesmo dia, refeições em estabelecimentos cuja soma das distâncias entre si (geocodificadas) é incompatível com o número de refeições, ou apresenta mais de 8 refeições no dia (regra 'suspicious_traveled_speed_day' da Rosie).",
+    "fonte": "Rosie",
+    "dados_necessarios": [
+      "despesas CEAP alimentação (parlamentar, data, cnpj)",
+      "endereço/lat-long do fornecedor (cadastro CNPJ + geocodificação)"
+    ],
+    "apis": [
+      "https://minhareceita.org/{cnpj}",
+      "https://brasilapi.com.br/api/cep/v2/{cep}",
+      "Nominatim/geocoder"
+    ],
+    "severidade": "media",
+    "logica": "PARA cada (parlamentar, dia): pontos = coords das refeições dentro do bounding box do Brasil; dist = soma das distâncias par a par; n = qtd refeições; esperado = poly3(n) ajustado no histórico; flag SE n > 8 OU |esperado - dist| > threshold calibrado para contaminação 0,1%",
+    "implementada": false,
+    "implementavel_v1": false
+  },
+  {
+    "id": "ceap-despesa-eleitoral",
+    "nome": "Reembolso pago a 'candidato a cargo político eletivo'",
+    "categoria": "parlamentar",
+    "descricao": "Fornecedor do reembolso tem natureza jurídica '409-0 Candidato a Cargo Político Eletivo' (CNPJ de campanha) — despesa eleitoral não pode ser paga com cota parlamentar (regra 'election_expenses' da Rosie).",
+    "fonte": "Rosie",
+    "dados_necessarios": [
+      "despesas CEAP (cnpj)",
+      "cadastro CNPJ (natureza_juridica)"
+    ],
+    "apis": [
+      "https://minhareceita.org/{cnpj}",
+      "https://brasilapi.com.br/api/cnpj/v1/{cnpj}"
+    ],
+    "severidade": "alta",
+    "logica": "flag SE consulta_cnpj(d.cnpj).natureza_juridica.codigo == '4090' (409-0)",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "ceap-fornecedor-doador-campanha",
+    "nome": "Fornecedor da cota é doador de campanha do parlamentar",
+    "categoria": "parlamentar",
+    "descricao": "Empresa/pessoa que recebe reembolsos da cota do parlamentar (ou seus sócios) doou para a campanha desse mesmo parlamentar. Serenata coletava doações (fetch_campaign_donations.py) e a OPS marca 'fornecedor.doador' no banco.",
+    "fonte": "OPS",
+    "dados_necessarios": [
+      "despesas CEAP (parlamentar, cnpj_cpf)",
+      "receitas de campanha TSE (cpf_cnpj_doador, candidato)",
+      "quadro societário (sócios do fornecedor)"
+    ],
+    "apis": [
+      "https://dadosabertos.tse.jus.br/dataset/ (prestacao_de_contas_eleitorais_candidatos_{ano})",
+      "https://minhareceita.org/{cnpj}"
+    ],
+    "severidade": "alta",
+    "logica": "doadores[candidato] = set(cpf_cnpj) de receitas TSE (candidato e partido). PARA despesa d: SE d.cnpj IN doadores[parlamentar] OU any(socio.cpf_mascarado IN doadores) ENTAO flag('fornecedor_doador')",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "ceap-fornecedor-recem-aberto",
+    "nome": "Fornecedor aberto pouco antes do primeiro reembolso",
+    "categoria": "parlamentar",
+    "descricao": "Empresa constituída há menos de N meses (default 6) da data da primeira despesa paga com cota — padrão típico de empresa criada para atender um gabinete (a OPS exibe data de abertura, situação e capital do fornecedor para o auditor voluntário julgar).",
+    "fonte": "OPS",
+    "dados_necessarios": [
+      "despesas CEAP (cnpj, data_emissao)",
+      "cadastro CNPJ (data_abertura)"
+    ],
+    "apis": [
+      "https://minhareceita.org/{cnpj}"
+    ],
+    "severidade": "media",
+    "logica": "primeira = min(data_emissao) por (parlamentar, cnpj); flag SE (primeira - data_abertura) < 180 dias",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "ceap-fornecedor-cnae-incompativel",
+    "nome": "CNAE do fornecedor incompatível com o tipo de despesa",
+    "categoria": "parlamentar",
+    "descricao": "Atividade econômica principal/secundária da empresa não corresponde à categoria reembolsada (ex.: 'consultoria' paga a loja de roupas; 'divulgação' paga a empresa de construção). Serenata explorou 'consultancies'; OPS mostra atividade principal do fornecedor.",
+    "fonte": "OPS",
+    "dados_necessarios": [
+      "despesas CEAP (categoria, cnpj)",
+      "cadastro CNPJ (cnae principal e secundários)",
+      "tabela categoria_despesa -> CNAEs compatíveis"
+    ],
+    "apis": [
+      "https://minhareceita.org/{cnpj}",
+      "https://servicodados.ibge.gov.br/api/v2/cnae/subclasses"
+    ],
+    "severidade": "media",
+    "logica": "cnaes = principal + secundarios; SE intersect(cnaes, CNAES_COMPATIVEIS[categoria]) == vazio ENTAO flag('cnae_incompativel')",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "ceap-fornecedor-concentracao",
+    "nome": "Concentração de gastos em um único fornecedor / fornecedor exclusivo",
+    "categoria": "parlamentar",
+    "descricao": "Um fornecedor recebe parcela desproporcional da cota do parlamentar no ano (>40%) ou atende exclusivamente um único parlamentar com valores altos (a OPS agrupa auditoria por Fornecedor e ranqueia 'campeões').",
+    "fonte": "OPS",
+    "dados_necessarios": [
+      "despesas CEAP agregadas por (parlamentar, cnpj, ano)"
+    ],
+    "apis": [
+      "https://dadosabertos.camara.leg.br/api/v2/deputados/{id}/despesas"
+    ],
+    "severidade": "baixa",
+    "logica": "share = soma(cnpj, parlamentar, ano)/soma(parlamentar, ano); n_parl = qtd parlamentares atendidos pelo cnpj no ano; flag SE share > 0.4 OU (n_parl == 1 E soma > 50000)",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "ceap-nota-duplicada",
+    "nome": "Mesmo documento fiscal reembolsado mais de uma vez",
+    "categoria": "parlamentar",
+    "descricao": "Mesmo número de documento + mesmo CNPJ + mesmo valor aparecendo em mais de um reembolso (mesmo ou diferentes parlamentares). Caso recorrente das denúncias da OPS.",
+    "fonte": "OPS",
+    "dados_necessarios": [
+      "despesas CEAP (numero_documento, cnpj, valor, parlamentar)"
+    ],
+    "apis": [
+      "https://dadosabertos.camara.leg.br/api/v2/deputados/{id}/despesas"
+    ],
+    "severidade": "alta",
+    "logica": "group by (cnpj, numero_documento, valor); flag SE count > 1",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "ceap-combustivel-excessivo",
+    "nome": "Abastecimentos incompatíveis (Operação Tanque Furado)",
+    "categoria": "parlamentar",
+    "descricao": "Vários abastecimentos no mesmo dia, valores acima da capacidade de tanque, ou volume mensal de combustível superior ao que um veículo percorreria; OPS denunciou casos assim ao TCU e MPF (Operação Tanque Furado 1-4).",
+    "fonte": "OPS",
+    "dados_necessarios": [
+      "despesas CEAP combustível (data, valor, cnpj)",
+      "preço médio do combustível (ANP) para estimar litros"
+    ],
+    "apis": [
+      "https://dadosabertos.camara.leg.br/api/v2/deputados/{id}/despesas",
+      "https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/levantamento-de-precos-de-combustiveis-ultimas-semanas-pesquisadas"
+    ],
+    "severidade": "media",
+    "logica": "litros = valor / preco_medio_uf; flag SE litros_dia > 120 OU qtd_abastecimentos_dia >= 3 OU litros_mes > 2500",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "ceap-consultoria-advogado-do-parlamentar",
+    "nome": "Consultoria paga a escritório que advoga para o parlamentar",
+    "categoria": "parlamentar",
+    "descricao": "Reembolso de 'consultoria/assessoria jurídica' a escritório cujos advogados patrocinam ações judiciais/eleitorais do próprio parlamentar (Operação Advogado do Diabo da OPS: 28 deputados e 1 senadora denunciados ao TCU/MPF, R$3,85 mi).",
+    "fonte": "OPS",
+    "dados_necessarios": [
+      "despesas CEAP consultoria (cnpj)",
+      "sócios do escritório",
+      "processos do parlamentar (advogados constituídos)"
+    ],
+    "apis": [
+      "https://minhareceita.org/{cnpj}",
+      "https://api-publica.datajud.cnj.jus.br",
+      "https://divulgacandcontas.tse.jus.br"
+    ],
+    "severidade": "alta",
+    "logica": "socios = quadro_societario(cnpj); advogados = advogados_do_parlamentar (DataJud/TSE); flag SE nomes coincidem",
+    "implementada": false,
+    "implementavel_v1": false
+  },
+  {
+    "id": "ceap-fornecedor-sancionado",
+    "nome": "Fornecedor da cota consta em CEIS/CNEP/CEPIM",
+    "categoria": "parlamentar",
+    "descricao": "Empresa que recebe reembolso de cota está sancionada (inidônea/impedida) nos cadastros da CGU. Serenata cruzava 'federal sanctions' com reembolsos (notebook 2017-01-15).",
+    "fonte": "Rosie",
+    "dados_necessarios": [
+      "despesas CEAP (cnpj)",
+      "CEIS, CNEP, CEPIM, CEAF"
+    ],
+    "apis": [
+      "https://api.portaldatransparencia.gov.br/api-de-dados/ceis?cnpjSancionado=",
+      "https://api.portaldatransparencia.gov.br/api-de-dados/cnep",
+      "https://portaldatransparencia.gov.br/download-de-dados/ceis"
+    ],
+    "severidade": "alta",
+    "logica": "flag SE cnpj_raiz(d.cnpj) IN sancionados_ativos(data_emissao)",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "ceap-gasto-com-presenca-em-brasilia",
+    "nome": "Refeição/deslocamento fora de Brasília em dia de presença em plenário",
+    "categoria": "parlamentar",
+    "descricao": "Reembolso em estabelecimento de outra UF na mesma data em que o parlamentar registrou presença ou discurso em Brasília (notebooks Serenata 'meal-reimbursements-on-speech-days' e 'analysis-on-meals-based-on-presence-information').",
+    "fonte": "Rosie",
+    "dados_necessarios": [
+      "despesas CEAP (data, uf_fornecedor)",
+      "presenças/discursos por data (Câmara)"
+    ],
+    "apis": [
+      "https://dadosabertos.camara.leg.br/api/v2/deputados/{id}/discursos",
+      "https://dadosabertos.camara.leg.br/api/v2/eventos/{id}/deputados",
+      "https://minhareceita.org/{cnpj}"
+    ],
+    "severidade": "media",
+    "logica": "flag SE uf_fornecedor != 'DF' E existe presença/discurso do parlamentar em Brasília na data_emissao",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "contrato-fornecedor-sancionado",
+    "nome": "Contratada consta em cadastro de sanções (CEIS/CNEP/CEPIM/TCU inidôneas)",
+    "categoria": "contratacao",
+    "descricao": "Empresa proibida de contratar com a Administração aparece como vencedora/contratada. Classe 'proibição de contratação com a Administração Pública' da Alice (TCU/CGU) e checagem automática do Sofia.",
+    "fonte": "TCU",
+    "dados_necessarios": [
+      "contratos/atas PNCP (cnpj fornecedor, data)",
+      "CEIS/CNEP/CEPIM/Licitantes inidôneos TCU"
+    ],
+    "apis": [
+      "https://pncp.gov.br/api/consulta/v1/contratos",
+      "https://api.portaldatransparencia.gov.br/api-de-dados/ceis",
+      "https://contas.tcu.gov.br/ords/f?p=INABILITADO:INIDONEOS"
+    ],
+    "severidade": "alta",
+    "logica": "flag SE cnpj_raiz(contrato.fornecedor) IN sancionados_vigentes(contrato.data_assinatura)",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "contrato-empresa-situacao-cadastral-irregular",
+    "nome": "Contratada sem situação cadastral ATIVA",
+    "categoria": "contratacao",
+    "descricao": "Vencedora não consta como ATIVA no CNPJ (baixada, suspensa, inapta) — regularidade fiscal é requisito de habilitação (Lei 14.133/2021). Indício de irregularidade da Alice (fase seleção do fornecedor).",
+    "fonte": "CGU",
+    "dados_necessarios": [
+      "contratos PNCP (cnpj)",
+      "cadastro CNPJ"
+    ],
+    "apis": [
+      "https://pncp.gov.br/api/consulta/v1/contratos",
+      "https://minhareceita.org/{cnpj}"
+    ],
+    "severidade": "alta",
+    "logica": "c = consulta_cnpj(cnpj); flag SE c.situacao != 'ATIVA' E c.data_situacao <= data_assinatura",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "contrato-baixo-capital-social",
+    "nome": "Capital social incompatível com o valor do contrato",
+    "categoria": "contratacao",
+    "descricao": "Empresa com capital social muito inferior ao vulto da contratação — risco de empresa de fachada (Alice; TCU Acórdão 2093/2021-P).",
+    "fonte": "CGU",
+    "dados_necessarios": [
+      "contratos PNCP (valor_global, cnpj)",
+      "cadastro CNPJ (capital_social)"
+    ],
+    "apis": [
+      "https://pncp.gov.br/api/consulta/v1/contratos",
+      "https://minhareceita.org/{cnpj}"
+    ],
+    "severidade": "media",
+    "logica": "flag SE capital_social < 0.01 * valor_global E valor_global > 500000; severidade alta SE capital_social < 0.001 * valor",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "contrato-empresa-recem-aberta",
+    "nome": "Empresa aberta pouco antes de vencer contrato (fantasma)",
+    "categoria": "contratacao",
+    "descricao": "Contratada constituída há menos de 6 meses da publicação do edital/assinatura — classe 'empresas fantasmas' da Alice.",
+    "fonte": "TCU",
+    "dados_necessarios": [
+      "contratos PNCP (data_assinatura, cnpj)",
+      "cadastro CNPJ (data_abertura)"
+    ],
+    "apis": [
+      "https://pncp.gov.br/api/consulta/v1/contratos",
+      "https://minhareceita.org/{cnpj}"
+    ],
+    "severidade": "media",
+    "logica": "flag SE (data_assinatura - data_abertura) < 180 dias; combinar com baixo capital para elevar severidade",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "contrato-quadro-funcionarios-insuficiente",
+    "nome": "Empresa sem empregados para o porte do contrato",
+    "categoria": "contratacao",
+    "descricao": "Contratada com número muito reduzido de empregados incompatível com o objeto (Alice; TCU Acórdãos 2668/2022-2ªC e 993/2022-P). Dados de vínculos (RAIS/CAGED por CNPJ) não são públicos; proxy: porte MEI/ME + optante Simples em contratos de serviço continuado de alto valor.",
+    "fonte": "CGU",
+    "dados_necessarios": [
+      "contratos PNCP (valor, objeto)",
+      "cadastro CNPJ (porte, opcao_mei, opcao_simples)"
+    ],
+    "apis": [
+      "https://minhareceita.org/{cnpj}",
+      "https://pncp.gov.br/api/consulta/v1/contratos"
+    ],
+    "severidade": "media",
+    "logica": "flag SE porte IN ('MEI','ME') E objeto contém termos de mão de obra (limpeza, vigilância, terceirização) E valor_global > 1_000_000",
+    "implementada": false,
+    "implementavel_v1": false
+  },
+  {
+    "id": "contrato-aditivos-acima-limite",
+    "nome": "Aditivos acima de 25% (50% reformas) do valor original",
+    "categoria": "contratacao",
+    "descricao": "Soma dos termos aditivos quantitativos ultrapassa o limite legal (Lei 14.133/2021 art. 125). Indício de irregularidade da Alice na fase de gestão contratual.",
+    "fonte": "CGU",
+    "dados_necessarios": [
+      "contratos e termos aditivos PNCP (valor_inicial, valor_acumulado, tipo de objeto)"
+    ],
+    "apis": [
+      "https://pncp.gov.br/api/consulta/v1/contratos",
+      "https://pncp.gov.br/api/pncp/v1/orgaos/{cnpj}/contratos/{ano}/{seq}/termos"
+    ],
+    "severidade": "alta",
+    "logica": "limite = 0.5 SE objeto é reforma de edifício/equipamento SENAO 0.25; flag SE (valor_acumulado - valor_inicial)/valor_inicial > limite",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "contrato-cnae-incompativel-objeto",
+    "nome": "CNAE da contratada incompatível com o objeto",
+    "categoria": "contratacao",
+    "descricao": "Empresa vence contrato para objeto totalmente fora do seu ramo (ex.: padaria fornecendo software). Trilha clássica de cruzamento CNAE x objeto (Alice/CGU).",
+    "fonte": "CGU",
+    "dados_necessarios": [
+      "contratos PNCP (objeto)",
+      "cadastro CNPJ (cnaes)",
+      "mapa objeto->CNAEs (por palavras-chave ou catálogo CATMAT/CATSER)"
+    ],
+    "apis": [
+      "https://minhareceita.org/{cnpj}",
+      "https://pncp.gov.br/api/consulta/v1/contratos"
+    ],
+    "severidade": "media",
+    "logica": "classe_objeto = classificador(objeto); flag SE nenhum CNAE da empresa pertence às divisões esperadas para classe_objeto",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "licitacao-fracionamento-despesa",
+    "nome": "Fracionamento de despesa (várias dispensas do mesmo objeto/fornecedor)",
+    "categoria": "contratacao",
+    "descricao": "Mesmo órgão realiza várias contratações diretas por dispensa de valor (art. 75 I/II Lei 14.133) para o mesmo objeto/fornecedor no mesmo exercício, cuja soma ultrapassa o limite da dispensa — burla à licitação. Trilha recorrente da CGU/TCEs.",
+    "fonte": "CGU",
+    "dados_necessarios": [
+      "contratações PNCP (orgao, modalidade=dispensa, objeto, fornecedor, valor, data)",
+      "limites vigentes de dispensa (atualizados anualmente por decreto)"
+    ],
+    "apis": [
+      "https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao?codigoModalidadeContratacao=8",
+      "https://pncp.gov.br/api/consulta/v1/contratos"
+    ],
+    "severidade": "alta",
+    "logica": "grupo = (orgao, ano, fornecedor OU classe_objeto); flag SE count(dispensas) >= 3 E soma > LIMITE_DISPENSA[ano][tipo]",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "licitacao-baixa-competitividade",
+    "nome": "Licitação com participante único ou desertas repetidas",
+    "categoria": "contratacao",
+    "descricao": "Pregão/concorrência com apenas 1 proposta válida, ou item adjudicado sem disputa, especialmente em objetos comuns — classe 'baixa competitividade' da Alice.",
+    "fonte": "TCU",
+    "dados_necessarios": [
+      "resultados por item PNCP (qtd propostas, vencedor)",
+      "atas de pregão"
+    ],
+    "apis": [
+      "https://pncp.gov.br/api/pncp/v1/orgaos/{cnpj}/compras/{ano}/{seq}/itens/{n}/resultados",
+      "https://compras.dados.gov.br/"
+    ],
+    "severidade": "media",
+    "logica": "flag SE qtd_propostas_validas <= 1 E valor_homologado > 100000; agravar SE mesmo órgão repete padrão com mesmo vencedor",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "licitacao-conluio-coparticipacao",
+    "nome": "Rede de conluio: empresas que sempre concorrem juntas e revezam vitórias",
+    "categoria": "contratacao",
+    "descricao": "Grupos de licitantes com alta coparticipação nas mesmas licitações, alternando vencedor, com preços próximos — padrão de cartel/conluio (projeto 'Rede de conluios' UFCG/MPPB e painel Adele do TCU).",
+    "fonte": "TCE",
+    "dados_necessarios": [
+      "participantes por licitação (cnpj, proposta, vencedor)"
+    ],
+    "apis": [
+      "https://pncp.gov.br/api/pncp/v1/orgaos/{cnpj}/compras/{ano}/{seq}/itens/{n}/resultados",
+      "portais TCE (SAGRES-PB, Audesp-SP, TCE-MG)"
+    ],
+    "severidade": "alta",
+    "logica": "grafo: nós=empresas, aresta(a,b)=qtd licitações em comum; comunidades com >=3 empresas, coparticipacao >= 5 licitações e taxa de vitória distribuída (nenhuma vence >70%) => flag; agravar SE sócios/endereço em comum",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "licitacao-socios-em-comum-entre-licitantes",
+    "nome": "Licitantes concorrentes com sócios, endereço ou contato em comum",
+    "categoria": "contratacao",
+    "descricao": "Duas ou mais empresas que disputam o mesmo certame compartilham sócio, endereço, telefone/e-mail ou (no pregão eletrônico) o mesmo IP — sinal de competição simulada (painel Adele do TCU; TCE-MG Suricato).",
+    "fonte": "TCU",
+    "dados_necessarios": [
+      "participantes por licitação",
+      "quadro societário e endereço (socios-brasil / minha-receita)"
+    ],
+    "apis": [
+      "https://minhareceita.org/{cnpj}",
+      "https://api.queridodiario.ok.org.br/company/partners/{cnpj}",
+      "https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao"
+    ],
+    "severidade": "alta",
+    "logica": "PARA cada licitação: pares (a,b) de participantes; flag SE socios(a) ∩ socios(b) != vazio OU endereco(a)==endereco(b) OU email/telefone iguais",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "licitacao-sobrepreco-vs-referencia",
+    "nome": "Preço unitário muito acima da referência de mercado",
+    "categoria": "contratacao",
+    "descricao": "Item homologado com preço unitário acima da mediana de itens equivalentes (mesmo CATMAT/NCM/descrição) em outras compras públicas recentes — trilha de sobrepreço (Alice, empenhados/MPPB 'variação de preço', Cesta de Preços PNCP da Transparência Brasil).",
+    "fonte": "CGU",
+    "dados_necessarios": [
+      "itens homologados PNCP (descrição, unidade, valor_unitario, catmat)",
+      "base de referência (Painel de Preços, cesta PNCP)"
+    ],
+    "apis": [
+      "https://pncp.gov.br/api/pncp/v1/orgaos/{cnpj}/compras/{ano}/{seq}/itens",
+      "https://paineldeprecos.planejamento.gov.br/",
+      "https://github.com/Transparencia-Brasil/cesta-de-precos-pncp"
+    ],
+    "severidade": "alta",
+    "logica": "ref = mediana(valor_unitario) do mesmo item nos últimos 12 meses (mín. 10 amostras); flag SE valor_unitario > 1.5*ref (média) OU > 2*ref (alta)",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "licitacao-realinhamento-precoce",
+    "nome": "Reajuste/realinhamento de preço logo após a assinatura",
+    "categoria": "contratacao",
+    "descricao": "Aditivo de realinhamento de preços poucos meses após o contrato, típico de 'mergulho' (proposta artificialmente baixa para vencer e depois recompor) — análise 'Realinhamento de Preços' do Empenhados (UFCG/MPPB).",
+    "fonte": "TCE",
+    "dados_necessarios": [
+      "contratos e aditivos (tipo=reajuste/realinhamento, data, percentual)"
+    ],
+    "apis": [
+      "https://pncp.gov.br/api/pncp/v1/orgaos/{cnpj}/contratos/{ano}/{seq}/termos"
+    ],
+    "severidade": "media",
+    "logica": "flag SE existe aditivo de valor/reajuste com (data_aditivo - data_assinatura) < 180 dias E aumento > 10%",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "licitacao-objeto-luxo-ou-desnecessario",
+    "nome": "Aquisição de bens de luxo ou desnecessários",
+    "categoria": "contratacao",
+    "descricao": "Edital/contrato para itens de luxo (whisky, carros premium, joias, festas) ou incompatíveis com a finalidade do órgão — tipologia treinada no robô Solaris (TCE-MG/Suricato) e alertas Alice de 'desnecessidade'.",
+    "fonte": "TCE",
+    "dados_necessarios": [
+      "objetos e itens PNCP (descrição)",
+      "lista de termos/categorias de luxo"
+    ],
+    "apis": [
+      "https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao"
+    ],
+    "severidade": "media",
+    "logica": "flag SE descricao ~ regex(termos_luxo) OU classificador_llm(descricao) == 'luxo/incompatível'",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "edital-clausula-restritiva",
+    "nome": "Cláusula restritiva à competitividade no edital",
+    "categoria": "contratacao",
+    "descricao": "Exigências ilegais/direcionadoras: certidões não previstas em lei, marca específica sem justificativa, atestados de capacidade desproporcionais, prazo exíguo, visita técnica obrigatória — foco principal da Alice na fase de planejamento e do Solaris (direcionamento).",
+    "fonte": "CGU",
+    "dados_necessarios": [
+      "texto do edital/termo de referência (PDF)"
+    ],
+    "apis": [
+      "https://pncp.gov.br/api/pncp/v1/orgaos/{cnpj}/compras/{ano}/{seq}/arquivos"
+    ],
+    "severidade": "alta",
+    "logica": "extrai texto do edital; regras regex (certidão de quitação, 'marca X ou similar' ausente, atestado >50% do quantitativo, prazo publicação < mínimo legal) + classificação LLM com citação do trecho",
+    "implementada": false,
+    "implementavel_v1": false
+  },
+  {
+    "id": "dispensa-inexigibilidade-recorrente",
+    "nome": "Dispensas/inexigibilidades recorrentes com o mesmo fornecedor",
+    "categoria": "contratacao",
+    "descricao": "Órgão contrata repetidamente o mesmo fornecedor por dispensa emergencial ou inexigibilidade (extratos no DOU/diários municipais) — foco do robô Carina (TCU) e das trilhas Alice sobre DOU.",
+    "fonte": "TCU",
+    "dados_necessarios": [
+      "contratações diretas PNCP/DOU/diários municipais (orgao, fornecedor, fundamento legal, data)"
+    ],
+    "apis": [
+      "https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao?codigoModalidadeContratacao=8,9",
+      "https://api.queridodiario.ok.org.br/gazettes?querystring=",
+      "https://www.in.gov.br/leiturajornal"
+    ],
+    "severidade": "media",
+    "logica": "flag SE count(contratações diretas do orgao com fornecedor F em 12 meses) >= 3 OU emergenciais consecutivas para mesmo objeto",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "contrato-fornecedor-doador-do-gestor",
+    "nome": "Contratada (ou sócio) doou para a campanha do gestor contratante",
+    "categoria": "contratacao",
+    "descricao": "Empresa vencedora ou seus sócios financiaram a campanha do prefeito/governador/parlamentar responsável pelo órgão ou pela emenda que custeia o contrato (cruzamento clássico Serenata/TSE, relatório de financiamento do Parlametria).",
+    "fonte": "Rosie",
+    "dados_necessarios": [
+      "contratos PNCP (orgao, cnpj)",
+      "receitas de campanha TSE (doador, candidato)",
+      "quadro societário",
+      "mapa órgão -> gestor eleito"
+    ],
+    "apis": [
+      "https://dadosabertos.tse.jus.br/dataset/",
+      "https://minhareceita.org/{cnpj}",
+      "https://pncp.gov.br/api/consulta/v1/contratos"
+    ],
+    "severidade": "alta",
+    "logica": "gestor = chefe do ente (município/UF) na data; doadores = doadores da campanha do gestor; flag SE cnpj OU cpf_socios IN doadores",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "contrato-socio-servidor-publico",
+    "nome": "Sócio da contratada é servidor do órgão contratante",
+    "categoria": "servidor",
+    "descricao": "Sócio/administrador da empresa consta na folha de servidores do próprio ente contratante (vedação art. 14 Lei 14.133 e trilha clássica CGU 'servidor sócio de empresa fornecedora').",
+    "fonte": "CGU",
+    "dados_necessarios": [
+      "quadro societário (nome, cpf mascarado)",
+      "servidores por órgão (Portal da Transparência / portais estaduais e municipais)"
+    ],
+    "apis": [
+      "https://api.portaldatransparencia.gov.br/api-de-dados/servidores",
+      "https://minhareceita.org/{cnpj}",
+      "https://portaldatransparencia.gov.br/download-de-dados/servidores"
+    ],
+    "severidade": "alta",
+    "logica": "match(nome_normalizado + cpf_mascarado (dígitos 4-9)) entre sócios e servidores do órgão; flag com grau de confiança",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "contrato-socio-politico-ou-parente",
+    "nome": "Sócio da contratada é político (candidato) ou homônimo de parente do gestor",
+    "categoria": "empresa",
+    "descricao": "Sócio da empresa contratada aparece como candidato (TSE) no ente/UF, ou compartilha sobrenomes raros com o gestor (Serenata get_family_names). Nepotismo/conflito de interesse.",
+    "fonte": "Rosie",
+    "dados_necessarios": [
+      "quadro societário",
+      "candidatos TSE (nome, cpf mascarado, município)",
+      "nome do gestor"
+    ],
+    "apis": [
+      "https://dadosabertos.tse.jus.br/dataset/candidatos-{ano}",
+      "https://minhareceita.org/{cnpj}",
+      "https://api.queridodiario.ok.org.br/company/partners/{cnpj}"
+    ],
+    "severidade": "media",
+    "logica": "flag SE socio.nome+cpf_mascarado casa com candidato; sinal fraco SE sobrenome composto raro coincide com gestor",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "empresa-sancionada-vencendo",
+    "nome": "Empresa sancionada segue vencendo contratos em outros entes",
+    "categoria": "empresa",
+    "descricao": "CNPJ (ou CNPJ raiz / mesmos sócios em nova empresa) com sanção vigente em um ente contratando em outro — 'empresa sucessora' para burlar impedimento.",
+    "fonte": "CGU",
+    "dados_necessarios": [
+      "CEIS/CNEP",
+      "contratos PNCP",
+      "quadro societário para detectar sucessão"
+    ],
+    "apis": [
+      "https://api.portaldatransparencia.gov.br/api-de-dados/ceis",
+      "https://pncp.gov.br/api/consulta/v1/contratos",
+      "https://minhareceita.org/{cnpj}"
+    ],
+    "severidade": "alta",
+    "logica": "sancionadas = CNPJs + sócios; flag contratos onde fornecedor sancionado OU empresa cujos sócios == sócios de sancionada (jaccard >= 0.5) e aberta após a sanção",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "empresa-endereco-compartilhado-multiplas-fornecedoras",
+    "nome": "Várias fornecedoras públicas no mesmo endereço",
+    "categoria": "empresa",
+    "descricao": "Mesmo endereço (CEP+número) abriga 3+ empresas que vendem ao poder público (não sendo coworking/escritório de contabilidade) — indício de grupo de fachada.",
+    "fonte": "TCU",
+    "dados_necessarios": [
+      "cadastro CNPJ (endereço) das fornecedoras",
+      "contratos PNCP"
+    ],
+    "apis": [
+      "https://minhareceita.org/{cnpj}",
+      "https://pncp.gov.br/api/consulta/v1/contratos"
+    ],
+    "severidade": "media",
+    "logica": "group fornecedoras por (cep, numero, complemento); flag SE count >= 3 E cnae principal != contabilidade/coworking",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "candidato-inelegivel-ou-registro-indeferido",
+    "nome": "Candidato com registro indeferido, sub judice ou inelegível (Ficha Limpa)",
+    "categoria": "eleitoral",
+    "descricao": "Situação de candidatura no DivulgaCand indica indeferimento/inelegibilidade (LC 135/2010) ou candidatura sub judice — essencial no Manual do Candidato 2026.",
+    "fonte": "TSE",
+    "dados_necessarios": [
+      "candidatos 2026 (situacao_candidatura, motivo)"
+    ],
+    "apis": [
+      "https://divulgacandcontas.tse.jus.br/divulga/rest/v1/candidatura/listar/2026/{ue}/{eleicao}/{cargo}/candidatos",
+      "https://dadosabertos.tse.jus.br/dataset/candidatos-2026"
+    ],
+    "severidade": "alta",
+    "logica": "flag SE situacao IN ('INDEFERIDO','INDEFERIDO COM RECURSO','CASSADO','INELEGÍVEL') OU sub_judice",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "candidato-doador-e-fornecedor-do-governo",
+    "nome": "Doador da campanha é fornecedor de contratos do ente onde o candidato tem/pretende cargo",
+    "categoria": "eleitoral",
+    "descricao": "Pessoas/empresas (via sócios, já que PJ não pode doar) que financiam a campanha e mantêm contratos com o governo do cargo disputado — trilha de captura/retorno de favores.",
+    "fonte": "Rosie",
+    "dados_necessarios": [
+      "receitas TSE 2026 (doador cpf)",
+      "sócios de fornecedores (socios-brasil)",
+      "contratos PNCP do ente"
+    ],
+    "apis": [
+      "https://divulgacandcontas.tse.jus.br/divulga/rest/v1/prestador/consulta/receitas/2026/...",
+      "https://minhareceita.org/{cnpj}",
+      "https://pncp.gov.br/api/consulta/v1/contratos"
+    ],
+    "severidade": "media",
+    "logica": "socios_fornecedores = union(socios(cnpj) for cnpj in fornecedores_do_ente); flag SE doador.cpf_mascarado+nome IN socios_fornecedores",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "candidato-salto-patrimonial",
+    "nome": "Crescimento patrimonial atípico entre eleições",
+    "categoria": "eleitoral",
+    "descricao": "Bens declarados ao TSE crescem muito acima da inflação e da remuneração do cargo entre duas candidaturas (projeto 'Empenhados Patrimônio' UFCG; Perfil Político load_assets).",
+    "fonte": "TCE",
+    "dados_necessarios": [
+      "bem_candidato TSE (por eleição)",
+      "IPCA",
+      "remuneração do cargo"
+    ],
+    "apis": [
+      "https://dadosabertos.tse.jus.br/dataset/candidatos-{ano} (bem_candidato)",
+      "https://servicodados.ibge.gov.br/api/v3/agregados/1737"
+    ],
+    "severidade": "media",
+    "logica": "cresc = patrimonio_2026 / (patrimonio_2022 * IPCA_acum); flag SE cresc > 2 E (patrimonio_2026 - patrimonio_2022_corrigido) > 4 * salario_anual_cargo",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "candidato-contas-desaprovadas",
+    "nome": "Prestação de contas de campanha desaprovada ou não prestada",
+    "categoria": "eleitoral",
+    "descricao": "Histórico de contas eleitorais julgadas desaprovadas/não prestadas em eleições anteriores.",
+    "fonte": "TSE",
+    "dados_necessarios": [
+      "prestacao_contas TSE (julgamento) por candidato"
+    ],
+    "apis": [
+      "https://dadosabertos.tse.jus.br/dataset/prestacao-de-contas-eleitorais-{ano}",
+      "https://divulgacandcontas.tse.jus.br"
+    ],
+    "severidade": "media",
+    "logica": "flag SE existe eleição anterior com julgamento IN ('DESAPROVADA','NÃO PRESTADA')",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "candidato-condenacao-improbidade",
+    "nome": "Condenação por improbidade/inelegibilidade em cadastros do CNJ",
+    "categoria": "eleitoral",
+    "descricao": "Candidato consta no CNCIAI (Cadastro Nacional de Condenações por Improbidade Administrativa e Inelegibilidade) do CNJ ou tem processos criminais/improbidade localizáveis no DataJud.",
+    "fonte": "CNJ",
+    "dados_necessarios": [
+      "CNCIAI (nome, cpf)",
+      "DataJud (classe/assunto por parte)"
+    ],
+    "apis": [
+      "https://www.cnj.jus.br/improbidade_adm/consultar_requerido.php",
+      "https://api-publica.datajud.cnj.jus.br/api_publica_{tribunal}/_search"
+    ],
+    "severidade": "alta",
+    "logica": "flag SE nome+cpf IN CNCIAI; sinal médio SE DataJud retorna processos com assunto improbidade/corrupção em que é réu",
+    "implementada": false,
+    "implementavel_v1": false
+  },
+  {
+    "id": "servidor-remuneracao-acima-teto",
+    "nome": "Remuneração acima do teto constitucional",
+    "categoria": "servidor",
+    "descricao": "Servidor/agente com remuneração líquida mensal acima do teto (subsídio de ministro do STF) sem justificativa (penduricalhos) — DadosJusBR mostra o padrão no Judiciário/MP; OPS aponta 'penduricalhos'.",
+    "fonte": "OPS",
+    "dados_necessarios": [
+      "folha (remuneração bruta/líquida, indenizações)",
+      "valor do teto vigente"
+    ],
+    "apis": [
+      "https://api.portaldatransparencia.gov.br/api-de-dados/servidores/remuneracao",
+      "https://api.dadosjusbr.org/"
+    ],
+    "severidade": "media",
+    "logica": "flag SE remuneracao_liquida_mensal > TETO_STF; listar verbas indenizatórias que compõem o excesso",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "obra-paralisada-com-desembolso",
+    "nome": "Obra paralisada/inacabada com pagamentos recentes",
+    "categoria": "obra",
+    "descricao": "Obra (SIMEC/Transferegov/Obrasgov) com situação paralisada, atrasada ou inacabada mas com desembolsos posteriores — base do Tá de Pé (Transparência Brasil) e do 'Obra Transparente'.",
+    "fonte": "TCE",
+    "dados_necessarios": [
+      "cadastro de obras (situacao, percentual_execucao, data_prevista_fim, pagamentos)"
+    ],
+    "apis": [
+      "https://api.portaldatransparencia.gov.br/api-de-dados/convenios",
+      "https://simec.mec.gov.br/",
+      "https://www.gov.br/transferegov/pt-br/dados-abertos"
+    ],
+    "severidade": "alta",
+    "logica": "flag SE situacao IN ('paralisada','inacabada') E existe pagamento com data > data_paralisacao; OU percentual_pago - percentual_executado > 30 p.p.",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "obra-atraso-cronograma",
+    "nome": "Obra com atraso relevante frente ao cronograma",
+    "categoria": "obra",
+    "descricao": "Data prevista de conclusão vencida há mais de 12 meses com execução física < 100% (Tá de Pé).",
+    "fonte": "TCE",
+    "dados_necessarios": [
+      "cadastro de obras (data_prevista, percentual_execucao)"
+    ],
+    "apis": [
+      "https://www.gov.br/transferegov/pt-br/dados-abertos",
+      "https://simec.mec.gov.br/"
+    ],
+    "severidade": "media",
+    "logica": "flag SE hoje - data_prevista_fim > 365 dias E execucao < 100%",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "municipal-emergencial-recorrente-no-diario",
+    "nome": "Dispensa emergencial recorrente publicada no diário oficial municipal",
+    "categoria": "municipal",
+    "descricao": "Diário oficial do município publica repetidas dispensas 'emergenciais' (art. 75 VIII) para o mesmo objeto/serviço ao longo de meses, indicando emergência fabricada — Querido Diário permite busca full-text por município.",
+    "fonte": "CGU",
+    "dados_necessarios": [
+      "diários oficiais municipais (Querido Diário)"
+    ],
+    "apis": [
+      "https://api.queridodiario.ok.org.br/gazettes?territory_ids={ibge}&querystring=\"dispensa emergencial\""
+    ],
+    "severidade": "media",
+    "logica": "trechos = busca(‘dispensa’ AND ‘emergencial’) por município/mês; extrai objeto+fornecedor via regex/LLM; flag SE mesmo objeto/fornecedor aparece em >= 3 meses distintos em 12 meses",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "municipal-emenda-pix-sem-plano-ou-execucao",
+    "nome": "Transferência especial (emenda Pix) sem plano de trabalho/execução comprovada",
+    "categoria": "municipal",
+    "descricao": "Município recebe transferências especiais (emendas 'Pix') sem registro de plano de ação/objeto ou sem execução informada no Transferegov — foco de fiscalização do TCU/STF em 2024-2026 e do repositório da Transparência Brasil.",
+    "fonte": "TCU",
+    "dados_necessarios": [
+      "Transferegov (transferências especiais: valor, plano de ação, execução)",
+      "emendas por autor"
+    ],
+    "apis": [
+      "https://api.portaldatransparencia.gov.br/api-de-dados/emendas",
+      "https://www.gov.br/transferegov/pt-br/dados-abertos"
+    ],
+    "severidade": "media",
+    "logica": "flag SE valor_recebido > 0 E (plano_acao ausente OU execucao_informada == 0 após 12 meses)",
+    "implementada": false,
+    "implementavel_v1": true
+  },
+  {
+    "id": "parlamentar-emenda-para-orgao-de-parente-ou-doador",
+    "nome": "Emenda parlamentar destinada a ente cujo contrato beneficia doador/parente",
+    "categoria": "parlamentar",
+    "descricao": "Emenda do parlamentar financia contrato cujo fornecedor doou para sua campanha ou tem sócio homônimo de parente — cadeia emenda→convênio→contrato→empresa→doação.",
+    "fonte": "Rosie",
+    "dados_necessarios": [
+      "emendas (autor, beneficiário, valor)",
+      "contratos financiados",
+      "doações TSE",
+      "sócios"
+    ],
+    "apis": [
+      "https://api.portaldatransparencia.gov.br/api-de-dados/emendas",
+      "https://pncp.gov.br/api/consulta/v1/contratos",
+      "https://dadosabertos.tse.jus.br/dataset/"
+    ],
+    "severidade": "alta",
+    "logica": "PARA emenda e: contratos c do beneficiário no período; flag SE fornecedor(c) OU socios IN doadores(autor(e))",
+    "implementada": false,
+    "implementavel_v1": false
+  }
+]

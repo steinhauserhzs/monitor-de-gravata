@@ -1,0 +1,4 @@
+# Casos exigem revisão dupla — configure "Require review from Code Owners" + 2 aprovações na branch protection.
+/data/casos/   @steinhauserhzs
+/lib/rules/    @steinhauserhzs
+/data/red-flags.json @steinhauserhzs

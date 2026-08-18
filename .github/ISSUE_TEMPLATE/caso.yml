@@ -1,0 +1,54 @@
+name: "🔎 Caso / hipótese com fontes"
+description: Registrar algo que merece verificação (contrato, gasto, candidato, empresa) — com fonte oficial. Não é denúncia nem acusação.
+title: "[caso] "
+labels: ["caso", "triagem"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Regras:** fonte primária (gov.br/.jus.br/.leg.br/diário oficial) · linguagem factual (número, data, link; sem adjetivo) · nada de CPF completo, endereço, dado vazado, familiares não-públicos. Ninguém é culpado antes do trânsito em julgado.
+  - type: input
+    id: entidade
+    attributes:
+      label: Quem/o quê
+      description: Nome do político/candidato, CNPJ da empresa ou nº de controle do contrato (PNCP)
+      placeholder: "ex.: 83026765000128-2-000266/2026 · ou · CNPJ 14.126.371/0001-29"
+    validations:
+      required: true
+  - type: textarea
+    id: fato
+    attributes:
+      label: Fato observado (com número, data e link)
+      placeholder: "Contrato X de R$ … assinado em … com a empresa Y, cujo CNPJ foi aberto em … (fonte: PNCP …, Receita/BrasilAPI …)."
+    validations:
+      required: true
+  - type: textarea
+    id: cruzamento
+    attributes:
+      label: Cruzamento (quais bases e como)
+  - type: input
+    id: regras
+    attributes:
+      label: Red flags relacionadas (ids do /radar)
+      placeholder: "fornecedor-cnpj-recem-aberto, dispensa-valor-alto"
+  - type: textarea
+    id: naosabemos
+    attributes:
+      label: O que NÃO sabemos / hipóteses alternativas
+    validations:
+      required: true
+  - type: textarea
+    id: proximo
+    attributes:
+      label: Próximo passo verificável (edital, ata, LAI, TCE…)
+  - type: checkboxes
+    id: compromisso
+    attributes:
+      label: Compromissos
+      options:
+        - label: Todas as fontes são oficiais/públicas e estão linkadas
+          required: true
+        - label: Não há dado sensível, CPF completo, endereço ou material vazado
+          required: true
+        - label: O texto é factual, sem juízo de valor
+          required: true

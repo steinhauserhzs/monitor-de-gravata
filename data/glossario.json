@@ -1,0 +1,18 @@
+[
+  { "termo": "Investigado", "definicao": "Pessoa sob apuração (inquérito, PAD, procedimento no MP). Não há acusação formal. Presunção de inocência plena.", "fonte": "CF art. 5º LVII" },
+  { "termo": "Denunciado / Réu", "definicao": "O MP ofereceu denúncia e o juiz a recebeu (ou há ação de improbidade ajuizada). Ainda não há culpa.", "fonte": "CPP art. 395-396" },
+  { "termo": "Condenado em 1ª instância", "definicao": "Sentença de um juiz singular. Cabe recurso; a condenação pode ser revertida.", "fonte": "" },
+  { "termo": "Condenado por órgão colegiado", "definicao": "Tribunal (2ª instância ou superior) confirmou/aplicou condenação. Para fins eleitorais, pode gerar inelegibilidade (Ficha Limpa).", "fonte": "LC 135/2010" },
+  { "termo": "Trânsito em julgado", "definicao": "Não cabe mais recurso. Só aqui existe 'culpado' no sentido jurídico.", "fonte": "CF art. 5º LVII" },
+  { "termo": "Improbidade administrativa", "definicao": "Ato ilícito civil de agente público (enriquecimento ilícito, dano ao erário, violação de princípios). Desde 2021 exige dolo.", "fonte": "Lei 8.429/92 c/ Lei 14.230/21" },
+  { "termo": "CEIS", "definicao": "Cadastro de Empresas Inidôneas e Suspensas — impedidas de contratar com o poder público.", "fonte": "CGU" },
+  { "termo": "CNEP", "definicao": "Cadastro Nacional de Empresas Punidas pela Lei Anticorrupção (12.846/2013).", "fonte": "CGU" },
+  { "termo": "CEAP / CEAPS", "definicao": "Cota para Exercício da Atividade Parlamentar (Câmara) / do Senado — verba de gabinete reembolsável mediante nota.", "fonte": "Câmara / Senado" },
+  { "termo": "PNCP", "definicao": "Portal Nacional de Contratações Públicas — publicação obrigatória de licitações e contratos de todos os entes desde a Lei 14.133.", "fonte": "Lei 14.133/2021" },
+  { "termo": "Dispensa de licitação", "definicao": "Contratação direta permitida em hipóteses legais (valor baixo, emergência etc.). Legal, mas sem disputa — merece olhar.", "fonte": "Lei 14.133 art. 75" },
+  { "termo": "Inexigibilidade", "definicao": "Contratação direta quando a competição é inviável (fornecedor exclusivo, notória especialização, artista).", "fonte": "Lei 14.133 art. 74" },
+  { "termo": "Emenda parlamentar", "definicao": "Recurso do orçamento federal que deputados/senadores destinam a estados, municípios e entidades. Rastreável no Portal da Transparência.", "fonte": "CF art. 166" },
+  { "termo": "Fundo partidário / FEFC", "definicao": "Dinheiro público que financia partidos e campanhas (Fundo Especial de Financiamento de Campanha).", "fonte": "Lei 9.096 / Lei 9.504" },
+  { "termo": "Red flag", "definicao": "Sinal objetivo, calculado por regra pública, que merece verificação humana. Nunca é prova.", "fonte": "OCP / Monitor de Gravata" },
+  { "termo": "Hipótese comunitária", "definicao": "Caso registrado por contribuidores com fontes, revisado por pares. Sempre marcado como hipótese, com direito de resposta.", "fonte": "Política editorial" }
+]

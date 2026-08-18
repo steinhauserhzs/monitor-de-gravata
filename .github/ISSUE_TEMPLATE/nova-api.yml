@@ -1,0 +1,24 @@
+name: "🔌 Nova API / fonte de dado"
+description: Sugerir uma base pública que falta (câmara municipal, TCE, portal estadual, dataset)
+title: "[api] "
+labels: ["api"]
+body:
+  - type: input
+    id: nome
+    attributes: { label: Nome e órgão }
+    validations: { required: true }
+  - type: input
+    id: url
+    attributes: { label: URL base / docs }
+    validations: { required: true }
+  - type: dropdown
+    id: auth
+    attributes: { label: Autenticação, options: [nenhuma, chave-gratuita, token, oauth, bulk-download] }
+  - type: textarea
+    id: teste
+    attributes:
+      label: Resultado de um teste real (comando curl e primeiras linhas da resposta)
+    validations: { required: true }
+  - type: textarea
+    id: utilidade
+    attributes: { label: Para que serve (anticorrupção) e com o que cruza }

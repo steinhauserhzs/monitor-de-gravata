@@ -1,0 +1,19 @@
+name: "🗣️ Direito de resposta / correção"
+description: Você é (ou representa) alguém citado e quer responder ou corrigir
+title: "[resposta] "
+labels: ["resposta", "prioridade"]
+body:
+  - type: markdown
+    attributes:
+      value: "Respondemos em até 72h. A resposta é anexada ao item com o mesmo destaque e o histórico fica público. Não inclua dados sensíveis aqui — se necessário, peça um canal privado."
+  - type: input
+    id: url
+    attributes: { label: URL da página/caso }
+    validations: { required: true }
+  - type: dropdown
+    id: quem
+    attributes: { label: Você é, options: [a própria pessoa citada, representante/assessoria, a empresa citada, o órgão citado, outro] }
+  - type: textarea
+    id: texto
+    attributes: { label: Resposta ou correção (com documento/link quando houver) }
+    validations: { required: true }

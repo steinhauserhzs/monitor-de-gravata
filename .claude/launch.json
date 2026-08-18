@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "monitor-dev", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--", "-p", "3777"], "port": 3777 }
+  ]
+}
