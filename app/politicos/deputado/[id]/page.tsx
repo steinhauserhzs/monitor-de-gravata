@@ -144,9 +144,7 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
               <a className="underline underline-offset-2" href={`https://www.camara.leg.br/deputados/${d.id}`} target="_blank" rel="noopener noreferrer">página oficial ↗</a>
               <a className="underline underline-offset-2" href={`${CAMARA}/deputados/${d.id}`} target="_blank" rel="noopener noreferrer">json da API ↗</a>
               {wdHit && <a className="underline underline-offset-2" href={`https://www.wikidata.org/wiki/${wdHit.id}`} target="_blank" rel="noopener noreferrer">wikidata ↗</a>}
-              {(d.redeSocial ?? []).slice(0, 4).map((r) => (
-                <a key={r} className="underline underline-offset-2" href={r} target="_blank" rel="noopener noreferrer nofollow">{new URL(r).hostname.replace("www.", "")} ↗</a>
-              ))}
+
             </div>
           </div>
           <form className="flex items-end gap-2">
@@ -355,6 +353,20 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
                 </>
               )}
             </Panel>
+            {(d.redeSocial?.length ?? 0) > 0 && (
+              <Panel kicker="§8c" title="Redes declaradas pelo gabinete">
+                <p className="text-xs text-ink-2 mb-2">
+                  Endereços informados pelo próprio gabinete à Câmara. Podem incluir perfis institucionais e de campanha; o Monitor não verifica a autenticidade de cada um.
+                </p>
+                <ul className="space-y-1">
+                  {(d.redeSocial ?? []).slice(0, 8).map((r) => {
+                    const limpo = String(r).trim().replace(/^https?:\/\//i, "");
+                    return <li key={r} className="url"><a href={`https://${limpo}`} target="_blank" rel="noopener noreferrer nofollow ugc" className="underline decoration-stamp underline-offset-2">{limpo}</a></li>;
+                  })}
+                </ul>
+                <div className="mt-2 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-ink-3">fonte: Câmara dos Deputados (campo redeSocial)</div>
+              </Panel>
+            )}
             <Panel kicker="§9" title="Na mídia (manchetes recentes)">
               <NoticiasList noticias={noticias} query={s.nome} />
             </Panel>

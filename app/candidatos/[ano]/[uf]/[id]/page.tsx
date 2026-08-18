@@ -120,8 +120,7 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
               <a className="underline underline-offset-2" href={`${DIVULGA}/candidatura/buscar/${ano}/${uf}/${el.id}/candidato/${cand.id}`} target="_blank" rel="noopener noreferrer">json ↗</a>
               {cand.numeroProcesso && <a className="underline underline-offset-2" href={`https://consultaunificadapje.tse.jus.br/#/public/inicial/index`} target="_blank" rel="noopener noreferrer">processo {cand.numeroProcesso} (PJe) ↗</a>}
               {wdHit && <a className="underline underline-offset-2" href={`https://www.wikidata.org/wiki/${wdHit.id}`} target="_blank" rel="noopener noreferrer">wikidata ↗</a>}
-              {(cand.sites ?? []).slice(0, 3).map((site) => { const limpo = String(site).trim().replace(/^https?:\/\//i, ""); return <a key={site} className="underline underline-offset-2" href={`https://${limpo}`} target="_blank" rel="noopener noreferrer nofollow">{limpo.slice(0, 30)} ↗</a>; })}
-            </div>
+              </div>
           </div>
         </div>
       </div>
@@ -239,6 +238,31 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
               )}
               <p className="mt-3 text-[0.68rem] text-ink-3">Parentesco confirmado só entra num <Link href="/casos" className="underline">caso</Link> com fonte primária (diário oficial de nomeação, certidão, declaração do próprio). Nepotismo: Súmula Vinculante 13.</p>
             </Panel>
+            {(cand.sites?.length ?? 0) > 0 && (
+              <Panel kicker="§5c" title="Links declarados por quem se candidatou">
+                <Notice tone="warn" title="Leia antes de clicar">
+                  Esta lista é <strong>preenchida pelo próprio candidato</strong> no registro da candidatura. Ela costuma misturar perfil pessoal,
+                  página de campanha, canal do partido e até perfis de terceiros ou apoiadores. O Monitor <strong>não verifica</strong> se cada link
+                  pertence de fato ao candidato — e a presença de um link aqui não significa que ele seja oficial ou que o conteúdo seja dele.
+                </Notice>
+                <ul className="mt-3 space-y-1">
+                  {(cand.sites ?? []).slice(0, 12).map((site) => {
+                    const limpo = String(site).trim().replace(/^https?:\/\//i, "");
+                    const valido = /^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(limpo);
+                    return (
+                      <li key={site} className="url">
+                        {valido ? (
+                          <a href={`https://${limpo}`} target="_blank" rel="noopener noreferrer nofollow ugc" className="underline decoration-stamp underline-offset-2">{limpo}</a>
+                        ) : (
+                          <span className="text-ink-3">{limpo} <span className="font-mono text-[0.58rem] uppercase">(texto livre, não é um endereço válido)</span></span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-2 text-[0.68rem] text-ink-3">Fonte: campo “sites” da candidatura no DivulgaCandContas (TSE), como declarado. Encontrou um link que não é do candidato? <a className="underline" href="https://github.com/steinhauserhzs/monitor-de-gravata/issues/new?template=api-quebrada.yml" target="_blank" rel="noopener noreferrer">avise aqui</a>.</p>
+              </Panel>
+            )}
             <Panel kicker="§6" title="Na mídia (manchetes recentes)">
               <NoticiasList noticias={noticias} query={cand.nomeUrna} />
             </Panel>
