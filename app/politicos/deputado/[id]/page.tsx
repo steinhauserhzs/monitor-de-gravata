@@ -16,6 +16,7 @@ import {
   getMandatosExternos,
   getHistorico,
   getOcupacoes,
+  getCeapArquivo,
   CAMARA,
 } from "@/lib/camara";
 import { safe } from "@/lib/fetcher";
@@ -68,8 +69,12 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
     temChavePortal() ? safe(emendasPorAutor(s.nome)) : Promise.resolve({ data: null, error: null }),
   ]);
 
-  /* ── CEAP ── */
-  const analise = analisarCEAP(despesas.data ?? []);
+  /* ── CEAP (API ao vivo; se vier vazia, usa o arquivo anual oficial) ── */
+  const analiseApi = analisarCEAP(despesas.data ?? []);
+  const arquivo = analiseApi.qtd === 0 ? getCeapArquivo(ano, id) : null;
+  const analise = arquivo
+    ? { total: arquivo.total, qtd: arquivo.qtd, porTipo: arquivo.porTipo.map((t) => ({ ...t, qtd: 0 })), porFornecedor: arquivo.porFornecedor.map((f) => ({ ...f, share: arquivo.total ? f.total / arquivo.total : 0 })), porMes: arquivo.porMes, maiorNota: arquivo.maiorNota as never, concentracaoTop1: arquivo.porFornecedor[0] && arquivo.total ? arquivo.porFornecedor[0].total / arquivo.total : 0, concentracaoTop3: arquivo.porFornecedor.slice(0, 3).reduce((a, f) => a + (arquivo.total ? f.total / arquivo.total : 0), 0), glosas: 0 }
+    : analiseApi;
   const findings = runRules("cota", { analise, ano, casa: "camara", mediaBancada: null });
 
   /* ── Presença ── */
@@ -179,8 +184,13 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
           {/* COLUNA A */}
           <div className="space-y-6">
             <Panel kicker="§1" title={`Cota parlamentar (CEAP) ${ano}`} right={<Source url={`${CAMARA}/deputados/${id}/despesas?ano=${ano}`} label="Câmara" />}>
-              {despesas.error && <Notice tone="warn">A API de despesas não respondeu ({despesas.error}). Fallback: arquivos anuais em dadosabertos.camara.leg.br/arquivos.</Notice>}
-              {!despesas.error && !analise.qtd && <p className="text-sm text-ink-3">Nenhuma despesa registrada em {ano} (a Câmara publica com atraso de semanas; o endpoint também passa por instabilidades).</p>}
+              {arquivo && (
+                <Notice tone="info" title="Fonte: arquivo anual oficial">
+                  A API de despesas da Câmara está devolvendo vazio; estes números vêm do arquivo anual oficial (<a className="underline" href={arquivo.fonte} target="_blank" rel="noopener noreferrer">Ano-{ano}.json.zip</a>), coletado em {arquivo.gerado_em}. Por isso não há link para cada nota fiscal aqui.
+                </Notice>
+              )}
+              {despesas.error && !arquivo && <Notice tone="warn">A API de despesas não respondeu ({despesas.error}) e não há arquivo anual gerado para {ano} (rode <code>npm run ceap {ano}</code>).</Notice>}
+              {!despesas.error && !analise.qtd && !arquivo && <p className="text-sm text-ink-3">Nenhuma despesa registrada em {ano} (a Câmara publica com atraso de semanas; o endpoint também passa por instabilidades).</p>}
               {analise.qtd > 0 && (
                 <div className="grid gap-6 md:grid-cols-2">
                   <div>
@@ -206,7 +216,7 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
                       })}
                     </div>
                   </div>
-                  <details className="md:col-span-2">
+                  <details className="md:col-span-2" hidden={Boolean(arquivo)}>
                     <summary className="cursor-pointer font-mono text-[0.65rem] uppercase tracking-[0.16em]">Ver as {Math.min(50, analise.qtd)} maiores notas</summary>
                     <div className="overflow-x-auto mt-2">
                       <table className="table">
@@ -245,7 +255,7 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
                       {nominais.map(({ v, meu, orientacao }) => (
                         <tr key={v.id}>
                           <td className="font-mono text-xs whitespace-nowrap">{dateBR(v.data)}</td>
-                          <td className="text-xs max-w-md"><a href={`https://www.camara.leg.br/presenca-comissoes/votacao-portal?reuniao=${v.id}`} className="hover:underline" target="_blank" rel="noopener noreferrer">{v.descricao?.slice(0, 180)}</a></td>
+                          <td className="text-xs max-w-md"><a href={`https://www.camara.leg.br/propostas-legislativas/${String(v.id).split("-")[0]}`} className="hover:underline" target="_blank" rel="noopener noreferrer">{v.descricao?.slice(0, 180)}</a></td>
                           <td className="font-mono text-xs font-bold">{meu ?? <span className="text-ink-3">não votou/ausente</span>}</td>
                           <td className="font-mono text-xs">{orientacao ?? "—"}</td>
                           <td className="text-xs">{v.aprovacao === 1 ? "aprovado" : v.aprovacao === 0 ? "rejeitado" : "—"}</td>

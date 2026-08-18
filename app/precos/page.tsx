@@ -35,7 +35,7 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
         stampTone="verde"
         lead={`"Esse notebook de R$ 10 mil custa R$ 4 mil em outros órgãos?" — busque o item no catálogo oficial (${total.toLocaleString("pt-BR")} padrões de material CATMAT) e veja os preços realmente pagos por outros órgãos públicos, com fornecedor, marca, UF e data. Digite o preço que você viu e receba a classificação.`}
         right={
-          <form className="card p-4 grid gap-2 sm:grid-cols-2 min-w-[22rem]">
+          <form className="card p-4 grid gap-2 sm:grid-cols-2 w-full sm:min-w-[22rem]">
             <label className="block sm:col-span-2"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Item (ex.: notebook, ar condicionado, merenda, asfalto)</span><input name="q" defaultValue={q} className="input" placeholder="notebook" /></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Preço unitário visto (R$)</span><input name="preco" defaultValue={preco || ""} className="input" placeholder="10000" /></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">UF (opcional)</span><select name="uf" defaultValue={uf} className="input"><option value="">Todas</option>{UFS.map((u) => <option key={u}>{u}</option>)}</select></label>

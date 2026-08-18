@@ -38,14 +38,18 @@ export type ContratoPNCP = {
 type PageResp<T> = { data: T[]; totalRegistros: number; totalPaginas: number; numeroPagina: number; paginasRestantes: number; empty: boolean };
 
 /** Contratos publicados por período (máx. 365 dias). */
-export async function listContratos(params: { dataInicial?: string; dataFinal?: string; cnpjOrgao?: string; pagina?: number; tamanhoPagina?: number }) {
+/** ATENÇÃO: o PNCP devolve HTTP 400 para tamanhoPagina > 50. Nunca aumente sem testar. */
+export const PNCP_MAX_PAGINA = 50;
+
+export async function listContratos(params: { dataInicial?: string; dataFinal?: string; cnpjOrgao?: string; uf?: string; pagina?: number; tamanhoPagina?: number }) {
   const q = new URLSearchParams({
     dataInicial: params.dataInicial ?? yyyymmdd(daysAgo(7)),
     dataFinal: params.dataFinal ?? yyyymmdd(new Date()),
     pagina: String(params.pagina ?? 1),
-    tamanhoPagina: String(params.tamanhoPagina ?? 50),
+    tamanhoPagina: String(Math.min(params.tamanhoPagina ?? PNCP_MAX_PAGINA, PNCP_MAX_PAGINA)),
   });
   if (params.cnpjOrgao) q.set("cnpjOrgao", params.cnpjOrgao);
+  if (params.uf) q.set("uf", params.uf);
   return getJSON<PageResp<ContratoPNCP>>(`${PNCP_CONSULTA}/contratos?${q}`, { revalidate: 600, timeoutMs: 30000 });
 }
 
@@ -77,7 +81,7 @@ export async function listContratacoes(params: { dataInicial?: string; dataFinal
     dataFinal: params.dataFinal ?? yyyymmdd(new Date()),
     codigoModalidadeContratacao: String(params.modalidade),
     pagina: String(params.pagina ?? 1),
-    tamanhoPagina: String(params.tamanhoPagina ?? 50),
+    tamanhoPagina: String(Math.min(params.tamanhoPagina ?? PNCP_MAX_PAGINA, PNCP_MAX_PAGINA)),
   });
   if (params.uf) q.set("uf", params.uf);
   if (params.cnpj) q.set("cnpj", params.cnpj);

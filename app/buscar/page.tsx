@@ -65,7 +65,7 @@ export default async function Buscar({ searchParams }: PageProps<"/buscar">) {
         title={q ? <>Resultados para <span className="marker">{q}</span></> : <>Busca filtrada</>}
         lead="Procure por nome, número de urna, partido, CNPJ ou objeto de contrato. Combine com estado e cargo para achar exatamente quem representa você."
         right={
-          <form className="card p-4 grid gap-2 sm:grid-cols-2 min-w-[24rem]">
+          <form className="card p-4 grid gap-2 sm:grid-cols-2 w-full sm:min-w-[24rem]">
             <label className="block sm:col-span-2"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Nome, número de urna, CNPJ ou objeto</span><input name="q" defaultValue={q} className="input" placeholder="ex.: 2222 · Maria · 00.000.000/0001-91 · merenda" /></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Estado</span><select name="uf" defaultValue={uf} className="input"><option value="">Todos</option>{UFS.map((u) => <option key={u}>{u}</option>)}</select></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Partido</span><input name="partido" defaultValue={partido} className="input" placeholder="PT, PL, NOVO…" /></label>

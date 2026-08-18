@@ -48,7 +48,7 @@ export default async function Apis({ searchParams }: PageProps<"/apis">) {
         stampTone="azul"
         lead={`Toda fonte de dado público que o Monitor conhece: ${semChave} sem chave, ${ok} testadas com sucesso. Cada entrada é um JSON em data/apis/ — adicionar uma API nova é um pull request de 30 linhas.`}
         right={
-          <form className="card p-4 grid gap-2 sm:grid-cols-[1fr_auto_auto_auto] items-end min-w-[20rem]">
+          <form className="card p-4 grid gap-2 sm:grid-cols-[1fr_auto_auto_auto] items-end w-full sm:min-w-[20rem]">
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Buscar</span><input name="q" defaultValue={q} className="input" placeholder="contratos, TSE, CNPJ…" /></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Esfera</span>
               <select name="esfera" defaultValue={esf} className="input"><option value="">Todas</option>{ORDEM.map((e) => <option key={e} value={e}>{ESFERAS[e]} ({cont(e)})</option>)}</select></label>

@@ -21,7 +21,7 @@ export default async function Empresas({ searchParams }: PageProps<"/empresas">)
         stampTone="verde"
         lead="Digite um CNPJ para ver quem é a empresa (sócios, idade, capital, situação, CNAE), que contratos públicos ela venceu no PNCP e se aparece em cadastros de sanção."
         right={
-          <form className="card p-4 flex gap-2 items-end min-w-[20rem]">
+          <form className="card p-4 flex gap-2 items-end w-full sm:min-w-[20rem]">
             <label className="block flex-1"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">CNPJ</span><input name="cnpj" className="input" placeholder="00.000.000/0001-91" defaultValue={q ?? ""} /></label>
             <button className="btn" type="submit">Abrir ficha</button>
           </form>

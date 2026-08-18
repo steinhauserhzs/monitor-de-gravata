@@ -56,11 +56,14 @@ const posicaoDoVoto = (v: string): VotoResumo["posicao"] => (POSITIVOS.test(v) ?
 /** Procura mandato atual (Câmara ou Senado) por nome de urna / nome completo. */
 export async function acharMandato(nomeUrna: string, nomeCompleto: string, uf?: string): Promise<{ casa: "camara" | "senado"; id: string; nome: string; partido: string; uf: string; confianca: "exata" | "provavel" } | null> {
   const alvos = [nomeUrna, nomeCompleto].filter(Boolean);
-  for (const alvo of alvos) {
-    const r = await safe(listDeputados({ nome: alvo, uf }));
-    const hit = (r.data ?? []).find((d) => norm(d.nome) === norm(alvo)) ?? (r.data ?? [])[0];
+  // 1ª passada com UF (mais preciso), 2ª sem UF (o candidato pode disputar em outra UF)
+  for (const alvo of [...alvos.map((a) => ({ a, uf })), ...alvos.map((a) => ({ a, uf: undefined }))]) {
+    const { a: alvoNome, uf: ufBusca } = alvo;
+    const r = await safe(listDeputados({ nome: alvoNome, uf: ufBusca }));
+    const exato = (r.data ?? []).find((d) => norm(d.nome) === norm(alvoNome));
+    const hit = exato ?? (r.data ?? []).length === 1 ? exato ?? (r.data ?? [])[0] : undefined;
     if (hit) {
-      return { casa: "camara", id: String(hit.id), nome: hit.nome, partido: hit.siglaPartido, uf: hit.siglaUf, confianca: norm(hit.nome) === norm(alvo) ? "exata" : "provavel" };
+      return { casa: "camara", id: String(hit.id), nome: hit.nome, partido: hit.siglaPartido, uf: hit.siglaUf, confianca: norm(hit.nome) === norm(alvoNome) ? "exata" : "provavel" };
     }
   }
   const sens = await safe(listSenadores());
@@ -105,7 +108,7 @@ export async function montarMandato360(nomeUrna: string, nomeCompleto: string, u
           orientacaoPartido: o,
           seguiuPartido: o && !/liber/i.test(o) ? o.toLowerCase() === meu.tipoVoto.toLowerCase() : null,
           resultado: v.aprovacao === 1 ? "aprovado" : v.aprovacao === 0 ? "rejeitado" : undefined,
-          url: `https://www.camara.leg.br/presenca-comissoes/votacao-portal?reuniao=${v.id}`,
+          url: `https://www.camara.leg.br/propostas-legislativas/${String(v.id).split("-")[0]}`,
         } as VotoResumo;
       })
       .filter(Boolean) as VotoResumo[];

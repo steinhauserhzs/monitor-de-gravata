@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { getJSON } from "./fetcher";
 
 export const CAMARA = "https://dadosabertos.camara.leg.br/api/v2";
@@ -253,6 +255,31 @@ export async function getOcupacoes(id: string | number) {
 export async function getTemas(idProposicao: number | string) {
   const r = await getJSON<Page<{ codTema: number; tema: string; relevancia: number }>>(`${CAMARA}/proposicoes/${idProposicao}/temas`, { revalidate: 86400 });
   return r.dados;
+}
+
+/* ───────── Fallback da cota (arquivo anual oficial) ───────── */
+export type CeapDerivado = {
+  nome: string; uf: string; partido: string; total: number; qtd: number;
+  porTipo: { tipo: string; total: number }[];
+  porMes: { mes: number; total: number }[];
+  porFornecedor: { fornecedor: string; cnpj: string; total: number; qtd: number }[];
+  maiorNota: { valorLiquido: number; nomeFornecedor: string; cnpjCpfFornecedor: string; tipoDespesa: string; dataDocumento: string } | null;
+};
+const _ceapCache = new Map<number, { gerado_em: string; fonte: string; deputados: Record<string, CeapDerivado> } | null>();
+
+/**
+ * Agregados da cota vindos do arquivo anual da Câmara (data/derivados/ceap-<ano>.json,
+ * gerado por `npm run ceap`). Usado quando a API /despesas devolve vazio — o que aconteceu
+ * em 17-18/08/2026 para todos os deputados.
+ */
+export function getCeapArquivo(ano: number, idDeputado: string | number) {
+  if (!_ceapCache.has(ano)) {
+    const f = path.join(process.cwd(), "data", "derivados", `ceap-${ano}.json`);
+    _ceapCache.set(ano, fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : null);
+  }
+  const base = _ceapCache.get(ano);
+  const d = base?.deputados?.[String(idDeputado)];
+  return d ? { ...d, gerado_em: base!.gerado_em, fonte: base!.fonte } : null;
 }
 
 /* ───────── Análise CEAP ───────── */

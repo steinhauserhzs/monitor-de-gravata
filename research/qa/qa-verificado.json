@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "papel": "verificador adversarial",
+    "data": "2026-08-18",
+    "hora_local": "10:50-11:35 BRT",
+    "alvo": "https://monitor-de-gravata.vercel.app",
+    "itens_reportados": 17,
+    "confirmados": 9,
+    "descartados": 6,
+    "novos_achados": 2,
+    "metodo": "curl repetido (3-6x por URL), navegador real 1280px para confirmar render pos-stream, chamadas diretas as APIs de origem para separar bug do app de falha upstream, leitura do codigo em /Users/hari/Hari/monitor-de-gravata/"
+  },
+
+  "confirmados": [
+    {
+      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2026&cargo=3",
+      "area": "home-nav",
+      "problema": "Os quatro botoes de cargo do bloco 'Clique no seu estado' (Governador cargo=3, Senador cargo=5, Dep. federal cargo=6, Dep. estadual cargo=7) nao produzem nenhum efeito util: o link nao carrega UF e a /candidatos so lista com uf+cargo. Pior: os 6 atalhos da tela de estado vazio e os 27 links do mapa/grade de siglas fixam cargo=6, entao a escolha do usuario e descartada e NAO EXISTE caminho de navegacao no site para chegar a lista de governadores, senadores ou deputados estaduais de um estado. Alem disso 'Dep. federal' e renderizado com a classe de estado ativo (bg-ink text-paper), sinalizando falsamente que o filtro ja foi aplicado.",
+      "gravidade": "alta",
+      "evidencia": "Confirmado 2026-08-18. curl: cargo=3 -> 200 0,20s 47.294 bytes; cargo=5 -> 200 0,19s 47.294; cargo=6 -> 200 0,20s 47.294; cargo=7 -> 200 0,21s 47.294 (respostas byte-identicas). Navegador real 1280x900 em ?ano=2026&cargo=3: document.querySelectorAll('main h2').length === 0; unico conteudo = cards 'PASSO 1 / PASSO 2 / PASSO 3'. Home: 27/27 hrefs do mapa terminam em '&cargo=6'; o botao Dep. federal vem com class='px-2.5 py-1.5 border border-ink bg-ink text-paper'. Comparacao: /candidatos?ano=2026&uf=SP&cargo=6 -> 'Deputado Federal · SP (1092)' com 240 fichas e paginacao funcionando.",
+      "causa_provavel": "components/MapaBrasil.tsx (linhas ~63-67) monta os hrefs de cargo sem uf; app/candidatos/page.tsx:24 so chama listCandidatos quando 'uf && cargo'; o ramo de estado vazio (linhas 74-94) e generico e seus 6 atalhos (linha 91) hardcodam cargo=6, sobrescrevendo o cargo escolhido.",
+      "correcao_sugerida": "Fazer os botoes de cargo alterarem o cargo dos 27 links do mapa (estado no cliente) e, no ramo vazio de /candidatos, exibir Notice explicito 'Falta escolher o estado' com os atalhos herdando o cargo da query em vez de cargo=6."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2026&cargo=5",
+      "area": "home-nav",
+      "problema": "Mesmo defeito do item anterior no botao 'Senador' — sem uf na querystring nada e listado e o atalho oferecido em seguida troca o cargo para 6.",
+      "gravidade": "alta",
+      "evidencia": "curl 2026-08-18 -> 200 em 0,19s, 47.294 bytes, zero hrefs /candidatos/2026/<UF>/<id>. Resposta identica a de cargo=3, 6 e 7.",
+      "causa_provavel": "Mesma origem: components/MapaBrasil.tsx + app/candidatos/page.tsx:24 e :91.",
+      "correcao_sugerida": "Ver item cargo=3 (mesma correcao cobre os quatro botoes)."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/politicos/deputado/204534",
+      "area": "politicos",
+      "problema": "Secao §1 'Cota parlamentar (CEAP)' vazia em 100% das fichas de deputado e em todos os anos, e por consequencia ZERO links /empresas/<CNPJ> sao gerados em qualquer ficha de deputado — o caminho fornecedor -> ficha da empresa nao existe na pratica para a Camara. NAO e apenas falta de dado na origem: o dado existe, o app so consulta por um parametro que a API esta ignorando hoje.",
+      "gravidade": "alta",
+      "evidencia": "App (2026-08-18, 4 fichas, cache quente e frio): 204534, 220588, 74646, 178937 -> todas '0 notas · 0 fornecedores' + 'Nenhuma despesa registrada em 2026'; ?ano=2025 e ?ano=2024 em 204534 tambem '0 notas · 0 fornecedores'; links /empresas/ na ficha: 0 em 4/4. Upstream medido diretamente agora: GET /api/v2/deputados/204534/despesas?ano=2026 -> 200 {dados:[]}; ?ano=2025 -> []; ?ano=2024 -> []; ?ano=2023 -> []; sem parametro -> []. MAS GET /api/v2/deputados/204534/despesas?idLegislatura=57&itens=100 -> 200 com 100 registros (Adobe Systems Software, CNPJ 00000000000010, R$ 224,00 ...), links.last = pagina=20 (~2.000 notas), e a pagina 20 traz registros de 2026. Mesmo padrao (ano= vazio) confirmado em 204379, 220714, 74158, 141428, 160541.",
+      "causa_provavel": "lib/camara.ts:92 monta a URL como `/deputados/{id}/despesas?ano={ano}&itens=100...`. O filtro `ano` do dadosabertos.camara.leg.br esta devolvendo lista vazia; `idLegislatura` devolve tudo. O app nao tem fallback e apresenta 0 como fato consumado.",
+      "correcao_sugerida": "Em lib/camara.ts, consultar por `idLegislatura` (paginando pelo link rel=last) e filtrar o ano em memoria; se o resultado vier vazio, exibir 'fonte indisponivel' em vez de '0 notas · 0 fornecedores'."
+    },
+    {
+      "url": "https://www.camara.leg.br/presenca-comissoes/votacao-portal?reuniao=2422887-23",
+      "area": "politicos",
+      "problema": "Todos os links da coluna 'Materia' do §3 (Como votou) das fichas de deputado devolvem HTTP 400 Bad Request — e o unico caminho para conferir a votacao na fonte oficial. Bonus confirmado: a coluna 'Materia' exibe a descricao do RESULTADO ('Rejeitado o Requerimento. Sim: 126; Nao: 274...'), duplicando a coluna 'Resultado' ('rejeitado') e deixando o leitor sem saber O QUE foi votado.",
+      "gravidade": "alta",
+      "evidencia": "curl -sIL 2026-08-18, 6/6 -> 400: reuniao=2422887-23, 2565804-8, 2605243-12, 2600277-9, 2601794-5, 2600122-8. Corpo: {\"status\":400,\"error\":\"Bad Request\",\"path\":\"/presenca-comissoes/votacao-portal\"}. Payload da ficha 204534: <td class='text-xs max-w-md'><a href='.../votacao-portal?reuniao=2422887-23'>Rejeitado o Requerimento. Sim: 126; Nao: 274; Abstencao: 2; Total: 402.</a></td> seguido de <td class='text-xs'>rejeitado</td>. Alternativa que FUNCIONA: GET /api/v2/votacoes/2422887-23 -> 200 com campo objetosPossiveis[].id (ex.: 2625773) e https://www.camara.leg.br/propostas-legislativas/2642742 -> 200.",
+      "causa_provavel": "app/politicos/deputado/[id]/page.tsx:248 usa o id de votacao ('2422887-23') como se fosse um id de reuniao de comissao no endpoint /presenca-comissoes/votacao-portal, que so aceita outro formato; e usa v.descricao (o resultado) como rotulo da coluna Materia.",
+      "correcao_sugerida": "Trocar o href por https://www.camara.leg.br/propostas-legislativas/{objetosPossiveis[0].id} (200 verificado) e mostrar na coluna Materia a sigla/ementa da proposicao, deixando v.descricao so na coluna Resultado."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/politicos/deputado/133439",
+      "area": "politicos",
+      "problema": "§8 'Emendas parlamentares' falha para todo deputado cujo nome parlamentar contem acento. Correlacao perfeita em 12 fichas testadas: 5/5 com acento devolvem 'Nenhuma emenda localizada pelo nome parlamentar', 7/7 sem acento devolvem os anos e valores normalmente. Zero emendas para Andre Figueiredo (PDT-CE, ex-ministro) ou Aecio Neves e implausivel — e bug de normalizacao/encoding do nome enviado ao SIOP, nao ausencia de dado.",
+      "gravidade": "alta",
+      "evidencia": "Coletado 2026-08-18. COM acento (5/5 vazios): 'ANDRE FIGUEIREDO' (133439), 'MARIO HERINGER' (74158), 'AECIO NEVES' (74646), 'ISNALDO BULHOES JR.' (204436), 'ABILIO SANTANA' (204554) -> todos 'Nenhuma emenda localizada pelo nome parlamentar \"<NOME>\" no SIOP'. SEM acento (7/7 com dados): RODRIGO MARTINS (178926, '2019 · 5 emenda(s) · empenhado R$ 1.835.078,24'), ELIAS VAZ (204389, '2023 · 3 emenda(s) · R$ 525.840,00'), GENINHO ZULIANI (204527), CHICO D'ANGELO (141439), JANDIRA FEGHALI (74848), ZUCCO (220552), TABATA AMARAL (204534).",
+      "causa_provavel": "lib/transparencia.ts:84 — `new URLSearchParams({ nomeAutor: nomeAutor.toUpperCase() })` envia o nome com diacriticos em UTF-8 percent-encoded; o indice de nomeAutor do Portal/SIOP nao casa acentos.",
+      "correcao_sugerida": "Normalizar antes de enviar: `nomeAutor.normalize('NFD').replace(/\\p{Diacritic}/gu,'').toUpperCase()`, e se vier vazio tentar a versao acentuada como segunda chamada."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/politicos/senador/5894",
+      "area": "politicos",
+      "problema": "O painel §1 rotulado 'Como votou (ultimas 25 votacoes do Plenario)' mostra as votacoes mais ANTIGAS, nao as ultimas. Em 4 das 5 fichas testadas a tabela inteira e de 2011-2021 enquanto o resto da pagina fala em 2026. A ordenacao nao e apenas invertida: nem a fatia visivel esta em ordem cronologica.",
+      "gravidade": "alta",
+      "evidencia": "2026-08-18, primeiras linhas da tabela §1: 5894 Flavio Bolsonaro -> 02/12/2020, 19/11/2020, 02/09/2020, 23/07/2020 (anos na secao: 2019=1, 2020=14, 2021=8); 5732 Rodrigo Pacheco -> identico (2020=15, 2021=8); 5376 Mara Gabrilli -> identico; 4981 Acir Gurgacz -> 08/02/2012, 13/12/2011, 13/12/2011, 13/12/2011 (2011=21, 2012=3); 5672 Alan Rick -> 20/05/2025, 20/05/2025, 15/07/2026, 15/07/2026 (fora de ordem mesmo quando o ano esta certo).",
+      "causa_provavel": "app/politicos/senador/[codigo]/page.tsx:147 faz `[...votos].reverse().slice(0, 25)`, presumindo que /senador/{cod}/votacoes vem em ordem cronologica crescente global — a API agrupa por legislatura/sessao. O mesmo padrao esta em :167 (§2 autorias).",
+      "correcao_sugerida": "Ordenar explicitamente por SessaoPlenaria.DataSessao decrescente antes do slice(0,25) (e idem para autorias em §2)."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/buscar?partido=NOVO&uf=SP&cargo=6",
+      "area": "home-nav",
+      "problema": "O titulo diz '60 candidato(s) · SP · NOVO' como se fosse o total, mas o NOVO tem 71 candidatos a deputado federal em SP. A /buscar corta em 60 por cargo, sem paginacao, sem aviso de truncamento e sem nenhum link para a /candidatos com os mesmos filtros — o usuario nao tem como chegar aos 11 restantes a partir dessa tela.",
+      "gravidade": "media",
+      "evidencia": "2026-08-18: /buscar?partido=NOVO&uf=SP&cargo=6 -> 200 0,52s, h2 '60 candidato(s) · SP · NOVO'. Fonte de verdade no proprio site: /candidatos?ano=2026&uf=SP&cargo=6&partido=NOVO -> 'Deputado Federal · SP (71)'. A /candidatos pagina corretamente (SP cargo 6 sem filtro: 1092 no total, 240 por pagina); a /buscar nao.",
+      "causa_provavel": "app/buscar/page.tsx:55 — `.slice(0, 60)` aplicado por cargo dentro do flatMap, sem guardar o total original.",
+      "correcao_sugerida": "Guardar o total antes do slice, mostrar 'mostrando 60 de N' e um link para /candidatos com uf/cargo/partido/nome ja preenchidos."
+    },
+    {
+      "url": "https://www.camara.leg.br/transparencia/recursos-humanos/servidores?nome=CLAUDIA",
+      "area": "politicos",
+      "problema": "ACHADO NOVO (nao estava na lista reportada). O link 'Camara / Senado transparencia' das pistas de vinculo (§ servidores/nepotismo) das fichas devolve a pagina de erro da Camara. Cada sobrenome raro gera um link desses, todos quebrados.",
+      "gravidade": "media",
+      "evidencia": "curl -sSL 2026-08-18 -> HTTP 404, 31.707 bytes, titulo da pagina: 'Pagina nao encontrada - Portal da Camara dos Deputados'. Aparece 2x na ficha 204534 (nome=CLAUDIA e nome=PONTES). Os outros dois links do mesmo bloco funcionam: portaldatransparencia.gov.br/servidores/consulta?nome=... e queridodiario.ok.org.br/pesquisa?querystring=... -> 200.",
+      "causa_provavel": "lib/vinculos.ts:46 monta `https://www.camara.leg.br/transparencia/recursos-humanos/servidores?nome=...`, rota que nao existe mais no portal da Camara.",
+      "correcao_sugerida": "Remover esse link ou trocar pela busca de servidores vigente da Camara (ex.: /transparencia/recursos-humanos/quadro-remuneratorio), mantendo os outros dois que respondem 200."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/candidatos/2026/ZZ/1",
+      "area": "home-nav",
+      "problema": "Soft-404: URLs de ficha invalidas devolvem HTTP 200. O usuario de navegador ve a pagina 404 corretamente (verificado), mas crawlers, previews de link e o proprio Google recebem status 200 com o esqueleto de carregamento — paginas inexistentes ficam indexaveis. Vale para /candidatos/<ano>/<UF>/<id>, /politicos/deputado/<id> e /politicos/senador/<codigo>.",
+      "gravidade": "baixa",
+      "evidencia": "2026-08-18: /candidatos/2026/ZZ/1 -> 200, 35.902 bytes; /politicos/deputado/999999999 -> 200, 35.424; /politicos/senador/999999 -> 200, 35.418. Todo o texto do <main> no curl e o fallback 'CONSULTANDO FONTES OFICIAIS…'. O marcador 'NEXT_HTTP_ERROR_FALLBACK;404' aparece 2x dentro do stream RSC dos tres. Em navegador real (1280px) /politicos/deputado/999999999 renderiza '404 — This page could not be found.'. Comparacao: /naoexiste -> 404 correto.",
+      "causa_provavel": "As tres rotas usam `export const dynamic = 'force-dynamic'` e chamam notFound() so DEPOIS do await das APIs; o shell (loading.tsx) ja foi enviado com status 200 e o 404 vai dentro do stream.",
+      "correcao_sugerida": "Validar formato de UF/id (e existencia via HEAD barata) antes de qualquer suspense, ou mover a resolucao para middleware, para o 404 sair no header HTTP."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/buscar?q=00000000000191",
+      "area": "home-nav",
+      "problema": "O redirect de CNPJ para a ficha da empresa so acontece no cliente. A resposta HTTP e 200 com <main> vazio; quem nao executa JS (crawler, preview de link em WhatsApp/Slack, leitor de RSS) recebe uma pagina em branco. Mesmo padrao em /buscar sem parametros (redirect para /).",
+      "gravidade": "baixa",
+      "evidencia": "curl -L 2026-08-18: code=200, num_redirects=0, url_effective inalterada, 32.920 bytes; o payload RSC carrega o digest NEXT_REDIRECT;replace;/empresas/00000000000191;307 dentro do stream (headers respondem 'HTTP/2 200'). Em navegador real funciona normalmente.",
+      "causa_provavel": "app/buscar/page.tsx:28 chama redirect() em pagina com `dynamic = 'force-dynamic'`; o shell ja foi transmitido, entao o 307 fica no stream em vez do header.",
+      "correcao_sugerida": "Detectar CNPJ de 14 digitos no middleware e emitir um 307 real antes de renderizar a /buscar."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/buscar?q=maria",
+      "area": "home-nav",
+      "problema": "ACHADO NOVO / residual. A /buscar avisa quando a API da Camara falha (Notice 'API nao respondeu'), mas NAO avisa quando a API do Senado falha: sens.error nunca e renderizado. Se o Senado cair, o contador 'Deputados e senadores (N)' simplesmente encolhe e o usuario le o numero menor como verdade.",
+      "gravidade": "baixa",
+      "evidencia": "app/buscar/page.tsx:106 renderiza Notice apenas para deps.error; sens.error (linha 38) e capturado por safe() e descartado. O titulo na linha 105 soma `(deps.data?.length ?? 0) + senadores.length` sem sinalizar fonte faltante.",
+      "causa_provavel": "Omissao simetrica: o tratamento de erro foi escrito so para a Camara.",
+      "correcao_sugerida": "Adicionar `{sens.error && <Notice tone=\"warn\" title=\"Senado\">API nao respondeu: {sens.error}</Notice>}` ao lado do aviso da Camara."
+    }
+  ],
+
+  "descartados": [
+    "FALSO POSITIVO — https://monitor-de-gravata.vercel.app/politicos 'lista so 100 dos 513 deputados, sem paginacao' (reportado 2x). Reteste 11:32 BRT de 2026-08-18: 'Deputados federais (513)' com 513 hrefs unicos + 'Senadores (81)'; ?casa=camara -> 513; ?letra=Z -> 9. Durante a primeira metade da minha sessao (10:50-11:25) a pagina realmente devolvia 100 mesmo com x-vercel-cache: MISS e querystrings de cache-bust, mas a API de origem sempre devolveu 513 (6/6 chamadas diretas a /api/v2/deputados?itens=513) e o codigo ja pede 513 (lib/camara.ts:61). Diagnostico: entrada velha no Data Cache da Vercel para essa URL upstream, com TTL de 3600s (revalidate: 3600), que expirou durante o teste. Nao ha bug de paginacao no app.",
+    "FALSO POSITIVO — https://monitor-de-gravata.vercel.app/politicos?uf=MG (e RJ, BA, RS, PE, TO) 'timeout de 10,5s e lista de deputados vazia'. Reteste sequencial 6/6 OK: MG 200 2,83s (53), RJ 200 2,03s (46), BA 200 1,60s (39), RS 200 1,67s (31), PE 200 2,97s (25), TO 200 1,90s (8). Instabilidade momentanea da API da Camara. Alem disso, quando a fonte falha a pagina EXIBE 'Camara dos Deputados — API nao respondeu: fetch failed' (app/politicos/page.tsx:115) e suprime o Empty enganoso (linha 117): e vazio explicado, nao defeito.",
+    "FALSO POSITIVO — https://monitor-de-gravata.vercel.app/buscar?q=maria 'devolve 7 ou 4 conforme a execucao, ~10,4s'. 5 execucoes seguidas: 200 em 1,93s / 0,34s / 0,19s / 0,25s / 0,19s, todas com 'Deputados e senadores (7)' (3 deputados + 4 senadores) e os mesmos ids. Instabilidade transitoria da API da Camara no momento da coleta original. (A lacuna real que sobrou desse item — falta de aviso quando o Senado falha — esta registrada como achado proprio em 'confirmados'.)",
+    "FALSO POSITIVO — https://monitor-de-gravata.vercel.app/buscar?q=jo%C3%A3o 'em cache frio devolveu 0 e exibiu Nenhum parlamentar'. 3 execucoes: 200 em 4,35s / 0,89s / 0,46s, todas com 'Deputados e senadores (5)'. Nao reproduzido. E o codigo ja distingue os casos: quando deps.error existe, app/buscar/page.tsx:106 renderiza o Notice 'Camara — API nao respondeu' acima do Empty.",
+    "FALSO POSITIVO (parcial) — 'ids inexistentes devolvem pagina EM BRANCO, sem 404, sem mensagem e sem link de volta'. Em navegador real /politicos/deputado/999999999 renderiza a pagina 404 do Next ('404 — This page could not be found.'), e o marcador NEXT_HTTP_ERROR_FALLBACK;404 esta no stream de todos os tres casos. Nao ha beco sem saida em branco para o usuario. O que restou de real e apenas o status HTTP 200 (soft-404), registrado em 'confirmados' com gravidade baixa.",
+    "FALSO POSITIVO — 'ficha 204534 com ?ano=2025 mostra: A API de despesas nao respondeu ( fetch failed )'. Nao reproduzido: ?ano=2025 e ?ano=2024 respondem 200 em ~6s exibindo '0 notas · 0 fornecedores', sem Notice de erro. Era falha transitoria. (O problema estrutural do CEAP vazio permanece confirmado, por outra causa: o filtro ?ano= da API da Camara.)"
+  ],
+
+  "nao_reproduzidos_mas_plausiveis": [
+    "Nenhum. Todos os 17 itens reportados foram retestados e classificados."
+  ]
+}

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PageHead, Section, Notice, Empty, Sev } from "@/components/ui";
-import { listContratos, listContratacoes, searchPNCP, MODALIDADES, type ContratoPNCP, type ContratacaoPNCP } from "@/lib/pncp";
+import { listContratos, listContratacoes, searchPNCP, MODALIDADES, PNCP_MAX_PAGINA, type ContratoPNCP, type ContratacaoPNCP } from "@/lib/pncp";
 import { safe } from "@/lib/fetcher";
 import { runRules } from "@/lib/rules";
 import { brl, dateBR, yyyymmdd, daysAgo, nowBR } from "@/lib/format";
@@ -32,18 +32,29 @@ export default async function Contratos({ searchParams }: PageProps<"/contratos"
     busca = r.data;
     erro = r.error;
   } else if (modo === "contratos") {
-    const r = await safe(listContratos({ dataInicial, dataFinal, tamanhoPagina: 200 }));
-    if (r.data) {
-      contratos = r.data.data.filter((c) => (!uf || c.unidadeOrgao?.ufSigla === uf) && (c.valorGlobal ?? 0) >= minValor).sort((a, b) => (b.valorGlobal ?? 0) - (a.valorGlobal ?? 0));
-      total = r.data.totalRegistros;
-    } else erro = r.error;
+    // o PNCP limita a 50 por página → buscamos 3 páginas em paralelo (150 registros)
+    const p1 = await safe(listContratos({ dataInicial, dataFinal, uf: uf || undefined, pagina: 1, tamanhoPagina: PNCP_MAX_PAGINA }));
+    if (p1.data) {
+      total = p1.data.totalRegistros;
+      const extras = await Promise.all(
+        [2, 3].filter((n) => n <= (p1.data!.totalPaginas ?? 1)).map((n) => safe(listContratos({ dataInicial, dataFinal, uf: uf || undefined, pagina: n, tamanhoPagina: PNCP_MAX_PAGINA }))),
+      );
+      contratos = [...p1.data.data, ...extras.flatMap((e) => e.data?.data ?? [])]
+        .filter((c) => (c.valorGlobal ?? 0) >= minValor)
+        .sort((a, b) => (b.valorGlobal ?? 0) - (a.valorGlobal ?? 0));
+    } else erro = p1.error;
   } else {
     const modalidade = modo === "dispensas" ? 8 : 9;
-    const r = await safe(listContratacoes({ dataInicial, dataFinal, modalidade, uf: uf || undefined, tamanhoPagina: 200 }));
-    if (r.data) {
-      contratacoes = r.data.data.filter((c) => (c.valorTotalEstimado ?? 0) >= minValor).sort((a, b) => (b.valorTotalEstimado ?? 0) - (a.valorTotalEstimado ?? 0));
-      total = r.data.totalRegistros;
-    } else erro = r.error;
+    const p1 = await safe(listContratacoes({ dataInicial, dataFinal, modalidade, uf: uf || undefined, pagina: 1, tamanhoPagina: PNCP_MAX_PAGINA }));
+    if (p1.data) {
+      total = p1.data.totalRegistros;
+      const extras = await Promise.all(
+        [2, 3].filter((n) => n <= (p1.data!.totalPaginas ?? 1)).map((n) => safe(listContratacoes({ dataInicial, dataFinal, modalidade, uf: uf || undefined, pagina: n, tamanhoPagina: PNCP_MAX_PAGINA }))),
+      );
+      contratacoes = [...p1.data.data, ...extras.flatMap((e) => e.data?.data ?? [])]
+        .filter((c) => (c.valorTotalEstimado ?? 0) >= minValor)
+        .sort((a, b) => (b.valorTotalEstimado ?? 0) - (a.valorTotalEstimado ?? 0));
+    } else erro = p1.error;
   }
 
   const flagsContrato = (c: ContratoPNCP) => runRules("contrato", { contrato: c });
@@ -58,7 +69,7 @@ export default async function Contratos({ searchParams }: PageProps<"/contratos"
         stampTone="verde"
         lead="Tudo que União, estados e municípios publicam no Portal Nacional de Contratações Públicas — contratos assinados, dispensas e inexigibilidades — com red flags calculadas na hora. Clique num contrato para cruzar com a Receita (idade do CNPJ, capital, sócios) e sanções."
         right={
-          <form className="card p-4 grid gap-2 sm:grid-cols-2 min-w-[22rem]">
+          <form className="card p-4 grid gap-2 sm:grid-cols-2 w-full sm:min-w-[22rem]">
             <label className="block sm:col-span-2"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Buscar (objeto, órgão, CNPJ/nome do fornecedor)</span><input name="q" defaultValue={q} className="input" placeholder="ex.: merenda escolar, 14126371000129" /></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Modo</span>
               <select name="modo" defaultValue={modo} className="input"><option value="contratos">Contratos assinados</option><option value="dispensas">Dispensas de licitação</option><option value="inexigibilidades">Inexigibilidades</option></select></label>
@@ -74,7 +85,7 @@ export default async function Contratos({ searchParams }: PageProps<"/contratos"
       <Section kicker={q ? "Busca" : modo} title={q ? `Resultados para “${q}”` : `${modo === "contratos" ? "Contratos publicados" : modo === "dispensas" ? "Dispensas publicadas" : "Inexigibilidades publicadas"} nos últimos ${dias} dia(s)${uf ? ` · ${uf}` : ""}`}>
         {erro && <Notice tone="warn" title="PNCP">A API do PNCP não respondeu: {erro}. Tente reduzir os dias ou repetir.</Notice>}
         <div className="mb-3 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-ink-3">
-          {q ? `${busca?.total ?? 0} resultado(s) no índice do PNCP` : `${total.toLocaleString("pt-BR")} registro(s) no período no PNCP inteiro · exibindo os ${(contratos.length || contratacoes.length)} maiores da 1ª página (200)`} · coletado {nowBR()}
+          {q ? `${busca?.total ?? 0} resultado(s) no índice do PNCP` : `${total.toLocaleString("pt-BR")} registro(s) no período${uf ? ` em ${uf}` : " no Brasil"} · exibindo os ${(contratos.length || contratacoes.length)} maiores das 3 primeiras páginas (o PNCP entrega 50 por página)`} · coletado {nowBR()}
         </div>
 
         {q && busca && (

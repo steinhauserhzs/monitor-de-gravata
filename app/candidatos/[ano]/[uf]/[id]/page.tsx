@@ -120,7 +120,7 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
               <a className="underline underline-offset-2" href={`${DIVULGA}/candidatura/buscar/${ano}/${uf}/${el.id}/candidato/${cand.id}`} target="_blank" rel="noopener noreferrer">json ↗</a>
               {cand.numeroProcesso && <a className="underline underline-offset-2" href={`https://consultaunificadapje.tse.jus.br/#/public/inicial/index`} target="_blank" rel="noopener noreferrer">processo {cand.numeroProcesso} (PJe) ↗</a>}
               {wdHit && <a className="underline underline-offset-2" href={`https://www.wikidata.org/wiki/${wdHit.id}`} target="_blank" rel="noopener noreferrer">wikidata ↗</a>}
-              {(cand.sites ?? []).slice(0, 3).map((s) => <a key={s} className="underline underline-offset-2" href={s.startsWith("http") ? s : `https://${s}`} target="_blank" rel="noopener noreferrer nofollow">{s.replace(/^https?:\/\//, "").slice(0, 30)} ↗</a>)}
+              {(cand.sites ?? []).slice(0, 3).map((site) => { const limpo = String(site).trim().replace(/^https?:\/\//i, ""); return <a key={site} className="underline underline-offset-2" href={`https://${limpo}`} target="_blank" rel="noopener noreferrer nofollow">{limpo.slice(0, 30)} ↗</a>; })}
             </div>
           </div>
         </div>
@@ -216,7 +216,7 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
               {certidoes.length > 0 && (
                 <details className="mt-3">
                   <summary className="cursor-pointer font-mono text-[0.65rem] uppercase tracking-[0.16em]">{certidoes.length} certidões anexadas ao registro</summary>
-                  <ul className="mt-2 text-xs text-ink-2 space-y-1">{certidoes.map((a) => <li key={a.idArquivo}>{a.nome.replace(/^pje-[a-z0-9]+-/, "")}</li>)}</ul>
+                  <ul className="mt-2 text-xs text-ink-2 space-y-1">{certidoes.map((a) => <li key={a.idArquivo}><a className="underline decoration-stamp underline-offset-2" href={`https://sig.tse.jus.br/${a.url}${encodeURIComponent(a.nome)}`} target="_blank" rel="noopener noreferrer">{a.nome.replace(/^pje-[a-z0-9]+-/, "")} ↗</a></li>)}</ul>
                 </details>
               )}
               <p className="mt-3 text-[0.68rem] text-ink-3">Processos judiciais fora da Justiça Eleitoral (DataJud/CNJ) exigem CPF ou nome exato — integração em andamento no módulo Judiciário. Presunção de inocência sempre.</p>

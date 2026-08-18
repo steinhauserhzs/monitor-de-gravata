@@ -59,7 +59,7 @@ export default async function Politicos({ searchParams }: PageProps<"/politicos"
         stampTone="verde"
         lead={`${pessoas.length} parlamentares em exercício (513 deputados federais + 81 senadores). Clique em qualquer um para a ficha completa: gastos nota a nota, presença, votações, produtividade, comissões, linha do tempo, notícias e red flags calculadas na hora.`}
         right={
-          <form className="card p-4 grid gap-2 sm:grid-cols-2 min-w-[22rem]">
+          <form className="card p-4 grid gap-2 sm:grid-cols-2 w-full sm:min-w-[22rem]">
             <label className="block sm:col-span-2"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Nome</span><input name="nome" defaultValue={nome} className="input" placeholder="sobrenome basta" /></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Estado</span>
               <select name="uf" defaultValue={uf} className="input"><option value="">Todos</option>{UFS.map((u) => <option key={u}>{u}</option>)}</select></label>

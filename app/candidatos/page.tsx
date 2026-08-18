@@ -56,7 +56,7 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
         stampTone="verde"
         lead="Todo candidato registrado na Justiça Eleitoral, por estado e cargo: situação da candidatura, bens declarados, evolução patrimonial, doadores, fornecedores de campanha, processos e certidões. Registro encerrou em 15/08/2026; contas de campanha aparecem a partir de setembro."
         right={
-          <form className="card p-4 grid gap-2 sm:grid-cols-[auto_auto_1fr_1fr_auto] items-end min-w-[22rem]">
+          <form className="card p-4 grid gap-2 sm:grid-cols-[auto_auto_1fr_1fr_auto] items-end w-full sm:min-w-[22rem]">
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Eleição</span>
               <select name="ano" defaultValue={ano} className="input">{Object.keys(ELEICOES).sort((a, b) => Number(b) - Number(a)).map((a) => <option key={a} value={a}>{a}</option>)}</select></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">UF</span>
@@ -71,7 +71,16 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
         }
       />
 
-      {!uf || !cargo ? (
+      {cargo && !uf && cargo !== 1 ? (
+        <Section kicker="Falta o estado" title={`${CARGOS[cargo] ?? "Cargo"} — escolha um estado`}>
+          <Notice tone="info">O TSE publica as listas de candidatos por <strong>estado</strong>. Escolha abaixo (ou no formulário) para ver {CARGOS[cargo] ?? "os candidatos"}:</Notice>
+          <div className="mt-4 grid gap-2 grid-cols-4 sm:grid-cols-7 md:grid-cols-9">
+            {UFS.map((u) => (
+              <Link key={u} href={`/candidatos?ano=${ano}&uf=${u}&cargo=${cargo}`} className="btn btn--ghost justify-center !py-2 !px-2 !text-[0.65rem]">{u}</Link>
+            ))}
+          </div>
+        </Section>
+      ) : !uf || !cargo ? (
         <Section>
           <div className="grid gap-4 md:grid-cols-3">
             {[
@@ -93,8 +102,17 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
           </div>
         </Section>
       ) : (
-        <Section kicker={`${el?.nome ?? ano}`} title={`${CARGOS[cargo]} · ${ufEfetiva} (${todos.length})`}>
+        <Section kicker={`${el?.nome ?? ano}`} title={`${CARGOS[cargo] ?? `Cargo ${cargo}`} · ${ufEfetiva} (${todos.length})`}>
           {lista.error && <Notice tone="warn" title="TSE">O DivulgaCand não respondeu: {lista.error}</Notice>}
+          {el?.abrangencia === "M" && !todos.length && (
+            <Notice tone="warn" title="Eleição municipal: listagem por município">
+              Para prefeito e vereador o TSE organiza os candidatos <strong>por município</strong>, não por estado — a consulta por UF volta vazia.
+              A busca por município ainda não está implementada aqui (
+              <a className="underline" href="https://github.com/steinhauserhzs/monitor-de-gravata/issues" target="_blank" rel="noopener noreferrer">issue aberta</a>
+              ). Enquanto isso, consulte no{" "}
+              <a className="underline" href={`https://divulgacandcontas.tse.jus.br/divulga/#/municipios/${el.id}/${uf}`} target="_blank" rel="noopener noreferrer">DivulgaCand oficial ↗</a>.
+            </Notice>
+          )}
           <div className="mb-4 flex flex-wrap gap-2">
             {[...porSituacao.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => (
               <Link key={k} href={qs({ situacao: situacao === k ? "" : k, pagina: 1 })} className={`tab ${situacao === k ? "!bg-ink !text-paper" : ""}`}>{k} · {v}</Link>
