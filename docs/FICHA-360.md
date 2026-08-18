@@ -6,7 +6,7 @@ Legenda: **auto** = ao vivo hoje · **chave** = requer `PORTAL_TRANSPARENCIA_KEY
 |---|---|---|---|---|---|
 | Identidade, foto, partido, UF | ✓ | ✓ | ✓ | Câmara `/deputados/{id}` · Senado `/senador/{cod}` · TSE `/candidatura/buscar/...` | auto |
 | Linha do tempo (mandatos, filiações, ocupações) | ✓ | ✓ | ✓ (candidaturas) | Câmara `/historico`, `/mandatosExternos`, `/ocupacoes` · Senado `/mandatos`, `/filiacoes` · Wikidata P39/P102 | auto |
-| Gastos (CEAP por tipo/fornecedor/mês) | ✓ | link | — | Câmara `/despesas?ano=` · Senado CSV CEAPS | auto / lote |
+| Gastos (CEAP/CEAPS por tipo/fornecedor/mês + red flags) | ✓ | ✓ | — | Câmara `/despesas?ano=` · Senado adm-dadosabertos `/senadores/despesas_ceaps/{ano}` e `/senadores/{cod}/recursos-utilizados` | auto |
 | Presença | ✓ (plenário) | ✓ (registrou voto/presente/missão) | — | Câmara `/eventos` × `/eventos?codTipoEvento=110&idOrgao=180` · Senado `/votacoes` | auto |
 | Votações + coerência com partido | ✓ (últimas 10 nominais) | ✓ (histórico) | — | Câmara `/votacoes/{id}/votos`, `/orientacoes` · Senado `/votacoes` | auto |
 | Produtividade (proposições por tipo) | ✓ (amostra) | ✓ (autorias) | — | Câmara `/proposicoes?idDeputadoAutor` · Senado `/autorias` | auto |
