@@ -216,7 +216,6 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
                       <ul className="text-sm space-y-1">{mesmoSobrenome.slice(0, 8).map((m) => <li key={m.id}><Link className="underline" href={`/candidatos/${ano}/${uf}/${m.id}`}>{m.nomeUrna}</Link> <span className="text-ink-3 text-xs">· {m.nomeCompleto} · {m.cargo} · {m.partido} · {m.situacao}</span></li>)}</ul>
                     </div>
                   )}
-                  {servidores && <div className="mb-3 text-sm">Servidores federais com "{raros[0]}" (Portal da Transparência): <strong>{servidores.qtd}{servidores.qtd >= 15 ? "+" : ""}</strong>{servidores.nomes.length ? <span className="text-xs text-ink-3"> — ex.: {servidores.nomes.join("; ")}</span> : null}</div>}
                   <ul className="text-sm space-y-1.5">
                     {pistas.map((v, i) => <li key={i}>→ {v.url ? <a className="underline" href={v.url} target={v.url.startsWith("/") ? undefined : "_blank"} rel="noopener noreferrer">{v.descricao}</a> : v.descricao} <span className="font-mono text-[0.58rem] uppercase text-ink-3">· {v.fonte}</span></li>)}
                   </ul>

@@ -410,3 +410,19 @@ select.input {
   border-top: 2px dashed var(--linha);
   margin: 2em 0;
 }
+
+/* Mapa do Brasil (SVG IBGE) */
+.mapa-br .mapa-uf {
+  fill: var(--paper-2);
+  stroke: var(--ink);
+  stroke-width: 900;
+  transition: fill 120ms ease;
+  cursor: pointer;
+}
+.mapa-br a:hover .mapa-uf,
+.mapa-br a:focus .mapa-uf {
+  fill: var(--stamp);
+}
+.mapa-br a:focus {
+  outline: none;
+}

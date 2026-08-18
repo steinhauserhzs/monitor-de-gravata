@@ -80,8 +80,11 @@ export type EmendaPT = {
 /** Emendas parlamentares por nome do autor (como consta no SIOP). */
 export async function emendasPorAutor(nomeAutor: string, ano?: number, pagina = 1) {
   if (!temChavePortal()) return null;
-  const q = new URLSearchParams({ nomeAutor, pagina: String(pagina) });
+  // O SIOP grava o autor em CAIXA ALTA; o filtro por ano só devolve algo se houver emenda naquele ano — por isso buscamos sem ano e agrupamos na UI.
+  const q = new URLSearchParams({ nomeAutor: nomeAutor.toUpperCase(), pagina: String(pagina) });
   if (ano) q.set("ano", String(ano));
   const r = await safe(pt<EmendaPT[]>(`/emendas?${q}`));
   return r.data ?? [];
 }
+
+export const brlPT = (v: string | number | undefined) => Number(String(v ?? "0").replace(/\./g, "").replace(",", ".")) || 0;

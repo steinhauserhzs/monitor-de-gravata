@@ -16,10 +16,15 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
   const cargosDisponiveis = el?.abrangencia === "M" ? [11, 13] : [1, 3, 5, 6, 7, 8];
   const ufEfetiva = cargo === 1 ? "BR" : uf;
 
+  const pagina = Math.max(1, Number(Array.isArray(sp.pagina) ? sp.pagina[0] : sp.pagina) || 1);
+  const POR_PAGINA = 240;
   const lista = uf && cargo ? await safe(listCandidatos(ano, ufEfetiva, cargo)) : { data: null, error: null };
-  const cands = (lista.data ?? []).filter((c) => !nome || (c.nomeUrna + " " + c.nomeCompleto).toLowerCase().includes(nome));
+  const todos = (lista.data ?? []).filter((c) => !nome || (c.nomeUrna + " " + c.nomeCompleto).toLowerCase().includes(nome));
+  const totalPaginas = Math.max(1, Math.ceil(todos.length / POR_PAGINA));
+  const cands = todos.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
   const porSituacao = new Map<string, number>();
-  for (const c of cands) porSituacao.set(c.descricaoSituacao, (porSituacao.get(c.descricaoSituacao) ?? 0) + 1);
+  for (const c of todos) porSituacao.set(c.descricaoSituacao, (porSituacao.get(c.descricaoSituacao) ?? 0) + 1);
+  const linkPagina = (p: number) => `/candidatos?ano=${ano}&uf=${uf}&cargo=${cargo}&nome=${encodeURIComponent(nome)}&pagina=${p}`;
 
   return (
     <>
@@ -65,14 +70,21 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
           </div>
         </Section>
       ) : (
-        <Section kicker={`${el?.nome ?? ano}`} title={`${CARGOS[cargo]} · ${ufEfetiva} (${cands.length})`}>
+        <Section kicker={`${el?.nome ?? ano}`} title={`${CARGOS[cargo]} · ${ufEfetiva} (${todos.length})`}>
           {lista.error && <Notice tone="warn" title="TSE">O DivulgaCand não respondeu: {lista.error}</Notice>}
           <div className="mb-4 flex flex-wrap gap-2">
             {[...porSituacao.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => (
               <span key={k} className="tab">{k} · {v}</span>
             ))}
           </div>
-          {lista.data && !cands.length && <Empty>Nenhum candidato para esse filtro.</Empty>}
+          {lista.data && !todos.length && <Empty>Nenhum candidato para esse filtro.</Empty>}
+          {totalPaginas > 1 && (
+            <div className="mb-3 flex flex-wrap items-center gap-2 font-mono text-[0.65rem] uppercase tracking-[0.12em]">
+              <span className="text-ink-3">Página {pagina} de {totalPaginas} · {POR_PAGINA} por página</span>
+              {pagina > 1 && <Link className="btn btn--ghost !py-1.5 !px-3" href={linkPagina(pagina - 1)}>← anterior</Link>}
+              {pagina < totalPaginas && <Link className="btn btn--ghost !py-1.5 !px-3" href={linkPagina(pagina + 1)}>próxima →</Link>}
+            </div>
+          )}
           <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {cands.map((c) => (
               <Link key={c.id} href={`/candidatos/${ano}/${ufEfetiva}/${c.id}`} className="card flex items-center gap-3 p-2.5 hover:-translate-y-0.5 transition-transform">

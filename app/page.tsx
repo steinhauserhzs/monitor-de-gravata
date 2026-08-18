@@ -3,6 +3,7 @@ import { Gravata } from "@/components/Logo";
 import { loadApis, loadRedFlags, loadCasos } from "@/lib/data";
 import { implementedRuleIds } from "@/lib/rules";
 import { Section } from "@/components/ui";
+import { MapaBrasil } from "@/components/MapaBrasil";
 
 export const revalidate = 3600;
 
@@ -109,6 +110,13 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* MAPA */}
+      <Section kicker="Manual do candidato" title="Quem quer o seu voto em 2026">
+        <div className="card p-6 md:p-8">
+          <MapaBrasil ano={2026} cargo={6} />
+        </div>
+      </Section>
 
       {/* MANIFESTO CURTO */}
       <Section>

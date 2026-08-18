@@ -25,7 +25,7 @@ import { runRules } from "@/lib/rules";
 import { brl, pct, dateBR, nowBR } from "@/lib/format";
 import { noticiasGoogle } from "@/lib/noticias";
 import { wdBuscar, wdTimeline } from "@/lib/wikidata";
-import { emendasPorAutor, temChavePortal } from "@/lib/transparencia";
+import { emendasPorAutor, temChavePortal, brlPT } from "@/lib/transparencia";
 import { pistasDeVinculo, sobrenomesRaros, servidoresPorSobrenome } from "@/lib/vinculos";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +64,7 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
     safe(getOcupacoes(id)),
     noticiasGoogle(`"${s.nome}" deputado`),
     safe(wdBuscar(d.nomeCivil)),
-    temChavePortal() ? safe(emendasPorAutor(s.nome, ano)) : Promise.resolve({ data: null, error: null }),
+    temChavePortal() ? safe(emendasPorAutor(s.nome)) : Promise.resolve({ data: null, error: null }),
   ]);
 
   /* ── CEAP ── */
@@ -323,20 +323,27 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
               )}
             </Panel>
 
-            <Panel kicker="§8" title={`Emendas parlamentares ${ano}`}>
+            <Panel kicker="§8" title="Emendas parlamentares (todas as que constam no SIOP)" right={emendas.data ? <Source url={`https://portaldatransparencia.gov.br/emendas/consulta?nomeAutor=${encodeURIComponent(s.nome)}`} label="Portal da Transparência" /> : undefined}>
               {!temChavePortal() && <p className="text-sm text-ink-3">Requer chave gratuita do Portal da Transparência (env <code className="font-mono">PORTAL_TRANSPARENCIA_KEY</code>). Enquanto isso: <a className="underline" href={`https://portaldatransparencia.gov.br/emendas/consulta?nomeAutor=${encodeURIComponent(s.nome)}`} target="_blank" rel="noopener noreferrer">consultar no Portal ↗</a></p>}
-              {emendas.data && !emendas.data.length && <p className="text-sm text-ink-3">Nenhuma emenda localizada pelo nome parlamentar em {ano}.</p>}
-              {emendas.data && emendas.data.length > 0 && (
-                <Bars rows={emendas.data.slice(0, 10).map((e) => ({ label: `${e.localidadeDoGasto} · ${e.funcao}`, sub: e.tipoEmenda, value: Number(String(e.valorEmpenhado).replace(/\./g, "").replace(",", ".")) || 0 }))} />
-              )}
+              {emendas.data && !emendas.data.length && <p className="text-sm text-ink-3">Nenhuma emenda localizada pelo nome parlamentar "{s.nome.toUpperCase()}" no SIOP (o nome pode constar diferente — confira no Portal).</p>}
+              {emendas.data && emendas.data.length > 0 && (() => {
+                const porAno = new Map<number, { emp: number; pago: number; n: number }>();
+                for (const e of emendas.data!) { const a = porAno.get(e.ano) ?? { emp: 0, pago: 0, n: 0 }; a.emp += brlPT(e.valorEmpenhado); a.pago += brlPT(e.valorPago); a.n++; porAno.set(e.ano, a); }
+                return (
+                  <>
+                    <div className="flex flex-wrap gap-2 mb-3">{[...porAno.entries()].sort((a, b) => b[0] - a[0]).map(([a, v]) => <span key={a} className="tab">{a} · {v.n} emenda(s) · empenhado {brl(v.emp)} · pago {brl(v.pago)}</span>)}</div>
+                    <div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-1">Por destino (empenhado)</div>
+                    <Bars rows={emendas.data!.slice(0, 12).map((e) => ({ label: `${e.localidadeDoGasto} · ${e.funcao}`, sub: `${e.ano} · ${e.tipoEmenda.replace("Emenda ", "")}`, value: brlPT(e.valorEmpenhado) }))} />
+                    <p className="mt-2 text-[0.68rem] text-ink-3">Fonte: Portal da Transparência (SIOP), autor "{s.nome.toUpperCase()}". Página 1 (até 15 emendas). Para onde foi e quem recebeu o pagamento: consulte cada emenda no Portal.</p>
+                  </>
+                );
+              })()}
             </Panel>
-
             <Panel kicker="§8b" title="Vínculos a verificar (hipóteses por sobrenome)">
               {!raros.length && <p className="text-sm text-ink-3">Sobrenomes muito comuns para busca útil.</p>}
               {raros.length > 0 && (
                 <>
                   <p className="text-xs text-ink-3 mb-2">Sobrenome(s) menos comum(ns): <span className="font-mono">{raros.join(", ")}</span>. Sobrenome igual não prova parentesco.</p>
-                  {servidores && <div className="mb-2 text-sm">Servidores federais com "{raros[0]}": <strong>{servidores.qtd}{servidores.qtd >= 15 ? "+" : ""}</strong></div>}
                   <ul className="text-sm space-y-1.5">{pistas.map((v, i) => <li key={i}>→ {v.url ? <a className="underline" href={v.url} target={v.url.startsWith("/") ? undefined : "_blank"} rel="noopener noreferrer">{v.descricao}</a> : v.descricao}</li>)}</ul>
                   <p className="mt-2 text-[0.68rem] text-ink-3">Secretários parlamentares do gabinete: <a className="underline" href={`https://www.camara.leg.br/deputados/${d.id}/pessoal-gabinete`} target="_blank" rel="noopener noreferrer">lista oficial ↗</a>. Confirmação só com fonte primária, num caso.</p>
                 </>

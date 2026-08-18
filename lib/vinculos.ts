@@ -5,8 +5,6 @@
  * (3) quando houver chave do Portal da Transparência, contar servidores federais com esse sobrenome.
  * Tudo isso é sinal para verificação humana — nunca afirmação de parentesco.
  */
-import { safe, getJSON } from "./fetcher";
-import { PT } from "./transparencia";
 
 const COMUNS = new Set([
   "SILVA","SANTOS","OLIVEIRA","SOUZA","SOUSA","RODRIGUES","FERREIRA","ALVES","PEREIRA","LIMA","GOMES","COSTA","RIBEIRO","MARTINS","CARVALHO","ALMEIDA","LOPES","SOARES","FERNANDES","VIEIRA","BARBOSA","ROCHA","DIAS","NASCIMENTO","ANDRADE","MOREIRA","NUNES","MARQUES","MACHADO","MENDES","FREITAS","CARDOSO","RAMOS","GONCALVES","GONÇALVES","SANTANA","TEIXEIRA","ARAUJO","ARAÚJO","MELO","BARROS","PINTO","MONTEIRO","CORREIA","CORREA","CAVALCANTE","CAVALCANTI","JESUS","CAMPOS","MORAES","MORAIS","CASTRO","REIS","BATISTA","DUARTE","MIRANDA","BORGES","CUNHA","NOGUEIRA","AZEVEDO","MOURA","PIRES","MEDEIROS","AMARAL","GARCIA","LEITE","BRITO","BRAGA","SAMPAIO","MOTA","MATOS","GUIMARAES","GUIMARÃES","REZENDE","RESENDE","FONSECA","TAVARES","LEAL","PAIVA","VASCONCELOS","VASCONCELLOS","COELHO","FARIAS","FARIA","QUEIROZ","BEZERRA","XAVIER","SIQUEIRA","NEVES","AGUIAR","LACERDA","PACHECO","MAIA","BRANDAO","BRANDÃO","VIANA","VIANNA","MAGALHAES","MAGALHÃES","DE","DA","DO","DOS","DAS","E","JUNIOR","JÚNIOR","FILHO","NETO","NETA","SOBRINHO",
@@ -27,13 +25,14 @@ export type Vinculo = {
   qtd?: number;
 };
 
-/** Servidores federais com o sobrenome (só com chave). Conta e lista até 5 nomes. */
-export async function servidoresPorSobrenome(sobrenome: string): Promise<{ qtd: number; nomes: string[] } | null> {
-  const key = process.env.PORTAL_TRANSPARENCIA_KEY;
-  if (!key) return null;
-  const r = await safe(getJSON<{ id: number; servidor?: { nome: string; orgaoServidorLotacao?: { nome: string } } }[]>(`${PT}/servidores?nome=${encodeURIComponent(sobrenome)}&pagina=1`, { headers: { "chave-api-dados": key }, revalidate: 86400 }));
-  if (!r.data) return null;
-  return { qtd: r.data.length, nomes: r.data.slice(0, 5).map((s) => `${s.servidor?.nome ?? "?"}${s.servidor?.orgaoServidorLotacao?.nome ? ` (${s.servidor.orgaoServidorLotacao.nome})` : ""}`) };
+/**
+ * Servidores federais por sobrenome: a API do Portal (/servidores) EXIGE órgão de lotação/exercício ou CPF —
+ * não aceita busca só por nome (verificado em 18/08/2026: HTTP 400 "Filtros mínimos"). Por isso esta função
+ * devolve null e a UI oferece o link da busca do próprio Portal, que aceita nome.
+ */
+export async function servidoresPorSobrenome(_sobrenome: string): Promise<{ qtd: number; nomes: string[] } | null> {
+  void _sobrenome;
+  return null;
 }
 
 /** Monta a lista de pistas (links prontos) para verificação humana. */
