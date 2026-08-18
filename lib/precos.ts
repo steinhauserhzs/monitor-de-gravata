@@ -50,7 +50,15 @@ export function buscarCatalogo(termo: string, max = 30): ItemCatalogo[] {
     if (bate(norm(s.n + " " + (s.kn ?? "")))) servs.push({ tipo: "servico", codigo: s.c, nome: s.n, classe: s.kn ?? "", grupo: s.g ?? "" });
     if (servs.length >= max) break;
   }
-  return [...mats, ...servs].sort((a, b) => a.nome.length - b.nome.length).slice(0, max);
+  // cota garantida para cada catálogo: material e serviço competem por espaço, não um sufoca o outro
+  const porTamanho = (a: ItemCatalogo, b: ItemCatalogo) => a.nome.length - b.nome.length;
+  mats.sort(porTamanho);
+  servs.sort(porTamanho);
+  const cota = Math.ceil(max / 2);
+  const escolhidos = [...mats.slice(0, cota), ...servs.slice(0, cota)];
+  // se um dos catálogos tem menos que a cota, o outro aproveita a sobra
+  if (escolhidos.length < max) escolhidos.push(...mats.slice(cota, cota + (max - escolhidos.length)), ...servs.slice(cota, cota + (max - escolhidos.length)));
+  return escolhidos.slice(0, max).sort(porTamanho);
 }
 
 /** Preços praticados de um SERVIÇO (CATSER). */
