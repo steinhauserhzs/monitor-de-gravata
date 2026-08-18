@@ -57,7 +57,7 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
     safe(getProposicoesDoAutor(id)),
     safe(getSessoesDeliberativas(ini, fim)),
     safe(getEventosDeputado(id, ini, fim)),
-    safe(getVotacoesPlenario(fim)),
+    safe(getVotacoesPlenario(fim, 3)),
     safe(getDiscursos(id, ini, fim, 8)),
     safe(getMandatosExternos(id)),
     safe(getHistorico(id)),
@@ -79,15 +79,20 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
 
   /* ── Votações: como votou nas últimas nominais do plenário ── */
   // muitas votações do Plenário são simbólicas (sem voto individual): sondamos até 30 e ficamos com as nominais
-  const ultimas = (votacoes.data ?? []).slice(0, 30);
-  const votosDetalhe = await Promise.all(
-    ultimas.map(async (v) => {
-      const [votos, orient] = await Promise.all([safe(getVotos(v.id)), safe(getOrientacoes(v.id))]);
-      const meu = (votos.data ?? []).find((x) => x.deputado_?.id === d.id);
-      const o = (orient.data ?? []).find((x) => x.siglaPartidoBloco?.toUpperCase().includes(s.siglaPartido.toUpperCase()));
-      return { v, meu: meu?.tipoVoto ?? null, orientacao: o?.orientacaoVoto ?? null, nominal: (votos.data ?? []).length > 0 };
-    }),
-  );
+  const todasV = votacoes.data ?? [];
+  const ultimas = [...todasV.filter((v) => v.proposicaoObjeto), ...todasV.filter((v) => !v.proposicaoObjeto)].slice(0, 36);
+  const votosDetalhe: { v: (typeof ultimas)[number]; meu: string | null; orientacao: string | null; nominal: boolean }[] = [];
+  for (let i = 0; i < ultimas.length && votosDetalhe.filter((x) => x.nominal).length < 12; i += 6) {
+    const lote = await Promise.all(
+      ultimas.slice(i, i + 6).map(async (v) => {
+        const [votos, orient] = await Promise.all([safe(getVotos(v.id)), safe(getOrientacoes(v.id))]);
+        const meu = (votos.data ?? []).find((x) => x.deputado_?.id === d.id);
+        const o = (orient.data ?? []).find((x) => x.siglaPartidoBloco?.toUpperCase().includes(s.siglaPartido.toUpperCase()));
+        return { v, meu: meu?.tipoVoto ?? null, orientacao: o?.orientacaoVoto ?? null, nominal: (votos.data ?? []).length > 0 };
+      }),
+    );
+    votosDetalhe.push(...lote);
+  }
   const nominais = votosDetalhe.filter((x) => x.nominal).slice(0, 12);
   const comparaveis = nominais.filter((x) => x.meu && x.orientacao && !/liber/i.test(x.orientacao));
   const coerentes = comparaveis.filter((x) => x.meu?.toLowerCase() === x.orientacao?.toLowerCase()).length;
@@ -238,9 +243,9 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
               <Flags findings={findings} />
             </Panel>
 
-            <Panel kicker="§3" title="Como votou — últimas votações nominais do Plenário (90 dias)" right={<Source url={`${CAMARA}/votacoes?dataFim=${fim}&itens=200&ordem=DESC&ordenarPor=dataHoraRegistro`} label="Câmara" />}>
+            <Panel kicker="§3" title="Como votou — últimas votações nominais do Plenário" right={<Source url={`${CAMARA}/votacoes?dataFim=${fim}&itens=200&ordem=DESC&ordenarPor=dataHoraRegistro`} label="Câmara" />}>
               {votacoes.error && <Notice tone="warn">Votações indisponíveis: {votacoes.error}</Notice>}
-              {!nominais.length && !votacoes.error && <p className="text-sm text-ink-3">Nenhuma votação nominal do Plenário nas {ultimas.length} mais recentes sondadas (votações simbólicas não registram voto individual).</p>}
+              {!nominais.length && !votacoes.error && <p className="text-sm text-ink-3">Nenhuma votação nominal localizada nas {ultimas.length} votações mais recentes do Plenário (varremos ~9 meses; em recesso e período eleitoral quase tudo é votação simbólica, que não registra voto individual).</p>}
               {nominais.length > 0 && (
                 <div className="overflow-x-auto">
                   <table className="table">

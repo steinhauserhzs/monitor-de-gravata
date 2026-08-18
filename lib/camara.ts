@@ -155,15 +155,23 @@ export type Votacao = {
   uriProposicaoObjeto?: string | null;
 };
 
-/** Votações do Plenário nos últimos `dias` (a API limita a janela a 3 meses). */
-export async function getVotacoesPlenario(dataFim: string, dias = 89, max = 200) {
-  const fim = new Date(dataFim);
-  const ini = new Date(fim.getTime() - dias * 86400000).toISOString().slice(0, 10);
-  const r = await getJSON<Page<Votacao>>(
-    `${CAMARA}/votacoes?dataInicio=${ini}&dataFim=${dataFim}&itens=${Math.min(max, 200)}&ordem=DESC&ordenarPor=dataHoraRegistro`,
-    { revalidate: 3600 },
+/**
+ * Votações do Plenário. A API limita cada consulta a 3 meses, então varremos `janelas`
+ * trimestres para trás — necessário porque em recesso/período eleitoral quase toda votação
+ * é simbólica (sem voto individual registrado) e as nominais ficam meses atrás.
+ */
+export async function getVotacoesPlenario(dataFim: string, janelas = 3) {
+  const fim = new Date(dataFim).getTime();
+  const partes = await Promise.all(
+    Array.from({ length: janelas }, (_, i) => {
+      const f = new Date(fim - i * 90 * 86400000).toISOString().slice(0, 10);
+      const ini = new Date(fim - (i * 90 + 89) * 86400000).toISOString().slice(0, 10);
+      return getJSON<Page<Votacao>>(`${CAMARA}/votacoes?dataInicio=${ini}&dataFim=${f}&itens=100&ordem=DESC&ordenarPor=dataHoraRegistro`, { revalidate: 3600 }).catch(() => ({ dados: [] as Votacao[], links: [] as { rel: string; href: string }[] }));
+    }),
   );
-  return r.dados.filter((v) => v.siglaOrgao === "PLEN");
+  const todas = partes.flatMap((p) => p.dados).filter((v) => v.siglaOrgao === "PLEN");
+  const vistos = new Set<string>();
+  return todas.filter((v) => (vistos.has(v.id) ? false : (vistos.add(v.id), true)));
 }
 
 export type Voto = { tipoVoto: string; dataRegistroVoto: string; deputado_: { id: number; nome: string; siglaPartido: string; siglaUf: string } };
