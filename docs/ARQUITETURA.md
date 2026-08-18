@@ -41,6 +41,18 @@ scripts/  validar-dados.mjs  gerar-catmat.mjs
 - `maxDuration = 60` nas páginas pesadas; toda fonte falha isoladamente (`safe`) e a UI mostra o erro da fonte, nunca 500.
 - PNCP `/api/search` exige UA de navegador (feito no fetcher). Câmara `/despesas` teve instabilidade em 17/08/2026 (retorna vazio) — fallback documentado (arquivos anuais).
 
+## Banco de dados (v2) — índice derivado, não fonte da verdade
+
+Postgres (Neon, região sa-east-1) entra **só** para o que não cabe em uma requisição: cruzamentos nacionais
+(doador × fornecedor), séries históricas (cota, presença, leis por autor), busca e alertas. Regras:
+
+1. Toda linha guarda `fonte_url` + `coletado_em`. Se o banco sumir, o site continua de pé com as APIs ao vivo.
+2. Só jobs em lote escrevem (GitHub Actions). O app **lê**; nunca grava.
+3. `lib/db.ts` devolve `null` sem `DATABASE_URL` — o app funciona igual sem banco.
+4. Schema em `lib/db.ts` (`SCHEMA_SQL`), aplicado com `npm run db:migrar`.
+
+Tabelas: `derivado_meta`, `doacao`, `fornecedor_contratos`, `doador_fornecedor`, `cota_parlamentar`.
+
 ## Roadmap técnico
 - **Jobs em lote** (GitHub Actions cron → `data/derivados/`): CEAPS Senado (CSV anual), presença consolidada, leis por autor (varrer tramitação), média de gasto por bancada/UF, DataJud por nome, doadores × fornecedores.
 - **v2**: Supabase (auth opcional, anotações, alertas), busca full-text (Meilisearch), grafo de vínculos.
