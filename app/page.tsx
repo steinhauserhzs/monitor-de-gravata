@@ -70,7 +70,9 @@ const FATOS = [
   "Quem fiscaliza um contrato de R$ 50 mil na sua cidade? Talvez ninguém",
 ];
 
-export default function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
+  const sp = await searchParams;
+  const cargoMapa = Number(Array.isArray(sp.cargo) ? sp.cargo[0] : sp.cargo) || 6;
   const apis = loadApis();
   const flags = loadRedFlags();
   const casos = loadCasos();
@@ -147,9 +149,9 @@ export default function Home() {
       </Section>
 
       {/* MAPA */}
-      <Section kicker="Comece pelo seu estado" title="Quem quer o seu voto em 2026">
+      <Section id="mapa" kicker="Comece pelo seu estado" title="Quem quer o seu voto em 2026">
         <div className="card p-6 md:p-8">
-          <MapaBrasil ano={2026} cargo={6} />
+          <MapaBrasil ano={2026} cargo={cargoMapa} />
         </div>
       </Section>
 

@@ -55,8 +55,11 @@ export function MapaBrasil({ ano = 2026, cargo = 6 }: { ano?: number; cargo?: nu
         <div className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-stamp">Eleições {ano}</div>
         <h2 className="font-display text-3xl md:text-5xl leading-[0.95] mt-2">Clique no seu estado</h2>
         <p className="mt-3 text-ink-2 max-w-md">
-          Todos os candidatos registrados no TSE, por cargo: bens declarados, evolução patrimonial, doações, processos e red flags. Sem
-          juízo de valor — só o que consta oficialmente.
+          Todos os candidatos registrados no TSE: bens declarados, evolução patrimonial, quem financiou, processos e sinais de risco.
+          Sem juízo de valor — só o que consta oficialmente.
+        </p>
+        <p className="mt-2 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-stamp">
+          cargo selecionado: {cargo === 1 ? "presidente" : cargo === 3 ? "governador" : cargo === 5 ? "senador" : cargo === 7 ? "deputado estadual" : "deputado federal"} — clique no estado
         </p>
         <div className="mt-4 flex flex-wrap gap-2 font-mono text-[0.62rem] uppercase tracking-[0.12em]">
           {[
@@ -66,7 +69,7 @@ export function MapaBrasil({ ano = 2026, cargo = 6 }: { ano?: number; cargo?: nu
             [6, "Dep. federal"],
             [7, "Dep. estadual"],
           ].map(([c, l]) => (
-            <Link key={c} href={`/candidatos?ano=${ano}${c === 1 ? "&uf=BR" : ""}&cargo=${c}`} className={`px-2.5 py-1.5 border border-ink ${c === cargo ? "bg-ink text-paper" : "hover:bg-paper-2"}`}>
+            <Link key={String(c)} href={c === 1 ? `/candidatos?ano=${ano}&uf=BR&cargo=1` : `/?cargo=${c}#mapa`} className={`px-2.5 py-1.5 border border-ink ${c === cargo ? "bg-ink text-paper" : "hover:bg-paper-2"}`}>
               {l}
             </Link>
           ))}

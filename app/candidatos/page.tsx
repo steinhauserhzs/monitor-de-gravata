@@ -56,17 +56,32 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
         stampTone="verde"
         lead="Todo candidato registrado na Justiça Eleitoral, por estado e cargo: situação da candidatura, bens declarados, evolução patrimonial, doadores, fornecedores de campanha, processos e certidões. Registro encerrou em 15/08/2026; contas de campanha aparecem a partir de setembro."
         right={
-          <form className="card p-4 grid gap-2 sm:grid-cols-[auto_auto_1fr_1fr_auto] items-end w-full sm:min-w-[22rem]">
-            <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Eleição</span>
-              <select name="ano" defaultValue={ano} className="input">{Object.keys(ELEICOES).sort((a, b) => Number(b) - Number(a)).map((a) => <option key={a} value={a}>{a}</option>)}</select></label>
-            <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">UF</span>
-              <select name="uf" defaultValue={uf} className="input"><option value="">—</option>{UFS.map((u) => <option key={u}>{u}</option>)}</select></label>
-            <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Cargo</span>
-              <select name="cargo" defaultValue={cargo || ""} className="input"><option value="">—</option>{cargosDisponiveis.map((c) => <option key={c} value={c}>{CARGOS[c]}</option>)}</select></label>
-            <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Nome</span><input name="nome" defaultValue={nome} className="input" placeholder="opcional" /></label>
-            <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Nº de urna</span><input name="numero" defaultValue={numero} className="input" placeholder="ex.: 2222" inputMode="numeric" /></label>
-            <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Partido</span><input name="partido" defaultValue={partido} className="input" placeholder="PT, PL…" /></label>
-            <button className="btn" type="submit">Listar</button>
+          <form className="card p-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 w-full sm:min-w-[26rem]">
+            <label className="block">
+              <span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 block mb-1">Eleição</span>
+              <select name="ano" defaultValue={ano} className="input">{Object.keys(ELEICOES).sort((a, b) => Number(b) - Number(a)).map((a) => <option key={a} value={a}>{a}</option>)}</select>
+            </label>
+            <label className="block">
+              <span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 block mb-1">Cargo</span>
+              <select name="cargo" defaultValue={cargo || ""} className="input"><option value="">escolha…</option>{cargosDisponiveis.map((c) => <option key={c} value={c}>{CARGOS[c]}</option>)}</select>
+            </label>
+            <label className="block">
+              <span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 block mb-1">Estado</span>
+              <select name="uf" defaultValue={uf} className="input"><option value="">todos…</option>{UFS.map((u) => <option key={u}>{u}</option>)}</select>
+            </label>
+            <label className="block">
+              <span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 block mb-1">Nome</span>
+              <input name="nome" defaultValue={nome} className="input" placeholder="opcional" />
+            </label>
+            <label className="block">
+              <span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 block mb-1">Nº de urna</span>
+              <input name="numero" defaultValue={numero} className="input" placeholder="ex.: 2222" inputMode="numeric" />
+            </label>
+            <label className="block">
+              <span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 block mb-1">Partido</span>
+              <input name="partido" defaultValue={partido} className="input" placeholder="PT, PL…" />
+            </label>
+            <button className="btn sm:col-span-2 lg:col-span-3" type="submit">Listar candidatos</button>
           </form>
         }
       />
@@ -95,10 +110,44 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
               </div>
             ))}
           </div>
-          <div className="mt-6 grid gap-2 sm:grid-cols-3 md:grid-cols-6">
-            {["SP", "RJ", "MG", "BA", "RS", "PR"].map((u) => (
-              <Link key={u} href={`/candidatos?ano=2026&uf=${u}&cargo=6`} className="btn btn--ghost justify-center">Dep. federais · {u}</Link>
-            ))}
+          <div className="mt-8">
+            <div className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-stamp mb-3">Atalhos por cargo</div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="card p-4">
+                <div className="font-display text-xl">Disputa nacional</div>
+                <p className="text-sm text-ink-2 mt-1">Um cargo, um país inteiro decidindo.</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link href={`/candidatos?ano=${ano}&uf=BR&cargo=1`} className="btn btn--stamp !py-2 !px-3 !text-[0.65rem]">Presidente</Link>
+                </div>
+              </div>
+              <div className="card p-4">
+                <div className="font-display text-xl">Disputa no seu estado</div>
+                <p className="text-sm text-ink-2 mt-1">Escolha o cargo e depois o estado.</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {[[3, "Governador"], [5, "Senador"], [6, "Dep. federal"], [7, "Dep. estadual"], [8, "Dep. distrital (DF)"]].map(([c, l]) => (
+                    <Link key={String(c)} href={`/candidatos?ano=${ano}&cargo=${c}${c === 8 ? "&uf=DF" : ""}`} className="btn btn--ghost !py-2 !px-3 !text-[0.65rem]">{l}</Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <div className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-ink-3 mb-2">Ou vá direto: governadores e senadores por estado</div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {["SP", "RJ", "MG", "BA", "RS", "PR", "PE", "CE"].map((u) => (
+                  <div key={u} className="card p-3">
+                    <div className="font-mono text-[0.7rem] uppercase tracking-[0.14em] mb-2">{u}</div>
+                    <div className="flex flex-wrap gap-1 font-mono text-[0.6rem] uppercase">
+                      <Link href={`/candidatos?ano=${ano}&uf=${u}&cargo=3`} className="px-2 py-1 border border-linha hover:bg-ink hover:text-paper">governador</Link>
+                      <Link href={`/candidatos?ano=${ano}&uf=${u}&cargo=5`} className="px-2 py-1 border border-linha hover:bg-ink hover:text-paper">senador</Link>
+                      <Link href={`/candidatos?ano=${ano}&uf=${u}&cargo=6`} className="px-2 py-1 border border-linha hover:bg-ink hover:text-paper">federal</Link>
+                      <Link href={`/candidatos?ano=${ano}&uf=${u}&cargo=7`} className="px-2 py-1 border border-linha hover:bg-ink hover:text-paper">estadual</Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-ink-3">Outros estados: use o filtro acima, ou o <Link href="/" className="underline">mapa do Brasil na página inicial</Link>.</p>
+            </div>
           </div>
         </Section>
       ) : (
