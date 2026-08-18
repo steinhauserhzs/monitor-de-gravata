@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { loadCasos } from "@/lib/data";
 
-const BASE = "https://monitor-de-gravata.vercel.app";
+const BASE = "https://monitordegravata.vercel.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const fixas = ["", "/politicos", "/candidatos", "/contratos", "/empresas", "/precos", "/radar", "/casos", "/apis", "/contribuir", "/sobre"];

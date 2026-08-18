@@ -1,25 +1,25 @@
 {
   "area": "MÓDULO POLÍTICOS",
   "data_execucao": "2026-08-18",
-  "base_url": "https://monitor-de-gravata.vercel.app",
+  "base_url": "https://monitordegravata.vercel.app",
   "urls_testadas": 95,
   "ok": 81,
   "resumo": "Nenhuma página do módulo devolve 5xx e nenhuma ficha quebra com stack trace. Os problemas são de CONTEÚDO/ROTA: (1) a listagem só entrega 100 dos 513 deputados e não há paginação; (2) o filtro por UF falha de forma intermitente com 'API não respondeu: fetch failed' e mostra 0 deputados; (3) o painel §1 CEAP (gastos nota a nota) do DEPUTADO está 100% vazio em todos os anos, então o caminho fornecedor -> /empresas/CNPJ simplesmente não existe nas fichas de deputado; (4) todos os links da tabela de votações do deputado devolvem HTTP 400; (5) §8 Emendas falha para todo deputado cujo nome parlamentar tem acento; (6) a tabela §1 de votações do senador mostra votos de 2019-2021 apesar do KPI dizer '57 em 2026'.",
   "quebrados": [
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos/deputado/204534",
+      "url": "https://monitordegravata.vercel.app/politicos/deputado/204534",
       "problema": "§1 Cota parlamentar (CEAP) vazio em TODAS as fichas de deputado e em TODOS os anos. Nas 6 fichas abertas o KPI mostra 'Cota parlamentar 2026 — 0 notas · 0 fornecedores' e o painel diz 'Nenhuma despesa registrada em 2026'. Testando ?ano=2025 e ?ano=2024 o resultado alterna entre 'Nenhuma despesa registrada' e 'A API de despesas não respondeu (fetch failed)'. Consequência direta: ZERO links /empresas/CNPJ são gerados em qualquer ficha de deputado — o caminho fornecedor -> ficha da empresa, que é a espinha dorsal do módulo, não existe na prática para a Câmara. CAUSA: o endpoint upstream está devolvendo lista vazia para todos os ids testados (verificado fora do app), mas o app apresenta isso como fato ('0 notas · 0 fornecedores'), o que é factualmente falso e grave num site de transparência. É bug de apresentação + falta de fallback (o próprio texto cita 'arquivos anuais em dadosabertos.camara.leg.br/arquivos' que nunca é usado).",
       "gravidade": "alta",
       "evidencia": "200 / §1: 'Nenhuma despesa registrada em 2026'; KPI: 'Cota parlamentar 2026 — 0 notas · 0 fornecedores' (204534, 220588, 74646, 178937, 204560, 133439 = 6/6). ?ano=2025 em 204534: 'A API de despesas não respondeu ( fetch failed )'. Upstream: GET https://dadosabertos.camara.leg.br/api/v2/deputados/204534/despesas?ano=2024 -> 200 {\"dados\":[],...} (idem para 74646, 178937, 133439, 204560, 220588 em 2024 e 2025). Links /empresas/ na ficha de deputado: 0 em 6/6."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos?uf=MG",
+      "url": "https://monitordegravata.vercel.app/politicos?uf=MG",
       "problema": "Filtro por UF falha de forma intermitente e devolve lista de deputados VAZIA com HTTP 200. A página exibe 'Deputados federais · MG (0)' + 'Câmara dos Deputados API não respondeu: fetch failed' após ~10,5s (timeout fixo). Reproduzido em MG, RJ, BA, RS, PE e TO. Em requisições sequenciais falhou 100% das vezes (3 rodadas seguidas em MG/RJ/BA/RS); em paralelo falhou ~30%. Como o status é 200 e o card do Senado continua populado, o usuário lê como 'este estado não tem deputados'.",
       "gravidade": "alta",
       "evidencia": "run1 uf=MG 200 10.656577 | 'Deputados federais · MG (0)' | 'Câmara dos Deputados API não respondeu: fetch failed'; run2 uf=RJ 200 10.658767 (0); run3 uf=BA 200 10.653321 (0); uf=PE 200 10.496831 (0); uf=TO 200 10.497143 (0). Quando funciona: uf=MG 200 3.53 -> 53; uf=RJ 200 2.38 -> 46; uf=BA 200 5.15 -> 39."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos",
+      "url": "https://monitordegravata.vercel.app/politicos",
       "problema": "A listagem principal entrega apenas 100 dos 513 deputados (corte alfabético: vai de 'Acácio Favacho' até 'Coronel Assis') e NÃO há paginação, botão 'ver mais', nem aviso de truncamento. O próprio texto acima da lista promete '513 deputados federais e 81 senadores em exercício. Clique em qualquer um para a ficha completa'. Na prática 413 deputados (~80%) são inalcançáveis por navegação — só via ?nome= ou ?uf=. Mesmo comportamento em ?casa=camara.",
       "gravidade": "alta",
       "evidencia": "GET /politicos -> 200 0.348501; label 'Deputados federais (100)'; 100 hrefs /politicos/deputado/ únicos; último item da lista = 'Coronel Assis PL - MT'. Buscas por 'Mostrando', 'Próxima', 'Ver mais', 'página' no HTML: nenhuma ocorrência. Idem /politicos?casa=camara -> 'Deputados federais (100)'."
@@ -31,49 +31,49 @@
       "evidencia": "curl -sL: reuniao=2422887-23 -> 400 {\"status\":400,\"error\":\"Bad Request\",\"path\":\"/presenca-comissoes/votacao-portal\"}; idem 2325845-23, 2351284-38, 2418020-7, 2438459-143, 2565804-8 (5/5 amostrados -> 400). Contagem: 5 links distintos em cada uma das fichas 204534, 220588, 74646, 178937, 204560, 133439."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos/deputado/133439",
+      "url": "https://monitordegravata.vercel.app/politicos/deputado/133439",
       "problema": "§8 Emendas parlamentares falha para todo deputado cujo nome parlamentar contém acento. Correlação perfeita em 10 fichas: 4/4 com acento devolvem 'Nenhuma emenda localizada pelo nome parlamentar' e 6/6 sem acento devolvem dados. André Figueiredo (PDT-CE, ex-ministro, 10 mandatos) aparecendo com zero emendas é implausível — é bug de normalização/encoding do nome enviado ao SIOP, não falta de dado na fonte.",
       "gravidade": "alta",
       "evidencia": "COM acento (falham): 133439 'ANDRÉ FIGUEIREDO', 74646 'AÉCIO NEVES', 178937 'ALTINEU CÔRTES', 204488 'CÉLIO STUDART' -> todos '§8 ... Nenhuma emenda localizada pelo nome parlamentar \"X\" no SIOP'. SEM acento (funcionam): 204534 Tabata Amaral (2026·1 emenda R$158.953,92), 220588 Roberto Duarte (2024·15 emendas R$7.616.474,00), 204560 Adolfo Viana (2025·2 emendas), 220589 Eduardo Velloso (2026·7 emendas R$12.735.274,47), 74057 Alice Portugal (2022·5 emendas), 160553 Antonio Brito (2024·1 emenda)."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos/senador/5894",
+      "url": "https://monitordegravata.vercel.app/politicos/senador/5894",
       "problema": "Painel §1 'Como votou (últimas 25 votações do Plenário)' NÃO mostra as últimas votações — mostra as mais ANTIGAS. Em 3 das 4 fichas de senador a tabela inteira é de 2019-2021, enquanto o KPI da mesma página diz '57 em 2026'. É ordenação/paginação invertida (pega os 25 primeiros itens da API em vez dos 25 últimos). O usuário que abre a ficha para ver como o senador votou hoje recebe votos da pandemia.",
       "gravidade": "alta",
       "evidencia": "5894 Flávio Bolsonaro: KPI 'Votações registradas 1140 · 57 em 2026'; tabela §1 datas = 02/12/2020, 19/11/2020, 02/09/2020, 23/07/2020, 15/07/2020, 24/06/2020, 12/05/2020, 17/12/2019 (anos presentes: 2019, 2020, 2021 apenas). 5732 Rodrigo Pacheco: idem (2019-2021). 5376 Mara Gabrilli: idem (2019-2021). 5672 Alan Rick: OK (2025-2026)."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos/deputado/999999999",
+      "url": "https://monitordegravata.vercel.app/politicos/deputado/999999999",
       "problema": "Id inexistente devolve HTTP 200 com página em branco (só cabeçalho e rodapé, título 'Deputado · Monitor de Gravata'), sem 404, sem mensagem 'não encontrado' e sem link de volta. Mesmo comportamento em /politicos/senador/999999. Beco sem saída e ruim para SEO (páginas vazias indexáveis).",
       "gravidade": "media",
       "evidencia": "GET /politicos/deputado/999999999 -> 200 1.332324, 35424 bytes, conteúdo útil = 'Deputado · Monitor de Gravata' e nada mais. GET /politicos/senador/999999 -> 200 0.903364, 35418 bytes, 'Senador · Monitor de Gravata'."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos/deputado/204534?ano=1999",
+      "url": "https://monitordegravata.vercel.app/politicos/deputado/204534?ano=1999",
       "problema": "Parâmetro ?ano não é validado. O seletor só oferece 2023-2026, mas qualquer ano é aceito e a ficha renderiza painéis falsos: 'Cota parlamentar 1999 — API da Câmara indisponível' e 'Presença no plenário — 0/0 sessões deliberativas em 1999' para uma deputada que assumiu em 2019. Gera 10,8s de espera e conteúdo enganoso. (?ano=abc cai silenciosamente em 2026 — esse comportamento está correto.)",
       "gravidade": "media",
       "evidencia": "GET ...?ano=1999 -> 200 10.806697; página contém 'Cota parlamentar 1999 — API da Câmara indisponível' e 'Presença no plenário — 0/0 sessões deliberativas em 1999'. Seletor exibido: 'Ano de referência 2026 2025 2024 2023'."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos/senador/5732",
+      "url": "https://monitordegravata.vercel.app/politicos/senador/5732",
       "problema": "Ficha de SENADOR não tem seletor de ano — o CEAPS fica travado em 2026 (ano corrente, incompleto). A ficha de DEPUTADO tem 'Ano de referência 2026/2025/2024/2023'. Inconsistência entre as duas fichas do mesmo módulo: não há como auditar a cota do senador em anos anteriores pelo site.",
       "gravidade": "media",
       "evidencia": "Nas 4 fichas de senador (5894, 5732, 5376, 5672) a string 'Ano de referência' NÃO aparece no HTML; §5 é fixo 'Cota parlamentar (CEAPS) 2026'. Nas 6 fichas de deputado aparece 'Ano de referência 2026 2025 2024 2023' com <select name=\"ano\">."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos?nome=xxxxxx",
+      "url": "https://monitordegravata.vercel.app/politicos?nome=xxxxxx",
       "problema": "Estado vazio inconsistente: o bloco Câmara mostra 'sem dados / Nenhum deputado com esse filtro.', mas o bloco Senado mostra apenas 'Senadores (0)' sem nenhuma mensagem. O usuário não sabe se filtrou errado ou se o Senado quebrou (que é exatamente a aparência do bug real de UF descrito acima).",
       "gravidade": "baixa",
       "evidencia": "GET /politicos?nome=xxxxxx -> 200 1.701567; texto: 'Deputados federais (0) sem dados Nenhum deputado com esse filtro. Senadores (0) Cobertura Hoje: ...' — nada entre 'Senadores (0)' e o bloco seguinte."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos/deputado/204534",
+      "url": "https://monitordegravata.vercel.app/politicos/deputado/204534",
       "problema": "§8b 'Vínculos a verificar (hipóteses por sobrenome)' trata nome do meio como sobrenome. Para TABATA CLAUDIA AMARAL DE PONTES escolhe 'CLAUDIA' e 'PONTES' e monta 4 buscas externas + /contratos?q=CLAUDIA — 'CLAUDIA' é prenome, então a busca por nepotismo/fornecedor nasce inútil. Há também inconsistência de acentuação interna: para ALTINEU CÔRTES o §8b usa 'CORTES' (sem acento) enquanto o §8 usa 'CÔRTES' (com acento, e por isso falha).",
       "gravidade": "baixa",
       "evidencia": "204534: 'Sobrenome(s) menos comum(ns): CLAUDIA, PONTES'; links gerados: /contratos?q=CLAUDIA&uf=SP, portaldatransparencia.gov.br/servidores/consulta?nome=CLAUDIA, queridodiario.ok.org.br/pesquisa?querystring=CLAUDIA. 178937: §8b 'CORTES, COUTINHO' vs §8 'ALTINEU CÔRTES'."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos/deputado/74646",
+      "url": "https://monitordegravata.vercel.app/politicos/deputado/74646",
       "problema": "Latência de primeira abertura alta e sem indicação de progresso no HTML servido: as 6 fichas de deputado levaram de 8,8s a 16,3s no primeiro acesso (SSR bloqueante). Não chega a quebrar, mas 16s sem feedback é abandono garantido em mobile. As fichas de senador são bem mais rápidas (3,8s-6,3s).",
       "gravidade": "baixa",
       "evidencia": "dep 74646 -> 200 16.266697; 204534 -> 200 12.384824; 220588 -> 200 10.495893; 204560 -> 200 10.124753; 133439 -> 200 9.255052; 178937 -> 200 8.801458. Senadores: 5894 3.799872, 5672 4.097663, 5732 4.517046, 5376 6.345766."

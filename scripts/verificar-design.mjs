@@ -25,7 +25,7 @@ const TOKENS = ["paper", "ink", "stamp", "marker", "verde", "azul", "linha"];
 const PROIBIDAS = [
   { re: /\b(suspeito|esquema criminoso|escândalo|corrupto|ladrão|bandido)\b/i, msg: "linguagem não factual (ver DESIGN-SYSTEM §8)" },
   { re: /className="[^"]*\bmin-w-\[[0-9.]+rem\]/, msg: "min-w fixo sem w-full/sm: — quebra no celular (§5)", ok: /w-full sm:min-w-\[/ },
-  { re: /#[0-9a-fA-F]{6}\b/, msg: "cor hex fora dos tokens (§1)", ignorar: /globals\.css|Logo\.tsx|rgba/ },
+  { re: /#[0-9a-fA-F]{6}\b/, msg: "cor hex fora dos tokens (§1)", ignorar: /globals\.css|Logo\.tsx|rgba|opengraph-image|twitter-image|apple-icon|icon\.svg/ },
 ];
 
 for (const f of arquivos) {

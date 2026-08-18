@@ -1,67 +1,67 @@
 {
   "area": "Robustez, erros e mobile",
-  "site": "https://monitor-de-gravata.vercel.app",
+  "site": "https://monitordegravata.vercel.app",
   "data_do_teste": "2026-08-18",
   "metodo": "curl (status/tempo/tamanho) + extração do payload RSC (self.__next_f) para ler o que é renderizado depois do streaming + verificação visual em browser headless (viewport 375 e 360px)",
   "urls_testadas": 98,
   "ok": 73,
   "quebrados": [
     {
-      "url": "https://monitor-de-gravata.vercel.app/empresas/abc",
+      "url": "https://monitordegravata.vercel.app/empresas/abc",
       "problema": "SOFT-404: notFound() é chamado dentro de um boundary de Suspense, então o servidor já enviou HTTP 200 e o 404 vira erro de cliente. O usuário vê a página 404 PADRÃO do Next.js, em INGLÊS ('404 | This page could not be found.'), sem menu de recuperação, sem rodapé e sem uma palavra em PT-BR. Afeta as 8 rotas de entidade inválida testadas.",
       "gravidade": "alta",
       "evidencia": "HTTP 200 (esperado 404) em: /empresas/abc, /empresas/11111111111111, /politicos/deputado/999999999, /politicos/senador/999999, /candidatos/2026/SP/999999999999, /candidatos/1999/SP/1, /contratos/00000000000000/2026/1, /casos/nao-existe. No payload RSC de todas elas: 1c:E{\"digest\":\"NEXT_HTTP_ERROR_FALLBACK;404\"} seguido de <meta name=\"robots\" content=\"noindex\"/> e $RX(\"B:0\",\"NEXT_HTTP_ERROR_FALLBACK;404\"). Screenshot em browser de /empresas/abc mostra literalmente '404 | This page could not be found.'. Título da aba oscila entre '404: This page could not be found.' e 'Empresa · Monitor de Gravata'."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/contratos?dias=5",
+      "url": "https://monitordegravata.vercel.app/contratos?dias=5",
       "problema": "O campo 'Últimos dias' do Radar de contratos está quebrado para qualquer valor acima do padrão (2). A requisição fica 30s pendurada e volta com 'A API do PNCP não respondeu: timeout' e '0 registro(s)'. Como o valor padrão é 2, o formulário parece funcionar até o usuário mexer no filtro principal.",
       "gravidade": "alta",
       "evidencia": "dias=5 => 200 em 30,22s | dias=7 => 200 em 30,18s | dias=15 => 200 em 30,17s | dias=30 => 200 em 30,18s | dias=999 => 200 em 31,01s. Todos com o texto renderizado: 'A API do PNCP não respondeu: timeout . Tente reduzir os dias ou repetir. 0 registro(s) no período no PNCP inteiro'. Já /contratos sem parâmetro (dias=2) responde em 0,47s com '12.298 registro(s)'."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/contratos",
+      "url": "https://monitordegravata.vercel.app/contratos",
       "problema": "MOBILE: o formulário de filtros tem a classe min-w-[22rem] (352px) dentro de um container com px-4 (32px). Em viewport de 360px (Android mais comum) o formulário estoura e a PÁGINA INTEIRA passa a rolar na horizontal. Mesmo defeito em /precos e /candidatos.",
       "gravidade": "alta",
       "evidencia": "Medido no browser em 360x740: {vw:360, docScrollW:368, pageHorizScroll:true, formW:352, formLeft:16, formRight:368, clipParent:null} em /contratos e idêntico em /precos. A classe min-w-[22rem] aparece no HTML de /contratos, /precos e /candidatos (2 ocorrências em cada). Em 375px ainda cabe (368 < 375), por isso não aparece no preset 'mobile' padrão."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2026&uf=SP&cargo=99",
+      "url": "https://monitordegravata.vercel.app/candidatos?ano=2026&uf=SP&cargo=99",
       "problema": "Código de cargo inválido vaza a string literal 'undefined' para dentro do <h2> público da página: 'undefined · SP (0)'. Não quebra, mas exibe erro de programação para o visitante.",
       "gravidade": "media",
       "evidencia": "HTTP 200. Payload RSC: [\"$\",\"h2\",null,{\"className\":\"font-display text-2xl md:text-3xl leading-none\",\"children\":\"undefined · SP (0)\"}]. Reproduz também em /candidatos?ano=abc&uf=ZZ&cargo=99 ('undefined · ZZ (0)'). Com cargo válido (uf=ZZ&cargo=6) o bug some."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/pagina-que-nao-existe",
+      "url": "https://monitordegravata.vercel.app/pagina-que-nao-existe",
       "problema": "O 404 real (status correto) também usa a página padrão do Next.js em inglês. Não existe app/not-found.tsx customizado: nenhum texto em PT-BR, nenhum caminho de volta além do header, nenhuma sugestão de busca.",
       "gravidade": "media",
       "evidencia": "HTTP 404 em 0,30s, 32.703 bytes. Texto renderizado: '404: This page could not be found. ... 404 This page could not be found.' Mesmo corpo é servido em /apis/xpto, /politicos/prefeito/1, /candidatos/2026/SP e /politicos/deputado/204379/extra (todos 404 + 32.703 bytes)."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/robots.txt",
+      "url": "https://monitordegravata.vercel.app/robots.txt",
       "problema": "robots.txt e sitemap.xml não existem — devolvem a página 404 em HTML. Para um projeto de transparência que quer ser encontrado, não há nenhum direcionamento de indexação nem mapa das milhares de fichas.",
       "gravidade": "media",
       "evidencia": "/robots.txt => 404, 32.703 bytes, content-type text/html; charset=utf-8. /sitemap.xml => 404, 32.703 bytes, text/html. (O HTML servido inclui <meta name=\"robots\" content=\"noindex\"/>, que é o noindex da própria página de erro.)"
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos/deputado/107970",
+      "url": "https://monitordegravata.vercel.app/politicos/deputado/107970",
       "problema": "Primeira abertura de ficha de político (cache frio) leva ~20s, travada exatamente no mesmo patamar em chamadas repetidas — cheiro de timeout interno de 20.000ms sendo atingido antes de renderizar. O aviso da própria interface promete 'alguns segundos'.",
       "gravidade": "media",
       "evidencia": "Duas chamadas seguidas: 200 em 20,162s e 200 em 20,169s. Depois de aquecido, a mesma URL responde em 2,96s. Outro caso: /politicos/deputado/220714 => 10,46s. Nenhuma mensagem de erro no conteúdo — a lentidão é silenciosa."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/buscar",
+      "url": "https://monitordegravata.vercel.app/buscar",
       "problema": "O formulário de busca do hero da home (action=\"/buscar\", input name=\"q\" SEM required) aceita envio vazio. O resultado é um HTML de 32KB que só mostra o esqueleto 'consultando fontes oficiais…' e depois joga o usuário de volta na home por redirect de cliente. O usuário perde o contexto sem nenhuma mensagem.",
       "gravidade": "baixa",
       "evidencia": "/buscar => 200 (não 3xx) em 0,16s; payload RSC contém 18:E{\"digest\":\"NEXT_REDIRECT;replace;/;307;\"}. Idem /buscar?q= e /buscar?q=%20. HTML da home: <form class=\"mt-10 flex max-w-2xl flex-col gap-2 sm:flex-row rise rise-4\" action=\"/buscar\"> com <input ... name=\"q\"/> sem required."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/EMPRESAS/01391755000127",
+      "url": "https://monitordegravata.vercel.app/EMPRESAS/01391755000127",
       "problema": "Rotas respondem com caixa alta, servindo conteúdo idêntico em URL diferente. Não há <link rel=\"canonical\"> nem og:url em nenhuma página, então cada variação de caixa vira uma URL duplicada.",
       "gravidade": "baixa",
       "evidencia": "/EMPRESAS/01391755000127 => 200, 104.812 bytes, title 'NEKTAR COMERCIO E REPRESENTACOES LTDA — ficha da empresa · Monitor de Gravata' (igual a /empresas/01391755000127). grep por 'rel=\"canonical\"' e 'og:url' na home: zero ocorrências."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/contratos",
+      "url": "https://monitordegravata.vercel.app/contratos",
       "problema": "MOBILE/PERF: a tabela do radar despeja 200 linhas sem paginação nem virtualização. Em 375px a página fica com 24.143px de altura. A tabela em si está corretamente dentro de overflow-x-auto, o problema é o volume.",
       "gravidade": "baixa",
       "evidencia": "Medido no browser em 375x812: {docHeight:24143, rowCount:200, tabela w:862 dentro de wrapper 'overflow-x-auto card' de 343px}. HTML SSR confirma 200 <tr> e o rodapé de contexto diz 'exibindo os 200 maiores da 1ª página (200)'."

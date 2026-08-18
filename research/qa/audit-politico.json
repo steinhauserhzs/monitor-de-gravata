@@ -1,7 +1,7 @@
 {
   "area": "Fichas de deputado e senador + lista /politicos",
   "data_auditoria": "2026-08-18",
-  "site": "https://monitor-de-gravata.vercel.app",
+  "site": "https://monitordegravata.vercel.app",
   "commit": "69be313",
   "campos_auditados": 47,
   "fichas_testadas": [
@@ -17,7 +17,7 @@
   ],
   "achados": [
     {
-      "onde": "https://monitor-de-gravata.vercel.app/politicos/deputado/220715 e /236375 — KPI 'Presença no plenário'",
+      "onde": "https://monitordegravata.vercel.app/politicos/deputado/220715 e /236375 — KPI 'Presença no plenário'",
       "arquivo": "app/politicos/deputado/[id]/page.tsx:81-83 e :168",
       "texto_exibido": "Presença no plenário — 0% — 0/65 sessões deliberativas em 2026 (em vermelho)",
       "problema": "Quando a chamada /deputados/{id}/eventos falha, `eventos.data` vira null, `presentes.length` vira 0 e a página publica 0% de presença como fato, com destaque vermelho (tone='stamp' para <50%). Não há checagem de `eventos.error` — o único erro tratado é o de despesas. Reproduzido ao vivo em duas fichas de deputados EM EXERCÍCIO (Amom Mandel e Marcos Braz), na mesma coleta em que outras três fichas trouxeram presença real de 82–98%. É a acusação implícita mais grave do site: 'este deputado não apareceu em nenhuma das 65 sessões'.",
@@ -53,7 +53,7 @@
       "correcao": "Só aceitar a entidade cujo P4029 (id Câmara) / id Senado bata com o parlamentar; sem casamento por id, não exibir nada do Wikidata."
     },
     {
-      "onde": "https://monitor-de-gravata.vercel.app/politicos/senador/5672 — KPIs 'Presente sem votar' e 'Missão oficial'",
+      "onde": "https://monitordegravata.vercel.app/politicos/senador/5672 — KPIs 'Presente sem votar' e 'Missão oficial'",
       "arquivo": "app/politicos/senador/[codigo]/page.tsx:67-68 e :125-126",
       "texto_exibido": "Presente sem votar — 0 — conta como presença, não como voto  |  Missão oficial — 0 — ausências justificadas pela Casa",
       "problema": "Os dois contadores casam texto que a API não devolve. A API do Senado devolve SIGLAS: 'P-NRV' (presente, não registrou voto) e 'MIS' (missão). O código procura /Presente/i e a string exata 'Missão da Casa no País/exterior'. Para Alan Rick o valor real é P-NRV=66 e MIS=32, e a ficha publica 0 e 0. Efeito prático: das 110 vezes em que ele não registrou voto, a ficha não explica nenhuma — sugere ausência não justificada onde a Casa registrou presença e missão oficial. Mesmo erro em Camilo Santana (P-NRV=7 → 0).",
@@ -98,7 +98,7 @@
       "correcao": "Agregar qtd por tipo no script; enquanto isso, omitir o subtítulo em vez de escrever '0 notas'."
     },
     {
-      "onde": "https://monitor-de-gravata.vercel.app/politicos/senador/5672 — painel §1",
+      "onde": "https://monitordegravata.vercel.app/politicos/senador/5672 — painel §1",
       "arquivo": "app/politicos/senador/[codigo]/page.tsx:147",
       "texto_exibido": "Como votou (últimas 25 votações do Plenário) — primeiras linhas: 20/05/2025, 20/05/2025, 15/07/2026, 15/07/2026, 08/04/2025…",
       "problema": "`[...votos].reverse().slice(0, 25)` supõe que a API devolve em ordem cronológica. Não devolve: o array de Alan Rick começa em 2026-04-08 e termina em 2024-08-13, com máximo real 2026-08-12. O que a página chama de 'últimas 25 votações' é um recorte arbitrário do fim do array, que deixa de fora a votação mais recente e mistura 2025 com 2026.",
@@ -143,7 +143,7 @@
       "correcao": "Recortar o período pelo início de exercício e descontar licenças; mostrar 'presença de dd/mm a dd/mm' no hint."
     },
     {
-      "onde": "https://monitor-de-gravata.vercel.app/politicos/deputado/236375 — KPI 'Cota parlamentar 2026'",
+      "onde": "https://monitordegravata.vercel.app/politicos/deputado/236375 — KPI 'Cota parlamentar 2026'",
       "arquivo": "app/politicos/deputado/[id]/page.tsx:167",
       "texto_exibido": "Cota parlamentar 2026 — R$ 25.764,50 — API da Câmara indisponível",
       "problema": "O valor exibido veio do arquivo anual (fallback), mas o hint só olha `despesas.error` e anuncia que a fonte está indisponível. O leitor vê um número preciso rotulado como vindo de uma fonte que não respondeu — não sabe se pode confiar. Na mesma página, o painel §1 dá um terceiro diagnóstico ('a API está devolvendo vazio'), que contradiz o erro real (fetch failed).",
@@ -161,7 +161,7 @@
       "correcao": "Trocar o `Source` para o arquivo anual quando `arquivo` estiver em uso."
     },
     {
-      "onde": "https://monitor-de-gravata.vercel.app/politicos/deputado/220715 — KPI 'Red flags' e painel §2",
+      "onde": "https://monitordegravata.vercel.app/politicos/deputado/220715 — KPI 'Red flags' e painel §2",
       "arquivo": "app/politicos/deputado/[id]/page.tsx:172 e components/ficha.tsx:46-53",
       "texto_exibido": "Red flags — 0 — nenhum sinal automático (em verde) | 'sem sinais — Nenhuma red flag automática acionada com os dados disponíveis.'",
       "problema": "Na ficha do Amom Mandel nenhuma fonte carregou (cota, presença, comissões, proposições, tudo zerado) e o site publica um atestado verde de 'nenhum sinal'. Ausência de dado vira ausência de problema. O texto do painel tem a ressalva 'com os dados disponíveis', mas o KPI verde não tem nenhuma.",
@@ -170,7 +170,7 @@
       "correcao": "Quando não houver base para rodar as regras (analise.qtd === 0 e sem arquivo), exibir '—' cinza com 'sem dados para avaliar', não 0 verde."
     },
     {
-      "onde": "https://monitor-de-gravata.vercel.app/politicos/deputado/220715 — painel §1",
+      "onde": "https://monitordegravata.vercel.app/politicos/deputado/220715 — painel §1",
       "arquivo": "app/politicos/deputado/[id]/page.tsx:190",
       "texto_exibido": "A API de despesas não respondeu (fetch failed) e não há arquivo anual gerado para 2026 (rode npm run ceap 2026).",
       "problema": "Duas coisas erradas. (1) A afirmação é falsa: o arquivo ceap-2026.json existe e tem 509 deputados — o que falta é o casamento por nome+UF desse deputado específico (4 casos hoje: Amom Mandel, Nivaldo Albuquerque, Priscila Costa, Roseana Sarney). O leitor conclui que o problema é da Câmara. (2) A mensagem entrega instrução interna de desenvolvimento ao público final.",
@@ -197,7 +197,7 @@
       "correcao": "Trocar por 'da cota publicada até {mês}/{ano}'."
     },
     {
-      "onde": "https://monitor-de-gravata.vercel.app/politicos/deputado/74646 — painel §8",
+      "onde": "https://monitordegravata.vercel.app/politicos/deputado/74646 — painel §8",
       "arquivo": "app/politicos/deputado/[id]/page.tsx:332",
       "texto_exibido": "Emendas parlamentares (todas as que constam no SIOP) — Nenhuma emenda localizada pelo nome parlamentar \"AÉCIO NEVES\" no SIOP (o nome pode constar diferente — confira no Portal).",
       "problema": "Com o título prometendo 'todas as que constam no SIOP', o painel vazio é lido como 'este deputado não tem emendas' — afirmação forte e provavelmente falsa. A ressalva sobre o nome está no corpo, mas o título a contradiz.",
@@ -206,7 +206,7 @@
       "correcao": "Título 'Emendas localizadas por nome no SIOP' e estado vazio 'a busca por este nome não retornou emendas — pode ser divergência de grafia'."
     },
     {
-      "onde": "https://monitor-de-gravata.vercel.app/politicos?uf=AP — kickers das seções",
+      "onde": "https://monitordegravata.vercel.app/politicos?uf=AP — kickers das seções",
       "arquivo": "app/politicos/page.tsx:56-59 e :159",
       "texto_exibido": "'27 eleitos na votação de 2022 · fonte TSE' acima de 'Governadores (1)'; '513 em exercício · fonte Câmara' acima de 'Deputados federais (8)'; '81 em exercício' acima de 'Senadores (3)'",
       "problema": "27, 81 e 513 são constantes escritas à mão no código, coladas ao lado da contagem filtrada. Além da leitura confusa, se a API devolver menos que o universo (falha parcial, deputado empossado/afastado), o kicker segue afirmando 513/81 enquanto a lista mostra outra coisa.",
@@ -215,7 +215,7 @@
       "correcao": "Derivar o universo de `secoes[i].pessoas.length` e escrever '8 de 513 em exercício' quando houver filtro."
     },
     {
-      "onde": "https://monitor-de-gravata.vercel.app/politicos — seção 'Senadores'",
+      "onde": "https://monitordegravata.vercel.app/politicos — seção 'Senadores'",
       "arquivo": "app/politicos/page.tsx:38 e :153",
       "texto_exibido": "(nenhum aviso; a seção some se a API do Senado falhar)",
       "problema": "Só o erro da Câmara é avisado ('A API não respondeu — a lista de deputados federais pode estar incompleta'). Se `listSenadores()` falhar, `senadores` fica vazio, a seção é filtrada fora por `todos.length > 0` e o usuário vê uma página aparentemente normal, sem senadores e sem explicação. Mesmo padrão de ausência silenciosa nos prefeitos/vereadores.",
@@ -224,7 +224,7 @@
       "correcao": "Renderizar um Notice para `sens.error` igual ao da Câmara, e nunca esconder uma seção por lista vazia sem dizer por quê."
     },
     {
-      "onde": "https://monitor-de-gravata.vercel.app/politicos?municipio=… — blocos Prefeito(a) e Vereadores",
+      "onde": "https://monitordegravata.vercel.app/politicos?municipio=… — blocos Prefeito(a) e Vereadores",
       "arquivo": "app/politicos/page.tsx:205 e :210",
       "texto_exibido": "Sem prefeito eleito localizado para este município em 2024. / Sem vereadores localizados para este município em 2024.",
       "problema": "O mesmo texto aparece quando a API do TSE falha (`prefeitos.error`/`vereadores.error` nunca são checados). O leitor entende 'não há prefeito eleito registrado', que é uma afirmação sobre o TSE.",

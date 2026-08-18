@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   },
   description:
     "Portal da transparência feito pela sociedade: ficha de deputados, senadores e candidatos 2026, radar de contratos públicos com sinais de risco, comparador de preços e catálogo das fontes oficiais do Brasil. Open source, sem partido.",
-  metadataBase: new URL("https://monitor-de-gravata.vercel.app"),
+  metadataBase: new URL("https://monitordegravata.vercel.app"),
   applicationName: "Monitor de Gravata",
   openGraph: {
     title: "Monitor de Gravata — o pesadelo de Brasília",

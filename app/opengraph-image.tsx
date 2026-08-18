@@ -56,7 +56,7 @@ export default function OG() {
             <span style={{ color: "#c8102e" }}>·</span>
             <span>preços</span>
           </div>
-          <div>monitor-de-gravata.vercel.app</div>
+          <div>monitordegravata.vercel.app</div>
         </div>
       </div>
     ),

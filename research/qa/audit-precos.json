@@ -1,7 +1,7 @@
 {
   "area": "Comparador de preços, página da compra e Radar de contratos",
   "data_auditoria": "2026-08-18",
-  "site": "https://monitor-de-gravata.vercel.app",
+  "site": "https://monitordegravata.vercel.app",
   "repo": "/Users/hari/Hari/monitor-de-gravata",
   "metodo": "curl nas páginas ao vivo (/precos, /precos/compra/[id], /contratos, /contratos/[cnpj]/[ano]/[seq]) + leitura do código (app/precos, app/contratos, lib/precos.ts, lib/pncp.ts, lib/mercado.ts, lib/rules/index.ts, components/Veredito.tsx) + sondagem direta da API dadosabertos.compras.gov.br para verificar o que a fonte de fato garante",
   "casos_de_teste": [
@@ -17,7 +17,7 @@
   "achados": [
     {
       "id": "precos-filtro-data-ignorado",
-      "onde": "https://monitor-de-gravata.vercel.app/precos?q=luva&pdm=30247&desde=2015-01-01 — título do Passo 2 e campo 'Compras desde' do formulário",
+      "onde": "https://monitordegravata.vercel.app/precos?q=luva&pdm=30247&desde=2015-01-01 — título do Passo 2 e campo 'Compras desde' do formulário",
       "texto_exibido": "LUVA P/ PROCEDIMENTO DE SAÚDE NÃO CIRÚRGICO C/ ANVISA — preços praticados no Brasil desde 01/01/2015",
       "problema": "O filtro de data escolhido pelo usuário é impresso no título mas NUNCA é aplicado aos dados. O comparador só envia dataCompraInicio; a API do Compras.gov.br só filtra quando recebe dataCompraInicio E dataCompraFim. Consultei ao vivo: desde=01/08/2026 e desde=01/01/2015 devolvem exatamente os mesmos números (mediana R$ 19,00, min R$ 0,15, max R$ 72,80, 600 de 7.699). Na API, dataCompraInicio=2026-07-25 (posterior ao registro mais novo) ainda devolve 7.699 registros de 2026-07-24; com início E fim de janeiro/2026 devolve 271. O usuário acredita estar olhando um recorte temporal que não existe.",
       "fonte_real": "Compras.gov.br /modulo-pesquisa-preco/1_consultarMaterial ignora dataCompraInicio isolada; a amostra devolvida é a mais recente disponível, sem recorte de período.",

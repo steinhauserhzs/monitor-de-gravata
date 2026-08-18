@@ -3,7 +3,7 @@
     "papel": "verificador adversarial",
     "data": "2026-08-18",
     "hora_local": "10:50-11:35 BRT",
-    "alvo": "https://monitor-de-gravata.vercel.app",
+    "alvo": "https://monitordegravata.vercel.app",
     "itens_reportados": 17,
     "confirmados": 9,
     "descartados": 6,
@@ -13,7 +13,7 @@
 
   "confirmados": [
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2026&cargo=3",
+      "url": "https://monitordegravata.vercel.app/candidatos?ano=2026&cargo=3",
       "area": "home-nav",
       "problema": "Os quatro botoes de cargo do bloco 'Clique no seu estado' (Governador cargo=3, Senador cargo=5, Dep. federal cargo=6, Dep. estadual cargo=7) nao produzem nenhum efeito util: o link nao carrega UF e a /candidatos so lista com uf+cargo. Pior: os 6 atalhos da tela de estado vazio e os 27 links do mapa/grade de siglas fixam cargo=6, entao a escolha do usuario e descartada e NAO EXISTE caminho de navegacao no site para chegar a lista de governadores, senadores ou deputados estaduais de um estado. Alem disso 'Dep. federal' e renderizado com a classe de estado ativo (bg-ink text-paper), sinalizando falsamente que o filtro ja foi aplicado.",
       "gravidade": "alta",
@@ -22,7 +22,7 @@
       "correcao_sugerida": "Fazer os botoes de cargo alterarem o cargo dos 27 links do mapa (estado no cliente) e, no ramo vazio de /candidatos, exibir Notice explicito 'Falta escolher o estado' com os atalhos herdando o cargo da query em vez de cargo=6."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2026&cargo=5",
+      "url": "https://monitordegravata.vercel.app/candidatos?ano=2026&cargo=5",
       "area": "home-nav",
       "problema": "Mesmo defeito do item anterior no botao 'Senador' — sem uf na querystring nada e listado e o atalho oferecido em seguida troca o cargo para 6.",
       "gravidade": "alta",
@@ -31,7 +31,7 @@
       "correcao_sugerida": "Ver item cargo=3 (mesma correcao cobre os quatro botoes)."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos/deputado/204534",
+      "url": "https://monitordegravata.vercel.app/politicos/deputado/204534",
       "area": "politicos",
       "problema": "Secao §1 'Cota parlamentar (CEAP)' vazia em 100% das fichas de deputado e em todos os anos, e por consequencia ZERO links /empresas/<CNPJ> sao gerados em qualquer ficha de deputado — o caminho fornecedor -> ficha da empresa nao existe na pratica para a Camara. NAO e apenas falta de dado na origem: o dado existe, o app so consulta por um parametro que a API esta ignorando hoje.",
       "gravidade": "alta",
@@ -49,7 +49,7 @@
       "correcao_sugerida": "Trocar o href por https://www.camara.leg.br/propostas-legislativas/{objetosPossiveis[0].id} (200 verificado) e mostrar na coluna Materia a sigla/ementa da proposicao, deixando v.descricao so na coluna Resultado."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos/deputado/133439",
+      "url": "https://monitordegravata.vercel.app/politicos/deputado/133439",
       "area": "politicos",
       "problema": "§8 'Emendas parlamentares' falha para todo deputado cujo nome parlamentar contem acento. Correlacao perfeita em 12 fichas testadas: 5/5 com acento devolvem 'Nenhuma emenda localizada pelo nome parlamentar', 7/7 sem acento devolvem os anos e valores normalmente. Zero emendas para Andre Figueiredo (PDT-CE, ex-ministro) ou Aecio Neves e implausivel — e bug de normalizacao/encoding do nome enviado ao SIOP, nao ausencia de dado.",
       "gravidade": "alta",
@@ -58,7 +58,7 @@
       "correcao_sugerida": "Normalizar antes de enviar: `nomeAutor.normalize('NFD').replace(/\\p{Diacritic}/gu,'').toUpperCase()`, e se vier vazio tentar a versao acentuada como segunda chamada."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos/senador/5894",
+      "url": "https://monitordegravata.vercel.app/politicos/senador/5894",
       "area": "politicos",
       "problema": "O painel §1 rotulado 'Como votou (ultimas 25 votacoes do Plenario)' mostra as votacoes mais ANTIGAS, nao as ultimas. Em 4 das 5 fichas testadas a tabela inteira e de 2011-2021 enquanto o resto da pagina fala em 2026. A ordenacao nao e apenas invertida: nem a fatia visivel esta em ordem cronologica.",
       "gravidade": "alta",
@@ -67,7 +67,7 @@
       "correcao_sugerida": "Ordenar explicitamente por SessaoPlenaria.DataSessao decrescente antes do slice(0,25) (e idem para autorias em §2)."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/buscar?partido=NOVO&uf=SP&cargo=6",
+      "url": "https://monitordegravata.vercel.app/buscar?partido=NOVO&uf=SP&cargo=6",
       "area": "home-nav",
       "problema": "O titulo diz '60 candidato(s) · SP · NOVO' como se fosse o total, mas o NOVO tem 71 candidatos a deputado federal em SP. A /buscar corta em 60 por cargo, sem paginacao, sem aviso de truncamento e sem nenhum link para a /candidatos com os mesmos filtros — o usuario nao tem como chegar aos 11 restantes a partir dessa tela.",
       "gravidade": "media",
@@ -85,7 +85,7 @@
       "correcao_sugerida": "Remover esse link ou trocar pela busca de servidores vigente da Camara (ex.: /transparencia/recursos-humanos/quadro-remuneratorio), mantendo os outros dois que respondem 200."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos/2026/ZZ/1",
+      "url": "https://monitordegravata.vercel.app/candidatos/2026/ZZ/1",
       "area": "home-nav",
       "problema": "Soft-404: URLs de ficha invalidas devolvem HTTP 200. O usuario de navegador ve a pagina 404 corretamente (verificado), mas crawlers, previews de link e o proprio Google recebem status 200 com o esqueleto de carregamento — paginas inexistentes ficam indexaveis. Vale para /candidatos/<ano>/<UF>/<id>, /politicos/deputado/<id> e /politicos/senador/<codigo>.",
       "gravidade": "baixa",
@@ -94,7 +94,7 @@
       "correcao_sugerida": "Validar formato de UF/id (e existencia via HEAD barata) antes de qualquer suspense, ou mover a resolucao para middleware, para o 404 sair no header HTTP."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/buscar?q=00000000000191",
+      "url": "https://monitordegravata.vercel.app/buscar?q=00000000000191",
       "area": "home-nav",
       "problema": "O redirect de CNPJ para a ficha da empresa so acontece no cliente. A resposta HTTP e 200 com <main> vazio; quem nao executa JS (crawler, preview de link em WhatsApp/Slack, leitor de RSS) recebe uma pagina em branco. Mesmo padrao em /buscar sem parametros (redirect para /).",
       "gravidade": "baixa",
@@ -103,7 +103,7 @@
       "correcao_sugerida": "Detectar CNPJ de 14 digitos no middleware e emitir um 307 real antes de renderizar a /buscar."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/buscar?q=maria",
+      "url": "https://monitordegravata.vercel.app/buscar?q=maria",
       "area": "home-nav",
       "problema": "ACHADO NOVO / residual. A /buscar avisa quando a API da Camara falha (Notice 'API nao respondeu'), mas NAO avisa quando a API do Senado falha: sens.error nunca e renderizado. Se o Senado cair, o contador 'Deputados e senadores (N)' simplesmente encolhe e o usuario le o numero menor como verdade.",
       "gravidade": "baixa",
@@ -114,10 +114,10 @@
   ],
 
   "descartados": [
-    "FALSO POSITIVO — https://monitor-de-gravata.vercel.app/politicos 'lista so 100 dos 513 deputados, sem paginacao' (reportado 2x). Reteste 11:32 BRT de 2026-08-18: 'Deputados federais (513)' com 513 hrefs unicos + 'Senadores (81)'; ?casa=camara -> 513; ?letra=Z -> 9. Durante a primeira metade da minha sessao (10:50-11:25) a pagina realmente devolvia 100 mesmo com x-vercel-cache: MISS e querystrings de cache-bust, mas a API de origem sempre devolveu 513 (6/6 chamadas diretas a /api/v2/deputados?itens=513) e o codigo ja pede 513 (lib/camara.ts:61). Diagnostico: entrada velha no Data Cache da Vercel para essa URL upstream, com TTL de 3600s (revalidate: 3600), que expirou durante o teste. Nao ha bug de paginacao no app.",
-    "FALSO POSITIVO — https://monitor-de-gravata.vercel.app/politicos?uf=MG (e RJ, BA, RS, PE, TO) 'timeout de 10,5s e lista de deputados vazia'. Reteste sequencial 6/6 OK: MG 200 2,83s (53), RJ 200 2,03s (46), BA 200 1,60s (39), RS 200 1,67s (31), PE 200 2,97s (25), TO 200 1,90s (8). Instabilidade momentanea da API da Camara. Alem disso, quando a fonte falha a pagina EXIBE 'Camara dos Deputados — API nao respondeu: fetch failed' (app/politicos/page.tsx:115) e suprime o Empty enganoso (linha 117): e vazio explicado, nao defeito.",
-    "FALSO POSITIVO — https://monitor-de-gravata.vercel.app/buscar?q=maria 'devolve 7 ou 4 conforme a execucao, ~10,4s'. 5 execucoes seguidas: 200 em 1,93s / 0,34s / 0,19s / 0,25s / 0,19s, todas com 'Deputados e senadores (7)' (3 deputados + 4 senadores) e os mesmos ids. Instabilidade transitoria da API da Camara no momento da coleta original. (A lacuna real que sobrou desse item — falta de aviso quando o Senado falha — esta registrada como achado proprio em 'confirmados'.)",
-    "FALSO POSITIVO — https://monitor-de-gravata.vercel.app/buscar?q=jo%C3%A3o 'em cache frio devolveu 0 e exibiu Nenhum parlamentar'. 3 execucoes: 200 em 4,35s / 0,89s / 0,46s, todas com 'Deputados e senadores (5)'. Nao reproduzido. E o codigo ja distingue os casos: quando deps.error existe, app/buscar/page.tsx:106 renderiza o Notice 'Camara — API nao respondeu' acima do Empty.",
+    "FALSO POSITIVO — https://monitordegravata.vercel.app/politicos 'lista so 100 dos 513 deputados, sem paginacao' (reportado 2x). Reteste 11:32 BRT de 2026-08-18: 'Deputados federais (513)' com 513 hrefs unicos + 'Senadores (81)'; ?casa=camara -> 513; ?letra=Z -> 9. Durante a primeira metade da minha sessao (10:50-11:25) a pagina realmente devolvia 100 mesmo com x-vercel-cache: MISS e querystrings de cache-bust, mas a API de origem sempre devolveu 513 (6/6 chamadas diretas a /api/v2/deputados?itens=513) e o codigo ja pede 513 (lib/camara.ts:61). Diagnostico: entrada velha no Data Cache da Vercel para essa URL upstream, com TTL de 3600s (revalidate: 3600), que expirou durante o teste. Nao ha bug de paginacao no app.",
+    "FALSO POSITIVO — https://monitordegravata.vercel.app/politicos?uf=MG (e RJ, BA, RS, PE, TO) 'timeout de 10,5s e lista de deputados vazia'. Reteste sequencial 6/6 OK: MG 200 2,83s (53), RJ 200 2,03s (46), BA 200 1,60s (39), RS 200 1,67s (31), PE 200 2,97s (25), TO 200 1,90s (8). Instabilidade momentanea da API da Camara. Alem disso, quando a fonte falha a pagina EXIBE 'Camara dos Deputados — API nao respondeu: fetch failed' (app/politicos/page.tsx:115) e suprime o Empty enganoso (linha 117): e vazio explicado, nao defeito.",
+    "FALSO POSITIVO — https://monitordegravata.vercel.app/buscar?q=maria 'devolve 7 ou 4 conforme a execucao, ~10,4s'. 5 execucoes seguidas: 200 em 1,93s / 0,34s / 0,19s / 0,25s / 0,19s, todas com 'Deputados e senadores (7)' (3 deputados + 4 senadores) e os mesmos ids. Instabilidade transitoria da API da Camara no momento da coleta original. (A lacuna real que sobrou desse item — falta de aviso quando o Senado falha — esta registrada como achado proprio em 'confirmados'.)",
+    "FALSO POSITIVO — https://monitordegravata.vercel.app/buscar?q=jo%C3%A3o 'em cache frio devolveu 0 e exibiu Nenhum parlamentar'. 3 execucoes: 200 em 4,35s / 0,89s / 0,46s, todas com 'Deputados e senadores (5)'. Nao reproduzido. E o codigo ja distingue os casos: quando deps.error existe, app/buscar/page.tsx:106 renderiza o Notice 'Camara — API nao respondeu' acima do Empty.",
     "FALSO POSITIVO (parcial) — 'ids inexistentes devolvem pagina EM BRANCO, sem 404, sem mensagem e sem link de volta'. Em navegador real /politicos/deputado/999999999 renderiza a pagina 404 do Next ('404 — This page could not be found.'), e o marcador NEXT_HTTP_ERROR_FALLBACK;404 esta no stream de todos os tres casos. Nao ha beco sem saida em branco para o usuario. O que restou de real e apenas o status HTTP 200 (soft-404), registrado em 'confirmados' com gravidade baixa.",
     "FALSO POSITIVO — 'ficha 204534 com ?ano=2025 mostra: A API de despesas nao respondeu ( fetch failed )'. Nao reproduzido: ?ano=2025 e ?ano=2024 respondem 200 em ~6s exibindo '0 notas · 0 fornecedores', sem Notice de erro. Era falha transitoria. (O problema estrutural do CEAP vazio permanece confirmado, por outra causa: o filtro ?ano= da API da Camara.)"
   ],

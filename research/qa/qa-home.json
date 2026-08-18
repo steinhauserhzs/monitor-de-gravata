@@ -1,6 +1,6 @@
 {
   "area": "HOME + NAVEGACAO GLOBAL + BUSCA",
-  "site": "https://monitor-de-gravata.vercel.app",
+  "site": "https://monitordegravata.vercel.app",
   "data_do_teste": "2026-08-18",
   "metodo": "curl (status/tempo/tamanho) + parse do payload RSC self.__next_f (o conteudo do App Router vem streamado dentro de <script>, nao no HTML estatico) + verificacao no browser real para redirects client-side e layout do mapa SVG",
   "urls_testadas": 72,
@@ -42,7 +42,7 @@
       "q_00000000000191": "Redireciona, mas so no cliente (ver quebrado #8)",
       "q_merenda": "OK com ressalva — 200 em 11,01s, 10 contratos do PNCP; bloco de politicos mostra estado vazio explicado ('Nenhum parlamentar em exercicio com esses filtros.').",
       "partido_NOVO_uf_SP_cargo_6": "Filtro funciona (60/60 cards sao NOVO) mas o total esta truncado (ver quebrado #7).",
-      "buscar_sem_parametros": "OK — redireciona para / (verificado no browser: location.href virou https://monitor-de-gravata.vercel.app/). Via curl retorna 200 porque o redirect e emitido como NEXT_REDIRECT no payload RSC, nao como 307 HTTP.",
+      "buscar_sem_parametros": "OK — redireciona para / (verificado no browser: location.href virou https://monitordegravata.vercel.app/). Via curl retorna 200 porque o redirect e emitido como NEXT_REDIRECT no payload RSC, nao como 307 HTTP.",
       "q_sem_resultado": "/buscar?q=zzzqqqxyzw123 -> 200, 0 resultados, com estados vazios explicados ('Deputados e senadores (0)' + 'Escolha um estado' no bloco de candidatos). Estado vazio correto."
     },
     "4_header_e_footer": {
@@ -79,61 +79,61 @@
 
   "quebrados": [
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2026&cargo=3",
+      "url": "https://monitordegravata.vercel.app/candidatos?ano=2026&cargo=3",
       "problema": "Botao 'Governador' da home leva a uma pagina sem nenhum resultado e sem nenhuma explicacao. O link nao carrega UF e a /candidatos exige UF para listar, entao renderiza so o form + os cards 'Passo 1/2/3'.",
       "gravidade": "alta",
       "evidencia": "curl -> 200 em 0,29s, 47.294 bytes (identico a /candidatos sem parametros). Confirmado em browser real (1280x900): document.querySelectorAll('h2').length === 0 e a unica <section> renderizada e 'Passo 1 Escolha eleicao, UF e cargo...'. Nenhuma string 'Nenhum', 'sem dados' ou 'escolha uma UF' aparece na pagina. Comparar com /candidatos?ano=2026&uf=BR&cargo=1, que devolve 68.354 bytes e 'Presidente · BR (13)'."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2026&cargo=5",
+      "url": "https://monitordegravata.vercel.app/candidatos?ano=2026&cargo=5",
       "problema": "Botao 'Senador' da home: mesmo defeito — sem UF na querystring, a pagina nao lista nada e nao avisa o motivo.",
       "gravidade": "alta",
       "evidencia": "curl -> 200 em 0,29s, 47.294 bytes, zero links /candidatos/2026/<UF>/<id>. Byte-identico as respostas de cargo=3, cargo=6 e cargo=7."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2026&cargo=6",
+      "url": "https://monitordegravata.vercel.app/candidatos?ano=2026&cargo=6",
       "problema": "Botao 'Dep. federal' — que na home vem destacado como o estado ATIVO (class 'bg-ink text-paper') — tambem nao lista nada. E o botao mais visivel do bloco 'Clique no seu estado' e nao faz nada visivel.",
       "gravidade": "alta",
       "evidencia": "curl -> 200 em 0,16s, 47.294 bytes, zero links de ficha. Na home o mesmo href aparece com className 'px-2.5 py-1.5 border border-ink bg-ink text-paper', sinalizando ao usuario que aquele filtro ja esta aplicado."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2026&cargo=7",
+      "url": "https://monitordegravata.vercel.app/candidatos?ano=2026&cargo=7",
       "problema": "Botao 'Dep. estadual': mesmo defeito. Alem disso, os 27 links do mapa e da grade de siglas fixam cargo=6, entao nao ha caminho na home para chegar a uma lista de deputados estaduais/governadores/senadores de um estado.",
       "gravidade": "alta",
       "evidencia": "curl -> 200 em 0,16s, 47.294 bytes. Todos os 27 hrefs do mapa terminam em '&cargo=6' (verificado no HTML da home). Correcao esperada: os botoes deveriam preservar a UF selecionada ou a /candidatos deveria mostrar 'escolha um estado' — que e exatamente o que a /buscar ja faz ('Escolha um estado')."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos",
+      "url": "https://monitordegravata.vercel.app/politicos",
       "problema": "A pagina afirma '513 deputados federais e 81 senadores em exercicio' mas lista apenas 100 deputados (A a 'Afonso Flo...'), sem paginacao, sem 'ver mais' e sem aviso de truncamento. 413 deputados sao inalcancaveis por navegacao a partir do link do header/footer.",
       "gravidade": "alta",
       "evidencia": "Texto da pagina: '513 deputados federais e 81 senadores em exercicio'. Titulo da lista: 'Deputados federais (100)'. Contagem de hrefs unicos no payload RSC: /politicos/deputado/<id> = 100, /politicos/senador/<id> = 81. Busca por 'pagina=', 'Ver todos' ou 'Proxim' no payload: 0 ocorrencias. O filtro por UF funciona (/politicos?uf=SP -> 'Deputados federais · SP (70)' + 'Senadores · SP (3)'), mas nada na tela indica que a lista sem filtro esta cortada."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/buscar?q=maria",
+      "url": "https://monitordegravata.vercel.app/buscar?q=maria",
       "problema": "A mesma URL devolve quantidades diferentes de parlamentares entre execucoes e leva ~10,4s. Numa coleta trouxe 7 (3 deputados + 4 senadores); em 5 execucoes seguintes trouxe sempre 4 (so senadores) — os 3 deputados somem sem nenhum aviso de que uma fonte falhou.",
       "gravidade": "alta",
       "evidencia": "Coleta 1: 'Deputados e senadores (7)' com /politicos/deputado/204540, /deputado/220668, /deputado/74398, /senador/5386, /senador/5906, /senador/6338, /senador/6359. Coletas 3,4,5: 'Deputados e senadores (4)' com apenas os 4 senadores; tempos 10,41s / 10,27s / 10,44s / 10,40s (constante ~10s = timeout). A pagina nao mostra 'a fonte X nao respondeu' — o usuario ve um numero menor como se fosse a verdade. Num app anticorrupcao, resultado silenciosamente incompleto e o pior modo de falha."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/buscar?q=jo%C3%A3o",
+      "url": "https://monitordegravata.vercel.app/buscar?q=jo%C3%A3o",
       "problema": "Em cache frio a busca devolveu ZERO parlamentares e exibiu 'Nenhum parlamentar em exercicio com esses filtros.' — um falso negativo. Repetida com cache quente, a mesma URL devolve 5.",
       "gravidade": "media",
       "evidencia": "1a chamada: 200 em 10,46s, 'Deputados e senadores (0)' + mensagem 'Nenhum parlamentar em exercicio com esses filtros.'. Chamadas seguintes: 200 em 0,33s / 0,18s / 0,18s, 'Deputados e senadores (5)'. Nao e problema de acento: /buscar?q=jo%C3%A3o&onde=politicos e /buscar?q=joao&onde=politicos devolvem ambos (5); silva -> (8); andre e andr%C3%A9 -> ambos (13). A mensagem de vazio deveria distinguir 'nao encontrei' de 'a fonte nao respondeu a tempo'."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/buscar?partido=NOVO&uf=SP&cargo=6",
+      "url": "https://monitordegravata.vercel.app/buscar?partido=NOVO&uf=SP&cargo=6",
       "problema": "O titulo diz '60 candidato(s) · SP · NOVO', mas o NOVO tem 71 candidatos a deputado federal em SP. A busca corta em 60 sem paginacao, sem 'ver todos no modulo de candidatos' e apresentando 60 como se fosse o total.",
       "gravidade": "media",
       "evidencia": "/buscar?partido=NOVO&uf=SP&cargo=6 -> h2 '60 candidato(s) · SP · NOVO', 60 cards, 60/60 do NOVO (filtro correto). Fonte de verdade: /candidatos?ano=2026&uf=SP&cargo=6&partido=NOVO&pagina=1 -> 'Deputado Federal · SP (71)'. O mesmo corte em 60 aparece em /buscar?q=22&uf=SP&cargo=6. Nao ha nenhum href para /candidatos com os filtros aplicados nos resultados da /buscar (verificado: os unicos links nao-ficha do payload sao header e footer)."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/buscar?q=00000000000191",
+      "url": "https://monitordegravata.vercel.app/buscar?q=00000000000191",
       "problema": "O redirect de CNPJ para a ficha da empresa acontece so no cliente. A resposta HTTP e 200 com uma pagina em branco (so header e footer); quem nao executa JS — crawlers, preview de link, leitores — recebe pagina vazia.",
       "gravidade": "baixa",
       "evidencia": "curl -L: 200, num_redirects=0, url_effective inalterada, 32.920 bytes, main sem conteudo. O payload RSC carrega '19:E{\"digest\":\"NEXT_REDIRECT;replace;/empresas/00000000000191;307;\"}' — o 307 esta dentro do stream, nao no header HTTP (headers mostram apenas 'HTTP/2 200' e 'x-matched-path: /buscar'). No browser real funciona: location.href virou /empresas/00000000000191 e o title 'BANCO DO BRASIL SA — ficha da empresa'. Mesmo padrao em /buscar sem parametros (NEXT_REDIRECT;replace;/;307)."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos/2026/ZZ/1",
+      "url": "https://monitordegravata.vercel.app/candidatos/2026/ZZ/1",
       "problema": "UF inexistente e id invalido devolvem 200 com uma pagina de candidato praticamente vazia, em vez de 404. Qualquer URL de ficha inventada 'existe'.",
       "gravidade": "baixa",
       "evidencia": "curl -> 200. Texto util da pagina apos o footer: apenas 'Candidato · Monitor de Gravata'. Comparar com /naoexiste, que corretamente devolve 404."

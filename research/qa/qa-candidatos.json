@@ -1,48 +1,48 @@
 {
   "area": "Módulo Candidatos (Manual do Candidato 2026)",
   "data_do_teste": "2026-08-18",
-  "base_url": "https://monitor-de-gravata.vercel.app",
+  "base_url": "https://monitordegravata.vercel.app",
   "urls_testadas": 94,
   "ok": 78,
   "quebrados": [
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos/2026/SP/250002539612",
+      "url": "https://monitordegravata.vercel.app/candidatos/2026/SP/250002539612",
       "problema": "FALSO NEGATIVO no painel §0: deputada federal EM EXERCÍCIO é apresentada como 'Sem mandato federal em exercício'. O app afirma um fato errado (não é um estado de carregamento nem de erro) e contradiz o próprio módulo /politicos. Padrão: em cache frio a resposta demora ~22s (timeout da consulta à Câmara) e o app renderiza a negativa; depois de algumas tentativas o painel correto aparece e passa a ser servido em ~1,5s.",
       "gravidade": "alta",
       "evidencia": "4 requisições consecutivas: 21.99s/105286B, 21.95s/105286B, 21.43s/105286B (bytes idênticos) contendo 'Sem mandato federal em exercício' + 'Não localizamos ERIKA HILTON entre os deputados federais e senadores em exercício'. Na 5ª: 6.69s/143882B com o painel '§0 O que já fez com o mandato'. CONTRADIÇÃO INTERNA: /politicos?nome=hilton (200, 1.88s) devolve 'Câmara / Deputados federais (1) / Erika Hilton / PSOL / SP'. Reproduzido também em /candidatos/2026/SP/250002539435 (TABATA AMARAL, 2 de 3 tentativas a 22.0s), /candidatos/2026/SP/250002546642 (KIM KATAGUIRI, 1ª tentativa 22.4s) e /candidatos/2026/MG/130002542026 (NIKOLAS FERREIRA, 1ª tentativa 22.07s)."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos/2026/BR/280002542548",
+      "url": "https://monitordegravata.vercel.app/candidatos/2026/BR/280002542548",
       "problema": "Links de redes sociais do candidato saem com o esquema duplicado: href=\"https://HTTPS://...\". Todo link social cujo valor no TSE já vem com esquema fica 100% inclicável. Bug sistêmico (aparece em pelo menos 6 fichas).",
       "gravidade": "alta",
       "evidencia": "hrefs no HTML: https://HTTPS://K.KWAI.COM/U/@LULAOFICIAL/XGXCOK66 , https://HTTPS://OPEN.SPOTIFY.COM/SHOW/0VHUNM3XLD6CGI3LRTTGBB , https://HTTPS://WWW.YOUTUBE.COM/@LULAOFICIAL. curl -sIL retorna 000 e 'curl: (6) Could not resolve host: HTTPS'. Outros afetados: https://HTTPS://T.ME/SENADORFLAVIOBOLSONARO (Flávio Bolsonaro), https://HTTPS://WWW.FACEBOOK.COM/TABATAAMARALSP e https://HTTPS://WWW.TIKTOK.COM/@TABATAAMARALSP (Tabata), https://HTTPS://WWW.INSTAGRAM.COM/NAT.BOULOS/ e https://HTTPS://WWW.KWAI.COM/@NAT.BOULOS (Natália Boulos), https://HTTPS://X.COM/ANGELOCORONEL_ e https://HTTPS://WWW.THREADS.COM/@ANGELO.CORONEL (Angelo Coronel), https://HTTPS://DISCORD.GG/EXYYRJ5TF. Quando o TSE grava sem esquema o link sai certo (ex.: https://FBTV22.NET), o que confirma a concatenação indevida."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2024&uf=SP&cargo=13",
+      "url": "https://monitordegravata.vercel.app/candidatos?ano=2024&uf=SP&cargo=13",
       "problema": "Eleições MUNICIPAIS (2024 e 2020) sempre retornam ZERO candidatos, embora o select 'Eleição' ofereça as duas opções e o texto do Passo 1 prometa explicitamente prefeito e vereador. Dois dos cinco anos do dropdown são becos sem saída.",
       "gravidade": "alta",
       "evidencia": "200 em 0.41s, 43753 bytes: 'Eleições Municipais 2024 / Vereador · SP (0) / sem dados / Nenhum candidato para esse filtro.' Idêntico (mesmos 43753 bytes) em ?ano=2024&uf=SP&cargo=11 (Prefeito·SP 0), ?ano=2024&uf=RJ&cargo=11 (Prefeito·RJ 0), ?ano=2024&uf=SP&cargo=6 (0), ?ano=2020&uf=SP&cargo=11 (0), ?ano=2020&uf=MG&cargo=13 (0). Controle: ?ano=2022&uf=SP&cargo=6 → 'Deputado Federal · SP (1539)' e ?ano=2018&uf=SP&cargo=6 → '(1685)'. Agravante: o select Cargo só lista Presidente/Governador/Senador/Dep. Federal/Estadual/Distrital — Prefeito(11) e Vereador(13) não existem na UI, só via URL manual."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/politicos/senador/5967",
+      "url": "https://monitordegravata.vercel.app/politicos/senador/5967",
       "problema": "O link 'ficha completa →' do painel §0 (em /candidatos/2026/BA/50002533124, Angelo Coronel) leva a uma página que responde 200 mas renderiza VAZIA — só cabeçalho e rodapé, com erro de streaming no boundary React. Falha permanente (não é cache frio).",
       "gravidade": "alta",
       "evidencia": "4 tentativas: 200 em 2.42s/0.70s/0.70s/1.50s, sempre 35381 bytes. HTML termina com <script>$RX(\"B:1\",\"2525394880\")</script> e self.__next_f.push([1,\"1b:E{\\\"digest\\\":\\\"2525394880\\\"}\"]). grep 'Votou a favor' = 0 ocorrências. Mesmo defeito em /politicos/senador/581 (2/2 tentativas, 35377 bytes, $RX presente). Controles saudáveis: /politicos/senador/5894 (213872B) e /politicos/senador/5523 (221101B) sem $RX."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2026&cargo=1",
+      "url": "https://monitordegravata.vercel.app/candidatos?ano=2026&cargo=1",
       "problema": "Presidente é INALCANÇÁVEL pelo formulário. O texto do Passo 1 diz 'Presidente usa UF = BR automaticamente', mas (a) o <select name=\"uf\"> não tem a opção BR (só as 27 UFs + '—') e (b) enviar cargo=1 com uf vazio (o default do select) cai na landing dos 3 passos, sem lista.",
       "gravidade": "media",
       "evidencia": "?ano=2026&cargo=1 → 200 em 0.17s, 47294 bytes, conteúdo = 'Passo 1 / Passo 2 / Passo 3' + atalhos (nenhuma lista). Idêntico em ?ano=2026&uf=&cargo=1&nome=&numero=&partido= (47479 bytes). Funciona só se a UF for preenchida na URL: ?ano=2026&uf=BR&cargo=1 → 'Presidente · BR (13)' e até ?ano=2026&uf=SP&cargo=1 → 'Presidente · BR (13)'. Nenhum chunk JS baixado contém a string 'Presidente', ou seja, não há lógica cliente que preencha BR no submit."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos/2026/BR/280002542548",
+      "url": "https://monitordegravata.vercel.app/candidatos/2026/BR/280002542548",
       "problema": "As certidões anexadas ao registro (§5) são renderizadas como <li> de TEXTO PURO, não como links. O usuário vê 27 nomes de PDF que não consegue abrir — enquanto o 'Plano de governo (PDF)' da mesma seção é link para sig.tse.jus.br, provando que a URL do anexo existe.",
       "gravidade": "media",
       "evidencia": "Payload RSC: [\"$\",\"li\",\"280017016002\",{\"children\":\"Certidao Negativa TJSP 2 Instancia.pdf\"}] — nenhum elemento <a>/href no bloco. Summary: '27 certidões anexadas ao registro'. Mesmo padrão nas outras fichas (Flávio 23, Natália 8, Tabata 7, Kalil 6, Coronel 5)."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/contratos?q=INACIO&uf=BR",
+      "url": "https://monitordegravata.vercel.app/contratos?q=INACIO&uf=BR",
       "problema": "O link do §5b 'Contratos no PNCP com fornecedor/objeto contendo X' gerado nas fichas de candidato a Presidente sai com uf=BR, que o módulo de contratos não reconhece, zerando a busca.",
       "gravidade": "media",
       "evidencia": "/contratos?q=INACIO&uf=BR → 200, '0 resultado(s) no índice do PNCP' + 'sem dados'. Mesma busca sem o uf: /contratos?q=INACIO → '1821 resultado(s)'. Confirmado também com /contratos?q=SILVA&uf=BR → 0. Para UFs reais o filtro funciona: /contratos?q=KALIL&uf=MG → 15 e /contratos?q=PONTES&uf=SP → 6881."
@@ -54,25 +54,25 @@
       "evidencia": "curl -sIL → 404. curl -sSL (GET) → 404 text/html. A URL base sem query também é 404: https://www.camara.leg.br/transparencia/recursos-humanos/servidores → 404."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2026&uf=SP&cargo=6&situacao=Deferido",
+      "url": "https://monitordegravata.vercel.app/candidatos?ano=2026&uf=SP&cargo=6&situacao=Deferido",
       "problema": "O filtro de SITUAÇÃO é silenciosamente descartado ao usar o botão 'Listar'. O <form> não tem campo (nem hidden) name=\"situacao\", então qualquer resubmissão apaga o chip ativo sem avisar.",
       "gravidade": "baixa",
       "evidencia": "Campos do form nessa página: select ano, select uf, select cargo, input nome, input numero, input partido. Teste /name=\"situacao\"/ no bloco <form> = false. Os demais filtros são preservados corretamente (partido value=\"PT\", nome value=\"silva\", numero value=\"22\", selects com selected)."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2026&uf=SP&cargo=6&cargo=99",
+      "url": "https://monitordegravata.vercel.app/candidatos?ano=2026&uf=SP&cargo=6&cargo=99",
       "problema": "Cargo inexistente vaza a string 'undefined' na interface em vez de uma mensagem de erro.",
       "gravidade": "baixa",
       "evidencia": "/candidatos?ano=2026&uf=SP&cargo=99 → 200 em 0.42s: cabeçalho renderiza 'undefined · SP (0)' seguido de 'sem dados / Nenhum candidato para esse filtro.'"
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos?ano=2026&uf=SP&cargo=6&pagina=99",
+      "url": "https://monitordegravata.vercel.app/candidatos?ano=2026&uf=SP&cargo=6&pagina=99",
       "problema": "Página fora do intervalo não é limitada nem avisada: mostra 'Página 99 de 5' com lista completamente vazia, sem nenhuma mensagem de estado vazio e sem link para voltar ao início (só '← anterior' para a página 98, também vazia).",
       "gravidade": "baixa",
       "evidencia": "200 em 0.35s, 58849 bytes. Texto: 'Página / 99 / de / 5 / · / 240 / por página / ← anterior'. Zero links /candidatos/2026/SP/... no corpo. Único href de paginação: /candidatos?ano=2026&uf=SP&cargo=6&pagina=98. Ausente qualquer 'Nenhum candidato para esse filtro'."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos/2026/SP/999999999999",
+      "url": "https://monitordegravata.vercel.app/candidatos/2026/SP/999999999999",
       "problema": "ID de candidato inexistente responde HTTP 200 (deveria ser 404) e cai no 404 genérico do Next.js, sem mensagem própria do produto nem caminho de volta para a busca.",
       "gravidade": "baixa",
       "evidencia": "200 em 0.24s, 35967 bytes. Payload contém digest NEXT_HTTP_ERROR_FALLBACK;404 e o título default '404: This page could not be found.'; <title> da página é o genérico 'Candidato · Monitor de Gravata'. Mesmo comportamento com UF inválida: /candidatos/2026/ZZ/250002539435 → 200, 35967 bytes."
@@ -84,7 +84,7 @@
       "evidencia": "HTTP/1.1 200 OK, Content-Type: text/html, Content-Length: 48307, Set-Cookie: TS94c1bf0c029=...; Max-Age=30. Corpo começa com <!DOCTYPE html><html><head><meta http-equiv=\"Pragma\" content=\"no-cache\"/>. Segunda tentativa com cookie jar + UA de Chrome: ainda 200 text/html 44143 bytes. Mesmo comportamento nos planos de Flávio Bolsonaro e de Alexandre Kalil."
     },
     {
-      "url": "https://monitor-de-gravata.vercel.app/candidatos/2026/SP/250002546642",
+      "url": "https://monitordegravata.vercel.app/candidatos/2026/SP/250002546642",
       "problema": "Cold start das fichas beira 20–25s. Como o timeout do upstream é renderizado como conteúdo (ver item 1), a lentidão vira dado errado em vez de erro visível.",
       "gravidade": "media",
       "evidencia": "Tempos medidos em primeira abertura: Kim Kataguiri 22.48s, Tabata Amaral 22.48s / 22.10s / 21.78s / 21.86s, Alexandre Kalil 22.94s, Erika Hilton 22.00s / 21.95s / 21.43s, Nikolas Ferreira 22.08s, /politicos/deputado/204536 20.19s. Depois de aquecido o mesmo caminho responde em 1.3–3.1s."

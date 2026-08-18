@@ -9,7 +9,7 @@ Prazo-alvo: confirmação em 72h; correção de alta severidade em 14 dias. Não
 
 ## Escopo
 
-- Este código (Next.js) e o deploy em `monitor-de-gravata.vercel.app`.
+- Este código (Next.js) e o deploy em `monitordegravata.vercel.app`.
 - Integridade dos dados em `data/` (poisoning via PR, bypass da CI).
 - Vazamento de chave (`PORTAL_TRANSPARENCIA_KEY`) ou de dados de contribuidores.
 

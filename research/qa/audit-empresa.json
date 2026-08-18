@@ -1,20 +1,20 @@
 {
   "area": "Ficha da empresa (/empresas/[cnpj]) e /cruzamentos",
   "data_auditoria": "2026-08-18",
-  "site": "https://monitor-de-gravata.vercel.app",
+  "site": "https://monitordegravata.vercel.app",
   "repo": "/Users/hari/Hari/monitor-de-gravata",
   "paginas_verificadas": [
-    "https://monitor-de-gravata.vercel.app/cruzamentos",
-    "https://monitor-de-gravata.vercel.app/empresas/08865615000192",
-    "https://monitor-de-gravata.vercel.app/empresas/02558157000162",
-    "https://monitor-de-gravata.vercel.app/empresas/00509968000148"
+    "https://monitordegravata.vercel.app/cruzamentos",
+    "https://monitordegravata.vercel.app/empresas/08865615000192",
+    "https://monitordegravata.vercel.app/empresas/02558157000162",
+    "https://monitordegravata.vercel.app/empresas/00509968000148"
   ],
   "campos_auditados": 34,
   "resumo": "24 achados: 7 de gravidade alta, 10 média, 7 baixa. O padrão do incidente anterior (dado verdadeiro na origem, apresentação que muda o significado) se repete em pelo menos quatro lugares: (1) o campo 'fornecedor' do CEAP — autodeclarado, digitado pelo gabinete — vira 'Empresa' num ranking, atribuindo R$ 646 mil de cota parlamentar a uma pessoa física nomeada (EVAIR MELO); (2) uma busca textual do PNCP vira 'Contratos no PNCP' desta empresa, listando compras feitas POR um órgão como se fossem contratos ganhos por ele; (3) uma amostra de ~1% do PNCP é rotulada como 'contratos publicados nos últimos 365 dias'; (4) somas truncadas por LIMIT/página de API são exibidas como totais — a ponto de duas páginas do próprio site darem números diferentes para o mesmo CNPJ.",
   "achados": [
     {
       "id": "EMP-01",
-      "onde": "https://monitor-de-gravata.vercel.app/cruzamentos — Cruzamento 2, tabela 'Quem mais recebe da cota parlamentar', linha #5",
+      "onde": "https://monitordegravata.vercel.app/cruzamentos — Cruzamento 2, tabela 'Quem mais recebe da cota parlamentar', linha #5",
       "arquivo": "lib/db.ts:108",
       "texto_exibido": "5 | EVAIR MELO | 02.558.157/0001-62 | 196 | 1293 | R$ 646.902,50   (coluna 'Empresa')",
       "problema": "A query usa `min(fornecedor_nome)` — o menor nome em ordem alfabética entre todas as grafias que os gabinetes digitaram para aquele CNPJ. O CNPJ 02.558.157/0001-62 é a TELEFONICA BRASIL S.A. (a própria tabela do Cruzamento 1, na mesma página, o identifica corretamente). O nome escolhido pelo `min()` foi 'EVAIR MELO' — nome de um deputado federal real. O site publica hoje, sob o cabeçalho 'Empresa', que EVAIR MELO recebeu R$ 646.902,50 de cota parlamentar de 196 deputados. É exatamente o incidente anterior repetido: o dado é verdadeiro no arquivo da Câmara (alguém digitou aquilo no campo fornecedor), mas a apresentação transforma texto livre autodeclarado em 'razão social'.",
@@ -24,7 +24,7 @@
     },
     {
       "id": "EMP-02",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/02558157000162 — KPI 'Cota parlamentar recebida' e painel §1b",
+      "onde": "https://monitordegravata.vercel.app/empresas/02558157000162 — KPI 'Cota parlamentar recebida' e painel §1b",
       "arquivo": "lib/db.ts:43 (order by valor desc limit 50) + app/empresas/[cnpj]/page.tsx:70,98",
       "texto_exibido": "Cota parlamentar recebida | R$ 362.365,98 | 50 deputado(s) · 439 nota(s)  —  e no painel: 'Esta empresa aparece 439 vez(es) nas notas da cota parlamentar (CEAP), somando R$ 362.365,98 de 50 deputado(s).'",
       "problema": "O total é somado sobre um `limit 50` de deputados. Para a Telefônica o site diz, na ficha, R$ 362.365,98 de 50 deputados / 439 notas; e diz, em /cruzamentos, R$ 646.902,50 de 196 deputados / 1.293 notas — para o MESMO CNPJ, no mesmo dia. A ficha subdeclara 44% do valor e apresenta 50 como se fosse o número de deputados. Duas páginas do site se contradizem, e nenhuma avisa que o número é truncado.",
@@ -34,7 +34,7 @@
     },
     {
       "id": "EMP-03",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/00509968000148 — KPI 'Contratos no PNCP' e painel §1 'Contratos públicos (índice do PNCP)'",
+      "onde": "https://monitordegravata.vercel.app/empresas/00509968000148 — KPI 'Contratos no PNCP' e painel §1 'Contratos públicos (índice do PNCP)'",
       "arquivo": "app/empresas/[cnpj]/page.tsx:32,68,76-86 + lib/pncp.ts:155-170",
       "texto_exibido": "Contratos no PNCP | 18492 | R$ 7.406.726,39 nos 30 mais recentes  —  tabela com 'AQUISIÇÃO DE PAPEL HIGIÊNICO', 'Producao de banners e lonas', 'Aluguel de estrutura para o backdrop do evento…'",
       "problema": "`searchPNCP({ q: cnpj })` é BUSCA TEXTUAL no índice do PNCP, não filtro por CNPJ de fornecedor. Quando o CNPJ da ficha também é o CNPJ do ÓRGÃO comprador (tribunais, prefeituras, autarquias, universidades, estatais e empresas públicas — todos têm CNPJ e todos abrem ficha aqui), a busca devolve as COMPRAS feitas por ele, e a ficha as apresenta como 'contratos públicos' da entidade. A ficha do Tribunal Superior do Trabalho mostra hoje 18.492 'Contratos no PNCP' e lista compras de papel higiênico do próprio tribunal. Vale também para o caminho inverso: qualquer documento cujo texto contenha aquela sequência de 14 dígitos entra na lista.",
@@ -44,7 +44,7 @@
     },
     {
       "id": "EMP-04",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/[cnpj] — KPI 'Sanções'",
+      "onde": "https://monitordegravata.vercel.app/empresas/[cnpj] — KPI 'Sanções'",
       "arquivo": "lib/transparencia.ts:34-40",
       "texto_exibido": "Sanções | 0 | CEIS 0 · CNEP 0",
       "problema": "As duas chamadas passam por `safe()` e o resultado vira `a.data ?? []`. Timeout, 401 (chave inválida/expirada), 429 (rate limit) ou 500 da CGU produzem exatamente o mesmo '0' que uma empresa limpa. O KPI 'Sanções 0', a ausência do selo 'sancionada' e a red flag 'Empresa sancionada' (que retorna null quando o contador é 0) inocentam uma empresa por falha de rede. É o pior tipo de estado vazio: mente a favor do investigado.",
@@ -54,7 +54,7 @@
     },
     {
       "id": "EMP-05",
-      "onde": "https://monitor-de-gravata.vercel.app/cruzamentos — colunas 'Contratos' e 'Valor em contratos' + Procedência 'contratos publicados nos últimos 365 dias'",
+      "onde": "https://monitordegravata.vercel.app/cruzamentos — colunas 'Contratos' e 'Valor em contratos' + Procedência 'contratos publicados nos últimos 365 dias'",
       "arquivo": "scripts/ingerir-fornecedores.mjs:29-58,96 + lib/db.ts:70-88",
       "texto_exibido": "TELEFONICA BRASIL S.A. | 02.558.157/0001-62 | R$ 646.902,50 | 196 | 1 | R$ 6.180,00   —   e no rodapé: 'fornecedor_contratos:pncp · 1.260 linha(s) · contratos publicados nos últimos 365 dias'",
       "problema": "A ingestão varre o PNCP em blocos de 30 dias com teto de 40 páginas × 50 registros = 2.000 contratos por bloco, e para no primeiro erro. O PNCP publicou 176.045 contratos só em julho/2026 — a base cobre da ordem de 1% da janela que o rótulo promete. A consequência aparece na tela: a Telefônica é exibida com '1 contrato · R$ 6.180,00' em contratos públicos. Além de ser amostra rotulada como universo, o efeito é o INVERSO do aviso 'Leia com cuidado': a operadora gigante aparece com números minúsculos, ficando parecida com uma empresa pequena de fachada.",
@@ -64,7 +64,7 @@
     },
     {
       "id": "EMP-06",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/[cnpj] — KPI 'Cota parlamentar recebida' e painel §1b (título, texto e rodapé)",
+      "onde": "https://monitordegravata.vercel.app/empresas/[cnpj] — KPI 'Cota parlamentar recebida' e painel §1b (título, texto e rodapé)",
       "arquivo": "app/empresas/[cnpj]/page.tsx:70,96-99,116 + scripts/ingerir-cota.mjs:16,45",
       "texto_exibido": "'Cota parlamentar recebida' · 'Dinheiro de cota parlamentar recebido por esta empresa' · 'Fonte: arquivo anual oficial da cota parlamentar (Câmara), processado em lote.'",
       "problema": "Nenhum período é declarado. O número é: (a) só de 2026, ano em curso e portanto PARCIAL (jan–ago); (b) só da Câmara — nenhuma nota do Senado (CEAPS) entra, embora a tabela tenha coluna `casa`; (c) só de deputados que a ingestão conseguiu casar por nome+UF com a API v2 — `if (!idApi) continue` descarta silenciosamente as demais notas. O leitor entende 'quanto esta empresa recebeu de cota parlamentar', ponto final. O rodapé diz 'arquivo anual' sem dizer qual ano nem em que data foi coletado.",
@@ -74,7 +74,7 @@
     },
     {
       "id": "EMP-07",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/[cnpj] — KPI 'Cota parlamentar recebida', estado vazio",
+      "onde": "https://monitordegravata.vercel.app/empresas/[cnpj] — KPI 'Cota parlamentar recebida', estado vazio",
       "arquivo": "lib/db.ts:36,55-57 + app/empresas/[cnpj]/page.tsx:70",
       "texto_exibido": "Cota parlamentar recebida | — | nenhuma nota localizada",
       "problema": "`cotaRecebidaPorEmpresa` devolve null em três situações indistinguíveis: DATABASE_URL ausente, exceção na consulta (catch vazio) e ausência real de notas. A UI afirma sempre a terceira: 'nenhuma nota localizada'. Se o índice cair, toda empresa do site passa a exibir 'nenhuma nota localizada' — uma afirmação factual falsa sobre cada uma delas.",
@@ -84,7 +84,7 @@
     },
     {
       "id": "EMP-08",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/[cnpj] — KPI 'Sanções' e painel §3",
+      "onde": "https://monitordegravata.vercel.app/empresas/[cnpj] — KPI 'Sanções' e painel §3",
       "arquivo": "lib/transparencia.ts:35-36",
       "texto_exibido": "Sanções | N | CEIS N · CNEP N",
       "problema": "As consultas pedem `pagina=1` e o contador é `lista.length` — ou seja, no máximo o tamanho de uma página da API da CGU (15 registros). Uma empresa com 40 sanções aparece com 15, exibidas como o total. Número parcial apresentado como total.",
@@ -94,7 +94,7 @@
     },
     {
       "id": "EMP-09",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/[cnpj] — selo 'sancionada' no cabeçalho, KPI 'Sanções' e red flag 'Empresa sancionada' (severidade alta)",
+      "onde": "https://monitordegravata.vercel.app/empresas/[cnpj] — selo 'sancionada' no cabeçalho, KPI 'Sanções' e red flag 'Empresa sancionada' (severidade alta)",
       "arquivo": "lib/transparencia.ts:31-41 + app/empresas/[cnpj]/page.tsx:54,122 + lib/rules/index.ts:501-524",
       "texto_exibido": "selo 'sancionada' · red flag 'Empresa sancionada' — 'X registro(s) CEIS, Y CNEP'",
       "problema": "Nenhum filtro de vigência: `dataFimSancao` não é considerado em lugar nenhum. Uma sanção iniciada em 2015 e encerrada em 2018 marca a empresa como 'sancionada' hoje, no presente, no cabeçalho da ficha, e dispara uma red flag de severidade ALTA. A lista do §3 até mostra 'início → fim', mas o selo, o KPI e a red flag tratam histórico como situação atual.",
@@ -104,7 +104,7 @@
     },
     {
       "id": "EMP-10",
-      "onde": "https://monitor-de-gravata.vercel.app/cruzamentos — Cruzamento 2, linha #22",
+      "onde": "https://monitordegravata.vercel.app/cruzamentos — Cruzamento 2, linha #22",
       "arquivo": "lib/db.ts:107-114",
       "texto_exibido": "22 | CELULAR FUNCIONAL | 00.000.000/0000-01 | 224 | 1208 | R$ 265.738,36  (com link para /empresas/00000000000001)",
       "problema": "'CELULAR FUNCIONAL' não é empresa: é o rótulo interno que a Câmara usa para o benefício de celular funcional. O filtro da consulta aceita qualquer string de 14 dígitos (`length(fornecedor_documento) = 14`), então o pseudo-documento 00000000000001 entra no ranking de 'Empresas por valor recebido' com CNPJ formatado e link de ficha (que cai em 404, porque falha na validação de dígito verificador). O leitor vê 'uma empresa recebeu R$ 265 mil de 224 deputados'.",
@@ -114,7 +114,7 @@
     },
     {
       "id": "EMP-11",
-      "onde": "https://monitor-de-gravata.vercel.app/cruzamentos — Cruzamento 2, coluna 'Empresa' (linhas #1, #26, #28)",
+      "onde": "https://monitordegravata.vercel.app/cruzamentos — Cruzamento 2, coluna 'Empresa' (linhas #1, #26, #28)",
       "arquivo": "lib/db.ts:108",
       "texto_exibido": "'13347016000117Facebook Serviços Online do Brasil Ltda.' · '36.899.824 ANDERSON DE JESUS VIEIRA' · '3142AMORETTO CAFES EXPRESSO LTDA'",
       "problema": "Mesma raiz do EMP-01: texto livre autodeclarado do CEAP (com números colados, grafias erradas, nome de pessoa) exibido na coluna 'Empresa' como se fosse razão social oficial. Além de sujo, mistura pessoa física com pessoa jurídica sem aviso.",
@@ -124,7 +124,7 @@
     },
     {
       "id": "EMP-12",
-      "onde": "https://monitor-de-gravata.vercel.app/cruzamentos — painel 'Empresas por valor recebido (ano corrente)'",
+      "onde": "https://monitordegravata.vercel.app/cruzamentos — painel 'Empresas por valor recebido (ano corrente)'",
       "arquivo": "app/cruzamentos/page.tsx:77 + lib/db.ts:107-114",
       "texto_exibido": "ranking — 'Empresas por valor recebido (ano corrente)'",
       "problema": "Dois problemas no mesmo rótulo. (a) A consulta NÃO filtra ano: soma tudo que estiver na tabela `cota_parlamentar`. Hoje só 2026 foi ingerido, então o rótulo acerta por acidente; assim que alguém rodar `npm run db:cota 2025`, o painel passará a somar dois anos ainda dizendo 'ano corrente'. (b) 'ano corrente' é ano PARCIAL (jan–ago/2026) e isso não é dito — o leitor compara com totais anuais de outras fontes e conclui errado.",
@@ -134,7 +134,7 @@
     },
     {
       "id": "EMP-13",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/[cnpj] — §5 'Dados cadastrais', §4 QSA e rodapé §7",
+      "onde": "https://monitordegravata.vercel.app/empresas/[cnpj] — §5 'Dados cadastrais', §4 QSA e rodapé §7",
       "arquivo": "lib/cnpj.ts:42-49 (revalidate 86400) + app/empresas/[cnpj]/page.tsx:164",
       "texto_exibido": "'coletado 18/08/2026, 12:20' — e nenhuma menção à data da base da Receita",
       "problema": "A data de atualização da base da Receita NÃO é dita em lugar nenhum da ficha, embora o próprio código anote 'dados da Receita, atualização mensal' (lib/cnpj.ts:42). O que aparece é 'coletado <agora>', carimbado no rodapé de uma página que mistura vintages muito diferentes: Receita (extração mensal, cache de 24 h), PNCP (índice ao vivo), CGU (ao vivo), cota parlamentar (job em lote, pode ser de semanas atrás). O carimbo único sugere que tudo ali é de hoje — inclusive situação cadastral, capital social e QSA, que podem estar até ~30 dias defasados.",
@@ -144,7 +144,7 @@
     },
     {
       "id": "EMP-14",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/[cnpj] — §4 'Quadro societário (QSA)'",
+      "onde": "https://monitordegravata.vercel.app/empresas/[cnpj] — §4 'Quadro societário (QSA)'",
       "arquivo": "app/empresas/[cnpj]/page.tsx:131-143",
       "texto_exibido": "'ALESSANDRO BARBOSA SANTOS · Diretor · desde 23/05/2007 · ***976201** · Entre 51 a 60 anos' + link 'é político/candidato? buscar →'",
       "problema": "O CPF mascarado está correto e a nota sobre verificação humana existe (bom). Faltam dois avisos: (a) o QSA reflete a última extração mensal da Receita — sócio que saiu depois disso continua listado e o site convida a cruzá-lo com candidatos; (b) o botão 'é político/candidato? buscar' faz busca por NOME EXATO, e nomes comuns produzem homônimos — o mesmo mecanismo do incidente anterior, aqui aplicado a pessoas privadas identificadas por nome + faixa etária + CPF parcial.",
@@ -154,7 +154,7 @@
     },
     {
       "id": "EMP-15",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/00509968000148 — §2 'Red flags automáticas'",
+      "onde": "https://monitordegravata.vercel.app/empresas/00509968000148 — §2 'Red flags automáticas'",
       "arquivo": "lib/rules/index.ts:476-499",
       "texto_exibido": "media · Capital simbólico × contratos — 'Capital social R$ 0,00 e R$ 7.406.726,39 em 30 contrato(s) público(s) localizados.'",
       "problema": "A regra dispara hoje contra o TRIBUNAL SUPERIOR DO TRABALHO. Dois defeitos somados: (a) órgãos públicos, associações, fundações e cooperativas têm capital social 0 por natureza jurídica — a regra os trata como empresa sem lastro; (b) o valor dos 'contratos' vem da busca textual do EMP-03, ou seja, são compras feitas PELO órgão. Uma red flag rotulada 'capital simbólico' num tribunal é ruído que corrói a credibilidade das red flags legítimas.",
@@ -164,7 +164,7 @@
     },
     {
       "id": "EMP-16",
-      "onde": "https://monitor-de-gravata.vercel.app/cruzamentos — estado vazio do Cruzamento 1 e KPIs",
+      "onde": "https://monitordegravata.vercel.app/cruzamentos — estado vazio do Cruzamento 1 e KPIs",
       "arquivo": "lib/db.ts:86-87,97-99,116-118 + app/cruzamentos/page.tsx:39,47",
       "texto_exibido": "'Nenhuma empresa nas duas bases ainda — rode a ingestão de fornecedores com uma janela maior (npm run db:fornecedores 365).' + KPI 'Empresas nas duas pontas | 0'",
       "problema": "Os três `catch { return [] }` de lib/db.ts tornam falha de banco indistinguível de resultado vazio. Se o Neon estiver fora do ar, a página exibe KPIs zerados, tabelas vazias, a seção 'Procedência' some inteira e a mensagem culpa a ingestão. Zero exibido como fato quando a consulta falhou.",
@@ -174,7 +174,7 @@
     },
     {
       "id": "EMP-17",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/02558157000162 — §1b, tabela de deputados",
+      "onde": "https://monitordegravata.vercel.app/empresas/02558157000162 — §1b, tabela de deputados",
       "arquivo": "app/empresas/[cnpj]/page.tsx:105",
       "texto_exibido": "texto diz '… de 50 deputado(s)', tabela mostra 20 linhas, sem nenhuma indicação de corte",
       "problema": "`cota.deputados.slice(0, 20)` sem rodapé de truncamento. O leitor que contar as linhas encontra 20 onde o texto prometeu 50 (que por sua vez já é o truncamento do EMP-02).",
@@ -183,7 +183,7 @@
     },
     {
       "id": "EMP-18",
-      "onde": "https://monitor-de-gravata.vercel.app/cruzamentos — Procedência, cartão cota_parlamentar:camara:2026",
+      "onde": "https://monitordegravata.vercel.app/cruzamentos — Procedência, cartão cota_parlamentar:camara:2026",
       "arquivo": "scripts/ingerir-cota.mjs:45,70",
       "texto_exibido": "'91.413 linha(s) · arquivo anual oficial da Câmara; deputados casados por nome+UF com a API v2'",
       "problema": "A observação sugere que o casamento por nome+UF é um detalhe de enriquecimento, quando na verdade é um FILTRO destrutivo: `if (!idApi) continue` descarta a nota inteira quando o parlamentar não é encontrado (ex-deputados, suplentes, licenciados, variações de grafia). O número de notas descartadas não é registrado nem exibido, então nenhuma soma de cota do site pode ser conferida contra o arquivo oficial.",
@@ -193,7 +193,7 @@
     },
     {
       "id": "EMP-19",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/[cnpj] — §1, mensagem de lista vazia",
+      "onde": "https://monitordegravata.vercel.app/empresas/[cnpj] — §1, mensagem de lista vazia",
       "arquivo": "app/empresas/[cnpj]/page.tsx:78",
       "texto_exibido": "'Nenhum contrato indexado no PNCP para este CNPJ (o PNCP cobre contratos publicados a partir de 2024).'",
       "problema": "A afirmação sobre a cobertura do PNCP não é exata: o portal está no ar desde agosto/2021 e já contém contratos de 2021–2023 (a própria ficha da WORKING lista contratos de 2023 e 2024). O que muda em 2024 é a obrigatoriedade plena da Lei 14.133. Além disso, a frase não avisa o essencial: contratos regidos pela Lei 8.666 e contratações municipais que não migraram simplesmente não estão no PNCP — 'nenhum contrato' não significa 'não contrata com o poder público'.",
@@ -203,7 +203,7 @@
     },
     {
       "id": "EMP-20",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/[cnpj] — §1, bloco 'Contratos federais (Portal da Transparência)'",
+      "onde": "https://monitordegravata.vercel.app/empresas/[cnpj] — §1, bloco 'Contratos federais (Portal da Transparência)'",
       "arquivo": "app/empresas/[cnpj]/page.tsx:88-93 + lib/transparencia.ts:58-63",
       "texto_exibido": "'Contratos federais (Portal da Transparência)' seguido de até 15 itens",
       "problema": "Só a página 1 da API é buscada e só 15 itens são exibidos, sem total e sem indicação de corte. Empresa com 200 contratos federais aparece com 15, e não há como o leitor saber. Também não há data de referência do bloco.",
@@ -212,7 +212,7 @@
     },
     {
       "id": "EMP-21",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/[cnpj] — cabeçalho, ao lado do nome da empresa",
+      "onde": "https://monitordegravata.vercel.app/empresas/[cnpj] — cabeçalho, ao lado do nome da empresa",
       "arquivo": "app/empresas/[cnpj]/page.tsx:53",
       "texto_exibido": "selo 'red flag alta'",
       "problema": "Selo com aparência de carimbo, colado ao nome da empresa, sem qualquer qualificação de que se trata de sinal estatístico automático. Fora do contexto do §2 (que explica cada regra), 'red flag alta' ao lado da razão social lê-se como veredito — e é o primeiro elemento que aparece em print/compartilhamento. O EMP-15 mostra o risco concreto: hoje o TST teria selo se a soma passasse do limiar.",
@@ -221,7 +221,7 @@
     },
     {
       "id": "EMP-22",
-      "onde": "https://monitor-de-gravata.vercel.app/cruzamentos — KPI 'Empresas nas duas pontas'",
+      "onde": "https://monitordegravata.vercel.app/cruzamentos — KPI 'Empresas nas duas pontas'",
       "arquivo": "app/cruzamentos/page.tsx:24,39 + lib/db.ts:70",
       "texto_exibido": "Empresas nas duas pontas | 10 | recebem cota parlamentar E têm contrato público",
       "problema": "O valor é `cruz.length` de uma consulta com `limit 60`: se o cruzamento crescer, o KPI vai congelar em 60 e continuar sendo lido como 'existem 60 empresas nas duas pontas'. Somado ao EMP-05 (a base de contratos é ~1% do PNCP), o número não mede o que o rótulo promete em nenhuma direção.",
@@ -230,7 +230,7 @@
     },
     {
       "id": "EMP-23",
-      "onde": "https://monitor-de-gravata.vercel.app/empresas/[cnpj] — §1, linha final",
+      "onde": "https://monitordegravata.vercel.app/empresas/[cnpj] — §1, linha final",
       "arquivo": "app/empresas/[cnpj]/page.tsx:87",
       "texto_exibido": "'Também aparece em N edital(is)/ata(s) indexados.'",
       "problema": "Mesmo mecanismo do EMP-03: busca textual. 'Aparece em' é mais honesto que 'tem', mas o total exibido é o total da BUSCA, e para CNPJ de órgão inclui todos os editais publicados por ele. Não há link para conferir.",
@@ -239,7 +239,7 @@
     },
     {
       "id": "EMP-24",
-      "onde": "https://monitor-de-gravata.vercel.app/cruzamentos — seção 'Procedência'",
+      "onde": "https://monitordegravata.vercel.app/cruzamentos — seção 'Procedência'",
       "arquivo": "lib/db.ts:92-100 + app/cruzamentos/page.tsx:102-113",
       "texto_exibido": "(seção some por completo quando metaDerivados falha)",
       "problema": "`metaDerivados` também tem `catch { return [] }`. Se a consulta de metadados falhar, a página continua exibindo tabelas com números, mas sem nenhuma procedência, fonte ou data de geração — exatamente o bloco que dá lastro aos números some silenciosamente, e o KPI 'Índices no banco' mostra 0.",

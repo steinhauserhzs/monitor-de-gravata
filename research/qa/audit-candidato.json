@@ -2,7 +2,7 @@
   "area": "Ficha do candidato — /candidatos/{ano}/{uf}/{id}",
   "auditor": "QA de veracidade (agente)",
   "data": "2026-08-18",
-  "site": "https://monitor-de-gravata.vercel.app",
+  "site": "https://monitordegravata.vercel.app",
   "repo": "/Users/hari/Hari/monitor-de-gravata",
   "commit_auditado": "45b2250",
   "campos_auditados": 34,
