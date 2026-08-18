@@ -56,8 +56,9 @@ export type Despesa = {
 
 type Page<T> = { dados: T[]; links: { rel: string; href: string }[] };
 
+/** Lista deputados. `itens=513` traz a legislatura inteira numa requisição (a API aceita). */
 export async function listDeputados(params: { uf?: string; partido?: string; nome?: string } = {}) {
-  const q = new URLSearchParams({ ordem: "ASC", ordenarPor: "nome", itens: "100" });
+  const q = new URLSearchParams({ ordem: "ASC", ordenarPor: "nome", itens: "513" });
   if (params.uf) q.set("siglaUf", params.uf);
   if (params.partido) q.set("siglaPartido", params.partido);
   if (params.nome) q.set("nome", params.nome);
@@ -70,19 +71,25 @@ export async function getDeputado(id: string | number) {
   return r.dados;
 }
 
-/** Busca todas as páginas de despesas de um ano (CEAP). */
+async function allPagesDespesas(firstUrl: string, maxPages: number): Promise<Despesa[]> {
+  const first = await getJSON<Page<Despesa>>(firstUrl, { revalidate: 1800 });
+  const last = first.links.find((l) => l.rel === "last")?.href;
+  const totalPag = last ? Number(new URL(last).searchParams.get("pagina") ?? 1) : 1;
+  const n = Math.min(totalPag, maxPages);
+  if (n <= 1) return first.dados;
+  const restantes = await Promise.all(
+    Array.from({ length: n - 1 }, (_, i) => {
+      const u = new URL(last!);
+      u.searchParams.set("pagina", String(i + 2));
+      return getJSON<Page<Despesa>>(u.toString(), { revalidate: 1800 }).catch(() => ({ dados: [] as Despesa[], links: [] as { rel: string; href: string }[] }));
+    }),
+  );
+  return [...first.dados, ...restantes.flatMap((r) => r.dados)];
+}
+
+/** Todas as páginas de despesas do ano (CEAP), em paralelo. */
 export async function getDespesas(id: string | number, ano: number, maxPages = 12) {
-  const all: Despesa[] = [];
-  let url: string | null = `${CAMARA}/deputados/${id}/despesas?ano=${ano}&itens=100&ordem=DESC&ordenarPor=dataDocumento`;
-  let pages = 0;
-  while (url && pages < maxPages) {
-    const r: Page<Despesa> = await getJSON<Page<Despesa>>(url, { revalidate: 1800 });
-    all.push(...r.dados);
-    const next: { rel: string; href: string } | undefined = r.links.find((l) => l.rel === "next");
-    url = next?.href ?? null;
-    pages++;
-  }
-  return all;
+  return allPagesDespesas(`${CAMARA}/deputados/${id}/despesas?ano=${ano}&itens=100&ordem=DESC&ordenarPor=dataDocumento`, maxPages);
 }
 
 export async function getFrentes(id: string | number) {
@@ -120,18 +127,21 @@ export type Evento = {
   urlRegistro?: string | null;
 };
 
+/** Busca a 1ª página, descobre a última pelo link rel=last e traz as demais EM PARALELO. */
 async function allPages<T>(firstUrl: string, maxPages = 10, revalidate = 3600): Promise<T[]> {
-  const out: T[] = [];
-  let url: string | null = firstUrl;
-  let n = 0;
-  while (url && n < maxPages) {
-    const r: Page<T> = await getJSON<Page<T>>(url, { revalidate });
-    out.push(...r.dados);
-    const next: { rel: string; href: string } | undefined = r.links.find((l) => l.rel === "next");
-    url = next?.href ?? null;
-    n++;
-  }
-  return out;
+  const first = await getJSON<Page<T>>(firstUrl, { revalidate });
+  const last = first.links.find((l) => l.rel === "last")?.href;
+  const totalPag = last ? Number(new URL(last).searchParams.get("pagina") ?? 1) : 1;
+  const n = Math.min(totalPag, maxPages);
+  if (n <= 1) return first.dados;
+  const restantes = await Promise.all(
+    Array.from({ length: n - 1 }, (_, i) => {
+      const u = new URL(last!);
+      u.searchParams.set("pagina", String(i + 2));
+      return getJSON<Page<T>>(u.toString(), { revalidate }).catch(() => ({ dados: [] as T[], links: [] as { rel: string; href: string }[] }));
+    }),
+  );
+  return [...first.dados, ...restantes.flatMap((r) => r.dados)];
 }
 
 /** Sessões deliberativas do Plenário no período (denominador da presença). */
@@ -172,6 +182,27 @@ export async function getVotacoesPlenario(dataFim: string, janelas = 3) {
   const todas = partes.flatMap((p) => p.dados).filter((v) => v.siglaOrgao === "PLEN");
   const vistos = new Set<string>();
   return todas.filter((v) => (vistos.has(v.id) ? false : (vistos.add(v.id), true)));
+}
+
+/**
+ * Descobre as votações NOMINAIS mais recentes do Plenário (as simbólicas não registram voto
+ * individual). O resultado é o mesmo para todos os parlamentares — por isso as chamadas ficam
+ * no cache do Next e a segunda ficha em diante não paga o custo.
+ */
+export async function getVotacoesNominais(dataFim: string, alvo = 12, maxSondagens = 60) {
+  const todas = await getVotacoesPlenario(dataFim, 5);
+  const ordenadas = [...todas.filter((v) => v.proposicaoObjeto), ...todas.filter((v) => !v.proposicaoObjeto)].slice(0, maxSondagens);
+  const achadas: { votacao: Votacao; votos: Voto[]; orientacoes: Orientacao[] }[] = [];
+  for (let i = 0; i < ordenadas.length && achadas.length < alvo; i += 8) {
+    const lote = await Promise.all(
+      ordenadas.slice(i, i + 8).map(async (v) => {
+        const [votos, orientacoes] = await Promise.all([getVotos(v.id).catch(() => []), getOrientacoes(v.id).catch(() => [])]);
+        return votos.length ? { votacao: v, votos, orientacoes } : null;
+      }),
+    );
+    achadas.push(...(lote.filter(Boolean) as typeof achadas));
+  }
+  return achadas.slice(0, alvo);
 }
 
 export type Voto = { tipoVoto: string; dataRegistroVoto: string; deputado_: { id: number; nome: string; siglaPartido: string; siglaUf: string } };

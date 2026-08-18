@@ -9,6 +9,8 @@ import { onlyDigits } from "@/lib/format";
 import { safe } from "@/lib/fetcher";
 import { brl, dateBR, nowBR, pct } from "@/lib/format";
 import { noticiasGoogle } from "@/lib/noticias";
+import { checagensSobre } from "@/lib/checagens";
+import { Checagens } from "@/components/Checagens";
 import { wdBuscar, wdTimeline } from "@/lib/wikidata";
 
 export const dynamic = "force-dynamic";
@@ -32,13 +34,14 @@ export default async function FichaSenador({ params }: PageProps<"/politicos/sen
   const basicos = sen.data.DadosBasicosParlamentar;
 
   const anoAtual = new Date().getFullYear();
-  const [mandatos, comissoes, autorias, votacoes, filiacoes, noticias, wd, recursos, ceaps] = await Promise.all([
+  const [mandatos, comissoes, autorias, votacoes, filiacoes, noticias, checagens, wd, recursos, ceaps] = await Promise.all([
     safe(getMandatos(codigo)),
     safe(getComissoes(codigo)),
     safe(getAutorias(codigo)),
     safe(getVotacoes(codigo)),
     safe(getFiliacoes(codigo)),
     noticiasGoogle(`"${idp.NomeParlamentar}" senador`),
+    checagensSobre(idp.NomeParlamentar),
     safe(wdBuscar(idp.NomeCompletoParlamentar)),
     safe(getRecursosUtilizados(codigo)),
     safe(getCEAPS(codigo, anoAtual)),
@@ -211,6 +214,10 @@ export default async function FichaSenador({ params }: PageProps<"/politicos/sen
             </Panel>
             <Panel kicker="§6" title="Na mídia (manchetes recentes)">
               <NoticiasList noticias={noticias} query={idp.NomeParlamentar} />
+            </Panel>
+
+            <Panel kicker="§6b" title="Checagens de fatos">
+              <Checagens dados={checagens} nome={idp.NomeParlamentar} />
             </Panel>
             <Panel kicker="§7" title="Contribua com esta ficha">
               <ul className="text-sm space-y-2 text-ink-2">

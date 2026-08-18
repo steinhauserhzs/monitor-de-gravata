@@ -1,0 +1,218 @@
+{
+  "gerado_em": "2026-08-18",
+  "base": "https://monitor-de-gravata.vercel.app",
+  "area": "RADAR / CASOS / APIS / CONTRIBUIR / SOBRE",
+  "paginas": [
+    {
+      "url": "/radar",
+      "status": 200,
+      "tempo_s": 1.14,
+      "bytes": 352878,
+      "regras_renderizadas": 81,
+      "ids_unicos": 81,
+      "duplicados": 0,
+      "claim": "24/81 automatizadas"
+    },
+    {
+      "url": "/apis",
+      "status": 200,
+      "tempo_s": 3.13,
+      "bytes": 1150753,
+      "entradas": 147,
+      "details_com_docs": 147,
+      "details_sem_conteudo": 0
+    },
+    {
+      "url": "/casos",
+      "status": 200,
+      "tempo_s": 0.037,
+      "bytes": 44283,
+      "casos": 1
+    },
+    {
+      "url": "/casos/0000-modelo-de-caso",
+      "status": 200,
+      "tempo_s": 0.578,
+      "bytes": 48975
+    },
+    {
+      "url": "/contribuir",
+      "status": 200,
+      "tempo_s": 0.42,
+      "bytes": 52036,
+      "ancoras_de_secao": 0
+    },
+    {
+      "url": "/sobre",
+      "status": 200,
+      "tempo_s": 0.032,
+      "bytes": 75359,
+      "ancoras": [
+        "manifesto",
+        "juridico",
+        "editorial",
+        "seguranca",
+        "resposta",
+        "quem"
+      ],
+      "ancoras_com_conteudo": 6
+    }
+  ],
+  "filtros_apis": [
+    {
+      "url": "/apis?q=contratos",
+      "status": 200,
+      "resultados": 34
+    },
+    {
+      "url": "/apis?q=xxxx",
+      "status": 200,
+      "resultados": 1,
+      "obs": "match espurio na entrada da Receita Federal"
+    },
+    {
+      "url": "/apis?esfera=federal",
+      "status": 200,
+      "resultados": 51
+    },
+    {
+      "url": "/apis?esfera=eleitoral",
+      "status": 200,
+      "resultados": 21
+    },
+    {
+      "url": "/apis?esfera=municipal",
+      "status": 200,
+      "resultados": 0,
+      "obs": "opcao do select sempre vazia (0)"
+    },
+    {
+      "url": "/apis?esfera=inexistente",
+      "status": 200,
+      "resultados": 0,
+      "estado_vazio": "Nada com esse filtro. Limpar"
+    },
+    {
+      "url": "/apis?auth=nenhuma",
+      "status": 200,
+      "resultados": 92
+    },
+    {
+      "url": "/apis?auth=chave-gratuita",
+      "status": 200,
+      "resultados": 13
+    }
+  ],
+  "ancoras_orfas_radar_para_apis": {
+    "ocorrencias_totais": 147,
+    "ocorrencias_orfas": 102,
+    "destinos_unicos_orfaos": 54,
+    "regras_afetadas": 48,
+    "lista": [
+      "compras-gov-dados-abertos",
+      "https://pncp.gov.br/api/consulta/v1/contratos",
+      "https://api.portaldatransparencia.gov.br/api-de-dados/ceis",
+      "https://contas.tcu.gov.br/ords/f?p=INABILITADO:INIDONEOS",
+      "https://minhareceita.org/{cnpj}",
+      "https://pncp.gov.br/api/pncp/v1/orgaos/{cnpj}/contratos/{ano}/{seq}/termos",
+      "https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao?codigoModalidadeContratacao=8",
+      "https://pncp.gov.br/api/pncp/v1/orgaos/{cnpj}/compras/{ano}/{seq}/itens/{n}/resultados",
+      "https://compras.dados.gov.br/",
+      "portais TCE (SAGRES-PB, Audesp-SP, TCE-MG)",
+      "https://api.queridodiario.ok.org.br/company/partners/{cnpj}",
+      "https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao",
+      "https://pncp.gov.br/api/pncp/v1/orgaos/{cnpj}/compras/{ano}/{seq}/itens",
+      "https://paineldeprecos.planejamento.gov.br/",
+      "https://github.com/Transparencia-Brasil/cesta-de-precos-pncp",
+      "https://pncp.gov.br/api/pncp/v1/orgaos/{cnpj}/compras/{ano}/{seq}/arquivos",
+      "https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao?codigoModalidadeContratacao=8,9",
+      "https://api.queridodiario.ok.org.br/gazettes?querystring=",
+      "https://www.in.gov.br/leiturajornal",
+      "https://dadosabertos.tse.jus.br/dataset/",
+      "https://dadosabertos.tse.jus.br/dataset/candidatos-{ano}",
+      "https://dadosabertos.camara.leg.br/api/v2/deputados/{id}/despesas",
+      "https://www12.senado.leg.br/transparencia/dados-abertos/dados-abertos-ceaps",
+      "https://brasilapi.com.br/api/cnpj/v1/{cnpj}",
+      "https://api.queridodiario.ok.org.br/company/info/{cnpj}",
+      "https://brasilapi.com.br/api/cep/v2/{cep}",
+      "Nominatim/geocoder",
+      "https://dadosabertos.tse.jus.br/dataset/ (prestacao_de_contas_eleitorais_candidatos_{ano})",
+      "https://servicodados.ibge.gov.br/api/v2/cnae/subclasses",
+      "https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/levantamento-de-precos-de-combustiveis-ultimas-semanas-pesquisadas",
+      "https://api-publica.datajud.cnj.jus.br",
+      "https://divulgacandcontas.tse.jus.br",
+      "https://api.portaldatransparencia.gov.br/api-de-dados/ceis?cnpjSancionado=",
+      "https://api.portaldatransparencia.gov.br/api-de-dados/cnep",
+      "https://portaldatransparencia.gov.br/download-de-dados/ceis",
+      "https://dadosabertos.camara.leg.br/api/v2/deputados/{id}/discursos",
+      "https://dadosabertos.camara.leg.br/api/v2/eventos/{id}/deputados",
+      "https://api.portaldatransparencia.gov.br/api-de-dados/emendas",
+      "https://divulgacandcontas.tse.jus.br/divulga/rest/v1/candidatura/listar/2026/{ue}/{eleicao}/{cargo}/candidatos",
+      "https://dadosabertos.tse.jus.br/dataset/candidatos-2026",
+      "https://divulgacandcontas.tse.jus.br/divulga/rest/v1/prestador/consulta/receitas/2026/...",
+      "https://dadosabertos.tse.jus.br/dataset/candidatos-{ano} (bem_candidato)",
+      "https://servicodados.ibge.gov.br/api/v3/agregados/1737",
+      "https://dadosabertos.tse.jus.br/dataset/prestacao-de-contas-eleitorais-{ano}",
+      "https://www.cnj.jus.br/improbidade_adm/consultar_requerido.php",
+      "https://api-publica.datajud.cnj.jus.br/api_publica_{tribunal}/_search",
+      "https://api.queridodiario.ok.org.br/gazettes?territory_ids={ibge}&amp;querystring=&quot;dispensa emergencial&quot;",
+      "https://www.gov.br/transferegov/pt-br/dados-abertos",
+      "https://api.portaldatransparencia.gov.br/api-de-dados/servidores",
+      "https://portaldatransparencia.gov.br/download-de-dados/servidores",
+      "https://api.portaldatransparencia.gov.br/api-de-dados/servidores/remuneracao",
+      "https://api.dadosjusbr.org/",
+      "https://api.portaldatransparencia.gov.br/api-de-dados/convenios",
+      "https://simec.mec.gov.br/"
+    ]
+  },
+  "links_externos_malformados": [
+    "https://pncp.gov.br/app/contratos (não documentada; usada pelo front do PNCP)",
+    "https://divulgacandcontas.tse.jus.br (sem doc oficial; endpoints usados pelo front)"
+  ],
+  "github": {
+    "templates_issue": {
+      "red-flag.yml": 200,
+      "caso.yml": 200,
+      "resposta.yml": 200,
+      "api-quebrada.yml": 200,
+      "nova-api.yml": 200
+    },
+    "templates_nunca_linkados": [
+      "api-quebrada.yml",
+      "nova-api.yml"
+    ],
+    "arquivos_repo": {
+      "lib/rules/index.ts": 200,
+      "data/red-flags.json": 200,
+      "data/apis/00-nucleo-verificado.json": 200,
+      "data/casos/0000-modelo-de-caso.md": 200,
+      "CONTRIBUTING.md": 200,
+      "SECURITY.md": 200,
+      "docs/THREAT-MODEL.md": 200,
+      "docs/POLITICA-EDITORIAL.md": 200
+    }
+  },
+  "externos_amostrados": {
+    "dadosabertos.compras.gov.br/swagger-ui": 200,
+    "dadosabertos.camara.leg.br/swagger": 200,
+    "legis.senado.leg.br/dadosabertos/docs": 200,
+    "dadosabertos.tse.jus.br": 200,
+    "api.queridodiario.ok.org.br/docs": 200,
+    "brasilapi.com.br/docs": 200,
+    "docs.minhareceita.org": 200,
+    "fnde.gov.br/siope": 200,
+    "api.tcm.go.gov.br/api": 200,
+    "www1.tce.pr.gov.br": 200,
+    "api.portaldatransparencia.gov.br/swagger-ui": 403,
+    "contas.tcu.gov.br/ords/condenacao/metadata-catalog": 405,
+    "portal.stf.jus.br": 403,
+    "planalto.gov.br (com UA de browser)": 200,
+    "pncp.gov.br/api/consulta/swagger-ui/index.html": "000 timeout 40s"
+  },
+  "status_declarados_apis": {
+    "ok": 134,
+    "falhou": 12,
+    "nao_testado": 1,
+    "claim_no_header": "136 testadas com sucesso"
+  }
+}

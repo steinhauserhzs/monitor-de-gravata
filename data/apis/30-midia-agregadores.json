@@ -114,7 +114,7 @@
       }
     ],
     "utilidade_anticorrupcao": "Agrega em 1 chamada as checagens de Aos Fatos, Lupa, Comprova, Estadão Verifica, AFP Checamos, UOL Confere etc. (todas publicam ClaimReview). Aba 'Checagens' da Ficha do Político.",
-    "status_verificado": "2026-08-18 falhou: 403 sem chave (PERMISSION_DENIED — esperado; endpoint responde)",
+    "status_verificado": "2026-08-18 integrado no app (com GOOGLE_FACTCHECK_KEY); sem chave o app usa fallback por RSS de Aos Fatos e Comprova",
     "exemplo_resposta": "{\"claims\":[{\"text\":\"...\",\"claimant\":\"...\",\"claimDate\":\"...\",\"claimReview\":[{\"publisher\":{\"name\":\"Aos Fatos\",\"site\":\"aosfatos.org\"},\"url\":\"...\",\"title\":\"...\",\"textualRating\":\"Falso\",\"languageCode\":\"pt\"}]}]}",
     "notas": "Gratuita, mas exige chave; guardar server-side. Também existe o Fact Check Explorer (UI) em toolbox.google.com/factcheck/explorer. Cobertura depende dos veículos marcarem ClaimReview."
   },

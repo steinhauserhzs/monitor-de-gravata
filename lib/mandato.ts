@@ -1,5 +1,5 @@
 import { safe } from "./fetcher";
-import { listDeputados, getDespesas, analisarCEAP, getVotacoesPlenario, getVotos, getOrientacoes, getProposicoesDoAutor, getTemas, getSessoesDeliberativas, getEventosDeputado, CAMARA, type AnaliseCEAP } from "./camara";
+import { listDeputados, getDespesas, analisarCEAP, getVotacoesNominais, getProposicoesDoAutor, getTemas, getSessoesDeliberativas, getEventosDeputado, CAMARA, type AnaliseCEAP } from "./camara";
 import { listSenadores, getVotacoes as getVotacoesSenador, getAutorias, getRecursosUtilizados, SENADO, SENADO_ADM } from "./senado";
 import { emendasPorAutor, temChavePortal, brlPT } from "./transparencia";
 
@@ -83,7 +83,7 @@ export async function montarMandato360(nomeUrna: string, nomeCompleto: string, u
   if (m.casa === "camara") {
     const [despesas, votacoes, props, sessoes, eventos, emendas] = await Promise.all([
       safe(getDespesas(m.id, ano)),
-      safe(getVotacoesPlenario(hoje)),
+      safe(getVotacoesNominais(hoje)),
       safe(getProposicoesDoAutor(m.id)),
       safe(getSessoesDeliberativas(`${ano}-01-01`, hoje)),
       safe(getEventosDeputado(m.id, `${ano}-01-01`, hoje)),
@@ -91,39 +91,27 @@ export async function montarMandato360(nomeUrna: string, nomeCompleto: string, u
     ]);
     fontes.push("Câmara dos Deputados (dados abertos)");
 
-    // votos nominais: priorizamos votações com proposição associada (as simbólicas raramente registram voto individual)
-    const todasVotacoes = votacoes.data ?? [];
-    const candidatas = [...todasVotacoes.filter((v) => v.proposicaoObjeto), ...todasVotacoes.filter((v) => !v.proposicaoObjeto)].slice(0, 36);
-    // lotes sequenciais com parada antecipada: a maioria das votações é simbólica (sem voto individual),
-    // então varremos até juntar 12 nominais em vez de disparar 70+ requisições de uma vez.
-    const detalhes: (VotoResumo | null)[] = [];
-    for (let i = 0; i < candidatas.length && detalhes.filter(Boolean).length < 12; i += 6) {
-      const lote = await Promise.all(
-        candidatas.slice(i, i + 6).map(async (v) => {
-          const [votos, orient] = await Promise.all([safe(getVotos(v.id)), safe(getOrientacoes(v.id))]);
-          const meu = (votos.data ?? []).find((x) => String(x.deputado_?.id) === m.id);
-          if (!meu) return null;
-          const o = (orient.data ?? []).find((x) => x.siglaPartidoBloco?.toUpperCase().includes((m.partido || "").toUpperCase()))?.orientacaoVoto ?? null;
-          const voto: VotoResumo = {
-            data: v.data,
-            materia: v.proposicaoObjeto ?? "",
-            descricao: v.descricao,
-            voto: meu.tipoVoto,
-            posicao: posicaoDoVoto(meu.tipoVoto),
-            orientacaoPartido: o,
-            seguiuPartido: o && !/liber/i.test(o) ? o.toLowerCase() === meu.tipoVoto.toLowerCase() : null,
-            resultado: v.aprovacao === 1 ? "aprovado" : v.aprovacao === 0 ? "rejeitado" : undefined,
-            url: `https://www.camara.leg.br/presenca-comissoes/votacao-portal?reuniao=${v.id}`,
-          };
-          return voto;
-        }),
-      );
-      detalhes.push(...lote);
-    }
-    const votos = detalhes.filter(Boolean) as VotoResumo[];
+    const votos: VotoResumo[] = (votacoes.data ?? [])
+      .map(({ votacao: v, votos: lista, orientacoes }) => {
+        const meu = lista.find((x) => String(x.deputado_?.id) === m.id);
+        if (!meu) return null;
+        const o = orientacoes.find((x) => x.siglaPartidoBloco?.toUpperCase().includes((m.partido || "").toUpperCase()))?.orientacaoVoto ?? null;
+        return {
+          data: v.data,
+          materia: v.proposicaoObjeto ?? "",
+          descricao: v.descricao,
+          voto: meu.tipoVoto,
+          posicao: posicaoDoVoto(meu.tipoVoto),
+          orientacaoPartido: o,
+          seguiuPartido: o && !/liber/i.test(o) ? o.toLowerCase() === meu.tipoVoto.toLowerCase() : null,
+          resultado: v.aprovacao === 1 ? "aprovado" : v.aprovacao === 0 ? "rejeitado" : undefined,
+          url: `https://www.camara.leg.br/presenca-comissoes/votacao-portal?reuniao=${v.id}`,
+        } as VotoResumo;
+      })
+      .filter(Boolean) as VotoResumo[];
 
     // pautas (temas das proposições de autoria)
-    const amostra = (props.data ?? []).slice(0, 24);
+    const amostra = (props.data ?? []).slice(0, 12);
     const temasArr = await Promise.all(amostra.map((p) => safe(getTemas(p.id))));
     const contagem = new Map<string, number>();
     temasArr.forEach((t) => (t.data ?? []).forEach((x) => contagem.set(x.tema, (contagem.get(x.tema) ?? 0) + 1)));

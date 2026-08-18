@@ -7,6 +7,8 @@ import { safe } from "@/lib/fetcher";
 import { runRules } from "@/lib/rules";
 import { brl, dateBR, nowBR, pct } from "@/lib/format";
 import { noticiasGoogle } from "@/lib/noticias";
+import { checagensSobre } from "@/lib/checagens";
+import { Checagens } from "@/components/Checagens";
 import { wdBuscar, wdTimeline } from "@/lib/wikidata";
 import { pistasDeVinculo, sobrenomesRaros, servidoresPorSobrenome } from "@/lib/vinculos";
 import { montarMandato360 } from "@/lib/mandato";
@@ -33,9 +35,10 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
   const cand = c.data;
   const cargo = cand.cargo?.codigo;
 
-  const [prest, noticias, wd, mandato] = await Promise.all([
+  const [prest, noticias, checagens, wd, mandato] = await Promise.all([
     cargo && cand.partido?.numero && cand.numero ? safe(getPrestacao(ano, uf, cargo, cand.partido.numero, cand.numero, cand.id)) : Promise.resolve({ data: null, error: "sem dados de partido/número" }),
     noticiasGoogle(`"${cand.nomeUrna}" candidato ${uf}`),
+    checagensSobre(cand.nomeUrna),
     safe(wdBuscar(cand.nomeCompleto)),
     safe(montarMandato360(cand.nomeUrna, cand.nomeCompleto, uf)),
   ]);
@@ -238,6 +241,10 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
             </Panel>
             <Panel kicker="§6" title="Na mídia (manchetes recentes)">
               <NoticiasList noticias={noticias} query={cand.nomeUrna} />
+            </Panel>
+
+            <Panel kicker="§6b" title="Checagens de fatos">
+              <Checagens dados={checagens} nome={cand.nomeUrna} />
             </Panel>
             <Panel kicker="§7" title="Perguntas para fazer ao candidato">
               <ul className="text-sm space-y-2 text-ink-2 list-disc pl-5">

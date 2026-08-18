@@ -526,8 +526,8 @@
       }
     ],
     "utilidade_anticorrupcao": "Sanções (CEIS/CNEP), contratos por fornecedor, emendas por parlamentar, servidores. É a chave que liga fornecedor ↔ político ↔ punição.",
-    "status_verificado": "nao-testado (exige chave gratuita)",
-    "notas": "Rate limit rígido: cachear. Sem CORS: sempre server-side."
+    "status_verificado": "2026-08-18 ok com chave (CEIS, CNEP, contratos por CNPJ e emendas por autor testados em produção; sem chave devolve 401)",
+    "notas": "Rate limit rígido: cachear. Sem CORS: sempre server-side. Atenção: /servidores exige órgão de lotação/exercício ou CPF — não aceita busca só por nome."
   },
   {
     "id": "senado-adm-dados-abertos-ceaps",

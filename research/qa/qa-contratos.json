@@ -1,0 +1,125 @@
+{
+  "area": "CONTRATOS + PRECOS + EMPRESAS",
+  "site": "https://monitor-de-gravata.vercel.app",
+  "data_teste": "2026-08-18",
+  "urls_testadas": 63,
+  "ok": 48,
+  "quebrados": [
+    {
+      "url": "https://monitor-de-gravata.vercel.app/contratos?modo=dispensas",
+      "problema": "Modo 'Dispensas de licitacao' NUNCA retorna dados: a API do PNCP estoura timeout. Reproduzido 2x, sempre ~30,2s. A pagina responde 200 mas a tabela some por completo.",
+      "gravidade": "alta",
+      "evidencia": "HTTP 200 em 30.20s e 30.18s (2 tentativas). Texto: 'Dispensas publicadas nos ultimos 2 dia(s) | PNCP A API do PNCP nao respondeu: timeout . Tente reduzir os dias ou repetir. 0 registro(s) no periodo no PNCP inteiro · exibindo os 0 maiores da 1a pagina (200)'. Links de contrato na tabela = 0."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/contratos?modo=inexigibilidades",
+      "problema": "Modo 'Inexigibilidades' idem: timeout do PNCP, 0 registros, tabela vazia. Os dois modos que mais interessam a um app anticorrupcao (dispensa e inexigibilidade) estao 100% inoperantes.",
+      "gravidade": "alta",
+      "evidencia": "HTTP 200 em 30.17s. Texto: 'Inexigibilidades publicadas nos ultimos 2 dia(s) | PNCP A API do PNCP nao respondeu: timeout . 0 registro(s) no periodo'. Links de contrato = 0."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/contratos?dias=1",
+      "problema": "O seletor 'Ultimos dias' quebra em quase todos os valores. dias=1 da timeout (reproduzido 2x). Ironia: a propria mensagem de erro manda 'reduzir os dias', mas dias=1 e justamente o menor valor possivel e tambem falha.",
+      "gravidade": "alta",
+      "evidencia": "HTTP 200 em 30.16s e 30.17s. 'Contratos publicados nos ultimos 1 dia(s) | A API do PNCP nao respondeu: timeout . Tente reduzir os dias ou repetir. 0 registro(s)'. Somente o default (2 dias) funciona: 12.298 registros em 1,17s."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/contratos?dias=30",
+      "problema": "dias=30 tambem da timeout. Na pratica o Radar de contratos so funciona na janela default de 2 dias; qualquer alteracao de periodo pelo usuario zera a tela.",
+      "gravidade": "alta",
+      "evidencia": "HTTP 200 em 30.21s. 'Contratos publicados nos ultimos 30 dia(s) | A API do PNCP nao respondeu: timeout . 0 registro(s) no periodo no PNCP inteiro'."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/contratos?uf=RJ",
+      "problema": "Filtro de UF e falso: nao vai para a API do PNCP, e aplicado como pos-filtro sobre as 200 linhas ja baixadas (ordenadas por valor). Resultado: o app afirma 'Nenhum contrato' para o Rio de Janeiro inteiro enquanto exibe '12.298 registro(s) no periodo'. Falso negativo grave num app anticorrupcao.",
+      "gravidade": "alta",
+      "evidencia": "uf=RJ -> HTTP 200 em 0.18s: '12.298 registro(s) no periodo no PNCP inteiro · exibindo os 0 maiores da 1a pagina (200)' + 'sem dados / Nenhum contrato'. uf=SP -> 1 resultado. uf=BA -> 5 resultados. Soma das 27 UFs nunca chega perto de 12.298."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/contratos?uf=SP",
+      "problema": "Mesma causa do item acima, com agravante: o unico contrato exibido para SP e de 16/10/2025, embora o cabecalho diga 'publicados nos ultimos 2 dia(s)'. O maior estado do pais aparece com 1 contrato.",
+      "gravidade": "alta",
+      "evidencia": "HTTP 200 em 0.19s. 'Contratos publicados nos ultimos 2 dia(s) · SP | 12.298 registro(s) ... exibindo os 1 maiores'. Unica linha: '16/10/2025 FUNDACAO PRO-SANGUE HEMOCENTRO DE SAO PAULO ... R$ 69.000,00'."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/precos?q=notebook&pdm=8435&preco=10000&desde=2026-08-01",
+      "problema": "O filtro 'Compras desde' e puramente cosmetico: muda o rotulo mas NAO filtra a consulta. Testei desde=2020-01-01, 2024-01-01, 2025-01-01 e 2026-08-01: estatisticas byte-a-byte identicas. Pior, a tabela sob 'desde 01/08/2026' lista compras de 09/01/2026, 28/04/2026, 11/05/2026, 25/05/2026. O rotulo mente sobre a base usada no calculo do sobrepreco.",
+      "gravidade": "alta",
+      "evidencia": "desde=2020-01-01, 2024-01-01, 2025-01-01 e 2026-08-01 -> todos 'Compras analisadas 600 | amostra de 6.096 registradas (3 pag.) | Mediana R$ 4.509,00 | Q1-Q3 R$ 3.394,27 - R$ 7.121,75 | Minimo R$ 3,37 | Maximo R$ 8.949.000,00 | Media R$ 22.318,99'. Datas na tabela com desde=2026-08-01: 01/08/2026, 11/05/2026, 25/05/2026, 28/04/2026, 02/04/2026, 09/01/2026."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/empresas/05884962436",
+      "problema": "Pagina 100% em branco (so header+footer+skeleton), sem erro, sem 'nao encontrado'. E um link que o PROPRIO site gera: a tabela de /contratos linka fornecedores pessoa fisica para /empresas/{CPF de 11 digitos}, rota que nao renderiza nada. 5 dos 110 links de fornecedor da 1a pagina de /contratos caem nesse buraco.",
+      "gravidade": "alta",
+      "evidencia": "HTTP 200 em 0.65s, 34.479 bytes, apenas 1.209 caracteres de texto visivel (header + rodape + 'consultando fontes oficiais...'). Nenhuma ocorrencia de 'nao encontrado', 'invalido', 'erro' ou 'indisponivel'. Mesmo comportamento identico (34.479 bytes) em /empresas/65042042415 e /empresas/12461275475. CPFs linkados por /contratos: 05884962436, 65042042415, 12461275475, 31042341400, 83116796491."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/precos?q=&preco=10000",
+      "problema": "Link 'preco praticado ->' quebrado nas fichas de contrato. Quando a descricao do item comeca com codigo entre parenteses (ex.: '(3344606) - APRESENTACAO ARTISTICA...'), a extracao das primeiras palavras devolve string vazia e o href sai como /precos?q=&preco=X. O usuario cai no formulario em branco, o preco que ele carregava e descartado e nao ha nenhuma explicacao. Afeta 13 dos 158 links de comparacao (8,2%) so na amostra de 10 fichas.",
+      "gravidade": "alta",
+      "evidencia": "Em /contratos/08032567000151/2026/2239 o href e '/precos?q=&preco=10000'. Abrindo: HTTP 200, pagina sem 'Passo 1' e sem 'Passo 2', so os atalhos ('notebook computador condicionador ar veiculo papel a4...'). Outros exemplos em /contratos/11022597001325/2026/539: /precos?q=&preco=4.64, /precos?q=&preco=3.68, /precos?q=&preco=271.56, /precos?q=&preco=1.16."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/empresas/99999999999999",
+      "problema": "CNPJ inexistente/invalido na rota direta renderiza pagina em branco sem nenhuma mensagem. O formulario em /empresas valida digito verificador corretamente ('CNPJ invalido'), mas a rota /empresas/{cnpj} nao valida nada e falha em silencio.",
+      "gravidade": "media",
+      "evidencia": "HTTP 200 em 0.61s, 34.485 bytes, 1.209 caracteres de texto visivel. Busca por 'nao encontrad', 'invalido', 'Erro', 'indisponivel' => AUSENTE em todos. Comparacao: /empresas/00000000000191 -> 164.122 bytes e 17.581 caracteres de texto."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/buscar?q=MOACYR%20FONTES%20DE%20BRITO",
+      "problema": "O link 'e politico/candidato? buscar ->' do QSA (secao §4 da ficha da empresa) leva a uma busca que nunca responde a pergunta: a aba Candidatos exige selecionar UF antes de buscar, entao o destino sempre abre com 'Escolha um estado' + 'Nenhum parlamentar em exercicio' + 'Nada no PNCP'. O link promete um cruzamento socio x politico que nao acontece em nenhum clique.",
+      "gravidade": "media",
+      "evidencia": "Origem: /empresas/29422659000118 secao '§4 Quadro societario (QSA)' -> hrefs /buscar?q=GLOBAL%20CONSTRUCTION%20PARTICIPACOES%20LTDA e /buscar?q=MOACYR%20FONTES%20DE%20BRITO. Destino HTTP 200 em 7.19s: 'Candidatos 2026 Escolha um estado. Para buscar candidatos por nome, numero de urna ou partido, selecione o estado no filtro' + 'Em exercicio ... (0) sem dados' + 'Contratos ... sem dados Nada no PNCP para esse termo.'"
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/empresas/00000000000191",
+      "problema": "Mojibake (UTF-8 lido como latin-1) nos objetos vindos do indice do PNCP na secao §1 'Contratos publicos'. Texto sai ilegivel para o usuario final.",
+      "gravidade": "media",
+      "evidencia": "'Credenciamento de instituiÃ§Ã£o financeira para prestaÃ§Ã£o de serviÃ§os bancÃ¡rios de arrecadaÃ§Ã£o de tributos municipais' (MUNICIPIO DE IBITURUNA, 16/07/2026, R$ 158.460,00). Na mesma tabela outras linhas vem corretas ('Prestacao de servico de cobranca de boleto'), entao o defeito e por registro."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/precos?q=cimento",
+      "problema": "Ranking de relevancia dos PDMs esta quebrado: itens sem relacao aparecem acima do item obvio. Quem busca 'cimento' recebe 'COLETOR OLEO' e 'BICO SOLDAGEM' como 1o e 2o cards, antes de CIMENTO PORTLAND.",
+      "gravidade": "media",
+      "evidencia": "HTTP 200. 'Passo 1 Qual destes e o item? (25 padroes encontrados) COLETOR OLEO PDM 15418 | BICO SOLDAGEM PDM 3533 | CIMENTO BRANCO PDM 866 | CIMENTO PORTLAND PDM 867 | BICO LUBRIFICACAO PDM 3527 ...'"
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/precos?q=ar%20condicionado",
+      "problema": "Mesmo defeito de relevancia, com resultado pior: 'CONDICIONADOR CABELOS' (shampoo) e listado como candidato para 'ar condicionado', e nenhum dos 5 primeiros cards e o aparelho de ar condicionado.",
+      "gravidade": "media",
+      "evidencia": "'(25 padroes encontrados) CLIMATIZADOR PDM 18545 | CHAVE DE COMANDO PDM 17980 | ACOPLAMENTO ELASTICO PDM 2938 | CONDENSADOR ESTATICO PDM 15239 | CONDICIONADOR CABELOS PDM 5541 · SABONETES, ARTIGOS PARA BARBEAR E DENTIFRICIOS | COMPRESSOR REFRIGERACAO PDM 5501'"
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/contratos?q=merenda",
+      "problema": "No modo busca a coluna 'Fornecedor' vem vazia ('—') em todos os resultados e nao ha link para /empresas. Quem chega por busca perde exatamente o cruzamento empresa x contrato que e a tese do produto.",
+      "gravidade": "baixa",
+      "evidencia": "HTTP 200 em 1.22s, '32913 resultado(s) no indice do PNCP'. Linhas: '19/01/2026 MUNICIPIO DE PARAPUA ... merenda das escolas e creches ... — Pregao - Eletronico R$ 1.246.220,00' (traco na coluna Fornecedor). 0 links /empresas/ na pagina, contra 110 no /contratos sem filtro."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/precos?q=notebook&pdm=8435&preco=10000",
+      "problema": "Outlier absurdo nao tratado contamina a estatistica exibida: um 'notebook' de R$ 8.949.000,00 (valor de lote lancado como unitario na origem) puxa a Media para R$ 22.318,99 contra Mediana de R$ 4.509,00. A classificacao usa a mediana (correto), mas o painel mostra Media e Maximo sem ressalva, o que enfraquece a credibilidade do numero.",
+      "gravidade": "baixa",
+      "evidencia": "'Compras analisadas 600 | Mediana R$ 4.509,00 | Minimo R$ 3,37 | Maximo R$ 8.949.000,00 | Media R$ 22.318,99'. Linha de origem: '11/05/2026 PREFEITURA MUNICIPAL DE JOINVILLE - SC ... DCM4A-5 DATEN TECNOLOGIA LTDA 04602789000101 1 R$ 8.949.000,00'."
+    },
+    {
+      "url": "https://monitor-de-gravata.vercel.app/empresas/29422659000118",
+      "problema": "Numeracao das secoes da ficha da empresa pula o §3 (vai de §2 direto para §4) e o §6 e renderizado sem titulo, so com a tabela. Defeito cosmetico de navegacao.",
+      "gravidade": "baixa",
+      "evidencia": "Sequencia no HTML: '§2 Red flags automaticas' -> '§4 Quadro societario (QSA)' -> '§5 Dados cadastrais' -> '§6' seguido direto de '29/07/2026 MUNICIPIO DE ITIRUCU...'. Busca por '§3' => AUSENTE."
+    }
+  ],
+  "observacoes": [
+    "Fichas de contrato: 17 URLs /contratos/{cnpj}/{ano}/{seq} testadas (10 extraidas da tabela sem filtro + 4 do modo busca ?q=merenda + 3 da ficha /empresas/00000000000191). TODAS retornaram HTTP 200 entre 0,19s e 2,40s com a secao 'Dados do contrato' presente. Nenhum 404 nessa rota.",
+    "Link do fornecedor na ficha de contrato funciona quando o fornecedor e pessoa juridica: /contratos/14198543000170/2026/5 -> /empresas/29422659000118 (200, ficha completa da M43 CONSTRUTORA). Quebra apenas para pessoa fisica (ver achado alta).",
+    "Links externos: 10 amostrados. Todos OK. pncp.gov.br/app/* e portaldatransparencia.gov.br derrubam curl com UA padrao (connection reset / 405), mas retornam 200 com User-Agent de navegador -> classificado como protecao anti-bot, nao como link quebrado. APIs PNCP (json), BrasilAPI, comprovante da Receita, DivulgaCand TSE e GitHub issues respondem 200 direto.",
+    "Link 'Abrir um caso' do GitHub e valido e vem pre-preenchido corretamente: https://github.com/steinhauserhzs/monitor-de-gravata/issues/new?template=caso.yml&title=[caso] Contrato 14198543000170-2-000005/2026 — MUNICIPIO DE ITIRUCU (HTTP 200).",
+    "Formulario de /empresas funciona: submete GET ?cnpj=... e a pagina responde com <meta http-equiv=\"refresh\" content=\"1;url=/empresas/00000000000191\">. Validacao de digito verificador OK ('CNPJ invalido — O numero informado nao passa na validacao de digitos verificadores' para cnpj=123).",
+    "Filtro de UF em /precos E real (diferente do de /contratos): uf=SP muda a amostra de 6.096 para 628 registros e a mediana de R$ 4.509,00 para R$ 5.334,80.",
+    "Filtro ?min= em /contratos funciona como esperado dentro da limitacao das 200 linhas: min=1000000 reduz de 200 para 4 linhas.",
+    "Busca por CNPJ em /contratos funciona: ?q=14126371000129 devolve '1 resultado(s) no indice do PNCP' com o contrato correto de Campo Ere/SC.",
+    "Classificacao de sobrepreco em /precos funciona bem quando o PDM e escolhido: /precos?q=notebook&pdm=8435&preco=10000 devolve 'alto — R$ 10.000,00 e 2.22 x a mediana', com regra e limiares explicitos e 47 links para /empresas/ na tabela de comparaveis (todos com CNPJ de 14 digitos).",
+    "Estado vazio de /precos?q=xxxxxx e correto e explicado: '(0 padroes encontrados) sem dados — Nenhum padrao CATMAT com todas essas palavras. Tente termos mais genericos'. Serve de modelo para os estados vazios silenciosos de /empresas/{cnpj invalido}.",
+    "Sancoes CEIS/CNEP aparecem como '0 CEIS 0 · CNEP 0' nas fichas de PJ, mas em contrato com fornecedor pessoa fisica o rotulo muda para 'sancoes CEIS/CNEP: sem chave do Portal'. Sem a chave do Portal da Transparencia configurada nao da para saber se '0 sancoes' significa 'consultei e nao achei' ou 'nao consultei'.",
+    "Os dois contratos /contratos/82915026000124/2026/403 (Maracaja/SC) e /contratos/83102384000180/2026/2384 (Canoinhas/SC) apontam para o mesmo edital de origem 12075748000132/2025/166 e o mesmo fornecedor 18233020000178, com paginas de tamanho quase identico (128.488 e 128.487 bytes). Compativel com carona em ata de registro de precos — nao classifiquei como bug, mas vale confirmar que nao e cache cruzado."
+  ]
+}

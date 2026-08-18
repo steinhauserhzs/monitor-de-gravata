@@ -39,7 +39,16 @@ export function buscarPDM(termo: string, max = 25): PDM[] {
 }
 
 export type PrecoPraticado = {
+  /** ATENÇÃO: vem como número grande no JSON e perde precisão (…2026 vira …2030).
+   *  Use `idCompraItem` (string) para montar links — os 17 primeiros dígitos são o id da compra. */
   idCompra: number;
+  idCompraItem?: string;
+  idItemCompra?: number;
+  numeroItemCompra: number;
+  codigoUasg: string;
+  forma?: string;
+  descricaoDetalhadaItem?: string;
+  nomeUnidadeFornecimento?: string;
   dataCompra: string;
   dataResultado: string;
   modalidade: number;
@@ -58,7 +67,6 @@ export type PrecoPraticado = {
   esfera: string;
   poder: string;
   objetoCompra?: string;
-  idCompraItem?: string;
 };
 
 export async function precosPorPDM(codigoPdm: number, opts: { uf?: string; desde?: string; ate?: string; pagina?: number; tamanho?: number } = {}) {
@@ -100,6 +108,23 @@ export function estatisticas(valores: number[]): Estatisticas | null {
 }
 
 /** Classifica um preço contra a distribuição: razão vs mediana e posição no percentil. */
+/** id da compra (string, sem perda de precisão) a partir de idCompraItem. */
+export const idCompraDe = (p: PrecoPraticado) => (p.idCompraItem ? String(p.idCompraItem).slice(0, 17) : String(p.idCompra));
+
+/** Link oficial para acompanhar a compra no Compras.gov.br (Comprasnet). */
+export const linkCompraGov = (p: PrecoPraticado) => `https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-web/public/compras/acompanhamento-compra?compra=${idCompraDe(p)}`;
+
+/** Termo curto do objeto para procurar o edital/contrato no PNCP pelo Radar. */
+export const termoObjeto = (p: PrecoPraticado) =>
+  (p.objetoCompra || p.descricaoItem || "")
+    .replace(/^Objeto:\s*/i, "")
+    .replace(/Pregão Eletrônico\s*-?\s*/i, "")
+    .split(/[,.;]/)[0]
+    .trim()
+    .split(/\s+/)
+    .slice(0, 6)
+    .join(" ");
+
 export function classificar(preco: number, e: Estatisticas) {
   const razao = preco / e.mediana;
   const nivel: "abaixo" | "normal" | "atencao" | "alto" | "muito-alto" =

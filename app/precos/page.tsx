@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { PageHead, Section, Notice, Empty, Sev } from "@/components/ui";
 import { KPI } from "@/components/ficha";
-import { buscarPDM, precosAmostra, estatisticas, classificar, loadPDMs, COMPRAS } from "@/lib/precos";
+import { buscarPDM, precosAmostra, estatisticas, classificar, loadPDMs, COMPRAS, linkCompraGov, termoObjeto, idCompraDe } from "@/lib/precos";
 import { safe } from "@/lib/fetcher";
 import { brl, dateBR, nowBR } from "@/lib/format";
 import { UFS } from "@/lib/tse";
@@ -92,23 +92,46 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
                 )}
                 <div className="overflow-x-auto card mt-4">
                   <table className="table">
-                    <thead><tr><th>Data</th><th>Órgão</th><th>UF</th><th>Item (como descrito)</th><th>Marca</th><th>Fornecedor</th><th className="text-right">Qtd</th><th className="text-right">Unitário</th></tr></thead>
+                    <thead><tr><th>Data</th><th>Órgão</th><th>UF</th><th>Item (como descrito)</th><th>Marca</th><th>Fornecedor</th><th className="text-right">Qtd</th><th className="text-right">Unitário</th><th>Compra</th></tr></thead>
                     <tbody>
-                      {[...lista].sort((a, b) => b.precoUnitario - a.precoUnitario).slice(0, 60).map((p, i) => (
-                        <tr key={i}>
-                          <td className="font-mono text-xs whitespace-nowrap">{dateBR(p.dataResultado || p.dataCompra)}</td>
-                          <td className="text-xs">{p.nomeOrgao}</td>
-                          <td className="font-mono text-xs">{p.estado}</td>
-                          <td className="text-xs max-w-md">{p.descricaoItem?.slice(0, 140)}</td>
-                          <td className="text-xs">{p.marca ?? "—"}</td>
-                          <td className="text-xs">{p.nomeFornecedor}<div><Link href={`/empresas/${p.niFornecedor}`} className="font-mono text-[0.6rem] underline">{p.niFornecedor}</Link></div></td>
-                          <td className="text-right font-mono text-xs">{p.quantidade}</td>
-                          <td className="text-right font-mono text-xs font-bold">{brl(p.precoUnitario)}</td>
-                        </tr>
-                      ))}
+                      {[...lista].sort((a, b) => b.precoUnitario - a.precoUnitario).slice(0, 60).map((p, i) => {
+                        const razao = est ? p.precoUnitario / est.mediana : 1;
+                        const extremo = razao >= 10;
+                        return (
+                          <tr key={i} className={extremo ? "bg-marker/15" : undefined}>
+                            <td className="font-mono text-xs whitespace-nowrap">{dateBR(p.dataResultado || p.dataCompra)}</td>
+                            <td className="text-xs">{p.nomeOrgao}</td>
+                            <td className="font-mono text-xs">{p.estado}</td>
+                            <td className="text-xs max-w-md">
+                              {p.descricaoItem?.slice(0, 140)}
+                              {p.objetoCompra && (
+                                <details className="mt-1">
+                                  <summary className="cursor-pointer font-mono text-[0.58rem] uppercase tracking-[0.12em] text-ink-3">objeto da licitação</summary>
+                                  <p className="mt-1 text-[0.72rem] text-ink-2">{p.objetoCompra.replace(/^Objeto:\s*/i, "")}</p>
+                                </details>
+                              )}
+                            </td>
+                            <td className="text-xs">{p.marca ?? "—"}</td>
+                            <td className="text-xs">{p.nomeFornecedor}<div><Link href={`/empresas/${p.niFornecedor}`} className="font-mono text-[0.6rem] underline">{p.niFornecedor}</Link></div></td>
+                            <td className="text-right font-mono text-xs">{p.quantidade}</td>
+                            <td className="text-right font-mono text-xs font-bold">
+                              {brl(p.precoUnitario)}
+                              {extremo && <div className="font-mono text-[0.55rem] uppercase text-stamp">{razao.toFixed(0)}× a mediana</div>}
+                            </td>
+                            <td className="text-xs whitespace-nowrap">
+                              <Link href={`/precos/compra/${idCompraDe(p)}?pdm=${pdmSel.c}&item=${p.numeroItemCompra}`} className="underline decoration-stamp underline-offset-2">abrir →</Link>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
+                {lista.some((p) => est && p.precoUnitario / est.mediana >= 10) && (
+                  <Notice tone="warn" title="Valores extremos na tabela">
+                    Linhas destacadas estão 10× ou mais acima da mediana. Isso pode ser <strong>sobrepreço</strong>, unidade de fornecimento diferente (caixa vs. unidade) ou <strong>erro de digitação do próprio órgão</strong> ao publicar. Clique em "abrir" para ver a licitação e conferir antes de qualquer conclusão.
+                  </Notice>
+                )}
                 <div className="mt-2 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-3">fonte: <a className="underline" href={`${COMPRAS}/modulo-pesquisa-preco/1_consultarMaterial?tipo=codigoPdm&codigo=${pdmSel.c}&pagina=1&tamanhoPagina=50`} target="_blank" rel="noopener noreferrer">Compras.gov.br dados abertos</a> · coletado {nowBR()}</div>
               </>
             )}

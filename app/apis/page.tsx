@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { PageHead, Section, Notice } from "@/components/ui";
 import { loadApis, type ApiEntry } from "@/lib/data";
+import { temChavePortal } from "@/lib/transparencia";
+import { temChaveFactCheck } from "@/lib/checagens";
 
 export const revalidate = 3600;
 export const metadata = { title: "Catálogo de APIs públicas do Brasil" };
@@ -28,6 +30,12 @@ export default async function Apis({ searchParams }: PageProps<"/apis">) {
   const grupos = new Map<string, ApiEntry[]>();
   for (const a of apis) grupos.set(a.esfera, [...(grupos.get(a.esfera) ?? []), a]);
   const cont = (s: string) => all.filter((a) => a.esfera === s).length;
+  /** Chaves configuradas NESTE servidor — o status_verificado registra o teste do catálogo, não o estado do app. */
+  const chaveConfigurada: Record<string, boolean> = {
+    "portal-transparencia-federal": temChavePortal(),
+    "portal-transparencia-api-dados": temChavePortal(),
+    "google-factcheck-tools-api": temChaveFactCheck(),
+  };
   const ok = all.filter((a) => /ok/.test(a.status_verificado ?? "")).length;
   const semChave = all.filter((a) => a.auth === "nenhuma").length;
 
@@ -51,6 +59,12 @@ export default async function Apis({ searchParams }: PageProps<"/apis">) {
         }
       />
       <Section>
+        <Notice tone="ok" title="O que significa o status">
+          O <strong>status</strong> à direita é o resultado do último teste do catálogo, feito <em>sem</em> chave — por isso APIs pagas de cadastro
+          aparecem como “401 sem chave (esperado)”. Quando o Monitor tem a chave configurada, a entrada ganha o selo{" "}
+          <span className="stamp stamp--flat stamp--verde">chave ativa neste site</span> e os painéis que dependem dela funcionam de verdade.
+        </Notice>
+        <div className="h-4" />
         <Notice tone="info" title="Como esta lista cresce">
           Pesquisadores humanos e agentes testam cada endpoint com <code>curl</code> e registram o status real com data. Se um endpoint quebrar, abra issue "API quebrada"; se faltar uma (a Câmara Municipal da sua cidade, o TCE do seu estado), abra "nova API" com o JSON preenchido.{" "}
           <a className="underline" href="https://github.com/steinhauserhzs/monitor-de-gravata/tree/main/data/apis" target="_blank" rel="noopener noreferrer">Ver os arquivos ↗</a>
@@ -65,6 +79,7 @@ export default async function Apis({ searchParams }: PageProps<"/apis">) {
                   <span className={`stamp stamp--flat ${a.auth === "nenhuma" ? "stamp--verde" : a.auth === "chave-gratuita" ? "stamp--azul" : "stamp--ink"}`}>{a.auth}</span>
                   <span className="font-display text-lg leading-none">{a.nome}</span>
                   <span className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-3">{a.orgao}{a.uf && a.uf !== "BR" ? ` · ${a.uf}` : ""}</span>
+                  {chaveConfigurada[a.id] && <span className="stamp stamp--flat stamp--verde">chave ativa neste site</span>}
                   <span className={`ml-auto font-mono text-[0.6rem] uppercase tracking-[0.12em] ${/ok/.test(a.status_verificado ?? "") ? "text-verde" : /falhou/.test(a.status_verificado ?? "") ? "text-stamp" : "text-ink-3"}`}>{a.status_verificado ?? "não testado"}</span>
                 </summary>
                 <div className="px-4 pb-4 grid gap-4 md:grid-cols-[1fr_1fr]">
