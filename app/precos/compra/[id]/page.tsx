@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Crumbs, Notice, Source, Section } from "@/components/ui";
 import { KPI, Panel } from "@/components/ficha";
-import { precosAmostra, estatisticas, classificar, loadPDMs, COMPRAS, linkCompraGov, termoObjeto, idCompraDe, type PrecoPraticado } from "@/lib/precos";
+import { precosAmostra, estatisticas, classificar, loadPDMs, loadServicos, COMPRAS, linkCompraGov, termoObjeto, idCompraDe } from "@/lib/precos";
 import { searchPNCP } from "@/lib/pncp";
 import { safe } from "@/lib/fetcher";
 import { brl, dateBR, nowBR } from "@/lib/format";
@@ -27,9 +27,10 @@ export default async function CompraDetalhe({ params, searchParams }: PageProps<
   const itemFoco = Number(Array.isArray(sp.item) ? sp.item[0] : sp.item) || 0;
   if (!/^\d{10,20}$/.test(id) || !pdm) notFound();
 
-  const pdmSel = loadPDMs().find((p) => p.c === pdm);
+  const tipo = (Array.isArray(sp.tipo) ? sp.tipo[0] : sp.tipo ?? "material") as "material" | "servico";
+  const pdmSel = tipo === "servico" ? loadServicos().filter((x) => x.c === pdm).map((x) => ({ c: x.c, n: x.n }))[0] : loadPDMs().filter((x) => x.c === pdm).map((x) => ({ c: x.c, n: x.n }))[0];
   // a API de preços filtra por PDM; pegamos a amostra e isolamos os itens desta compra
-  const amostra = await safe(precosAmostra(pdm, { paginas: 3 }));
+  const amostra = await safe(precosAmostra(pdm, { paginas: 3, tipo }));
   const itens = (amostra.data?.resultado ?? []).filter((p) => idCompraDe(p) === id);
   const ref = itens[0];
   if (!ref) {
@@ -67,7 +68,7 @@ export default async function CompraDetalhe({ params, searchParams }: PageProps<
         <div className="mt-3 text-sm text-ink-2"><strong>{ref.nomeOrgao}</strong> · {ref.nomeUasg}</div>
         <div className="mt-3 flex flex-wrap gap-3 font-mono text-[0.62rem] uppercase tracking-[0.12em]">
           <a className="underline underline-offset-2" href={linkCompraGov(ref)} target="_blank" rel="noopener noreferrer">acompanhar no Compras.gov.br ↗</a>
-          <a className="underline underline-offset-2" href={`${COMPRAS}/modulo-pesquisa-preco/1_consultarMaterial?tipo=codigoPdm&codigo=${pdm}&idCompra=${id}&pagina=1&tamanhoPagina=10`} target="_blank" rel="noopener noreferrer">json da compra ↗</a>
+          <a className="underline underline-offset-2" href={tipo === "servico" ? `${COMPRAS}/modulo-pesquisa-preco/3_consultarServico?codigoItemCatalogo=${pdm}&idCompra=${id}&pagina=1&tamanhoPagina=10` : `${COMPRAS}/modulo-pesquisa-preco/1_consultarMaterial?tipo=codigoPdm&codigo=${pdm}&idCompra=${id}&pagina=1&tamanhoPagina=10`} target="_blank" rel="noopener noreferrer">json da compra ↗</a>
           <a className="underline underline-offset-2" href={`https://pncp.gov.br/app/editais?q=${encodeURIComponent(termo)}`} target="_blank" rel="noopener noreferrer">procurar no PNCP ↗</a>
           <Link className="underline underline-offset-2" href={`/contratos?q=${encodeURIComponent(termo)}&uf=${ref.estado}`}>ver contratos relacionados no radar</Link>
         </div>
@@ -87,7 +88,7 @@ export default async function CompraDetalhe({ params, searchParams }: PageProps<
           />
         </div>
 
-        <Panel kicker="§1" title="Itens desta compra (padrão selecionado)" right={<Source url={`${COMPRAS}/modulo-pesquisa-preco/1_consultarMaterial?tipo=codigoPdm&codigo=${pdm}&idCompra=${id}`} label="Compras.gov.br" />}>
+        <Panel kicker="§1" title="Itens desta compra (padrão selecionado)" right={<Source url={`${COMPRAS}/modulo-pesquisa-preco/${tipo === "servico" ? "3_consultarServico" : "1_consultarMaterial"}?codigo=${pdm}&idCompra=${id}`} label="Compras.gov.br" />}>
           <div className="overflow-x-auto">
             <table className="table">
               <thead><tr><th>#</th><th>Descrição</th><th>Marca</th><th className="text-right">Qtd</th><th>Unidade</th><th className="text-right">Unitário</th><th className="text-right">Total</th><th>Sinal</th></tr></thead>

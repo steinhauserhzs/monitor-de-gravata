@@ -43,8 +43,8 @@ export function MapaBrasil({ ano = 2026, cargo = 6 }: { ano?: number; cargo?: nu
             if (!uf) return null;
             return (
               <Link key={p.id} href={`/candidatos?ano=${ano}&uf=${uf.sigla}&cargo=${cargo}`} aria-label={`${uf.nome} — candidatos ${ano}`}>
-                <path d={p.d} className="mapa-uf">
-                  <title>{uf.nome} ({uf.sigla}) — ver candidatos {ano}</title>
+                <path d={p.d} className="mapa-uf" aria-label={`${uf.nome} (${uf.sigla})`}>
+                  <title>{`${uf.nome} (${uf.sigla}) — ver candidatos de ${ano}`}</title>
                 </path>
               </Link>
             );

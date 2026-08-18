@@ -22,6 +22,53 @@ export function loadPDMs(): PDM[] {
 
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase();
 
+/* ───────── Serviços (CATSER) — para cobrir TODAS as compras, não só material ───────── */
+export type Servico = { c: number; n: string; k: number; kn: string; g: string };
+let _servicos: Servico[] | null = null;
+export function loadServicos(): Servico[] {
+  if (_servicos) return _servicos;
+  const f = path.join(process.cwd(), "data", "derivados", "catser.json");
+  if (!fs.existsSync(f)) return [];
+  _servicos = (JSON.parse(fs.readFileSync(f, "utf8")) as { servicos: Servico[] }).servicos;
+  return _servicos;
+}
+
+export type ItemCatalogo = { tipo: "material" | "servico"; codigo: number; nome: string; classe: string; grupo: string };
+
+/** Busca unificada nos dois catálogos oficiais: materiais (CATMAT/PDM) e serviços (CATSER). */
+export function buscarCatalogo(termo: string, max = 30): ItemCatalogo[] {
+  const words = norm(termo).split(/\s+/).filter((w) => w.length > 1);
+  if (!words.length) return [];
+  const bate = (hay: string) => words.every((w) => hay.includes(w));
+  const mats: ItemCatalogo[] = [];
+  for (const p of loadPDMs()) {
+    if (bate(norm(p.n + " " + p.kn))) mats.push({ tipo: "material", codigo: p.c, nome: p.n, classe: p.kn, grupo: p.g });
+    if (mats.length >= max) break;
+  }
+  const servs: ItemCatalogo[] = [];
+  for (const s of loadServicos()) {
+    if (bate(norm(s.n + " " + (s.kn ?? "")))) servs.push({ tipo: "servico", codigo: s.c, nome: s.n, classe: s.kn ?? "", grupo: s.g ?? "" });
+    if (servs.length >= max) break;
+  }
+  return [...mats, ...servs].sort((a, b) => a.nome.length - b.nome.length).slice(0, max);
+}
+
+/** Preços praticados de um SERVIÇO (CATSER). */
+export async function precosPorServico(codigoItemCatalogo: number, opts: { uf?: string; desde?: string; ate?: string; pagina?: number; tamanho?: number } = {}) {
+  const q = new URLSearchParams({
+    pagina: String(opts.pagina ?? 1),
+    tamanhoPagina: String(opts.tamanho ?? 200),
+    codigoItemCatalogo: String(codigoItemCatalogo),
+  });
+  if (opts.uf) q.set("estado", opts.uf);
+  if (opts.desde) q.set("dataCompraInicio", opts.desde);
+  if (opts.ate) q.set("dataCompraFim", opts.ate);
+  return getJSON<{ resultado: PrecoPraticado[]; totalRegistros: number; totalPaginas: number }>(`${COMPRAS}/modulo-pesquisa-preco/3_consultarServico?${q}`, {
+    revalidate: 3600,
+    timeoutMs: 30000,
+  });
+}
+
 /** Busca PDMs por termo (todas as palavras precisam aparecer). */
 export function buscarPDM(termo: string, max = 25): PDM[] {
   const words = norm(termo).split(/\s+/).filter((w) => w.length > 1);
@@ -86,10 +133,12 @@ export async function precosPorPDM(codigoPdm: number, opts: { uf?: string; desde
 }
 
 /** Até `paginas` páginas (200 cada) em paralelo — amostra maior para mediana mais estável. */
-export async function precosAmostra(codigoPdm: number, opts: { uf?: string; desde?: string; ate?: string; paginas?: number } = {}) {
-  const first = await precosPorPDM(codigoPdm, { ...opts, pagina: 1, tamanho: 200 });
+export async function precosAmostra(codigo: number, opts: { uf?: string; desde?: string; ate?: string; paginas?: number; tipo?: "material" | "servico" } = {}) {
+  const buscar = (pagina: number) =>
+    opts.tipo === "servico" ? precosPorServico(codigo, { ...opts, pagina, tamanho: 200 }) : precosPorPDM(codigo, { ...opts, pagina, tamanho: 200 });
+  const first = await buscar(1);
   const totalPag = Math.min(opts.paginas ?? 3, first.totalPaginas || 1);
-  const rest = totalPag > 1 ? await Promise.all(Array.from({ length: totalPag - 1 }, (_, i) => precosPorPDM(codigoPdm, { ...opts, pagina: i + 2, tamanho: 200 }).catch(() => null))) : [];
+  const rest = totalPag > 1 ? await Promise.all(Array.from({ length: totalPag - 1 }, (_, i) => buscar(i + 2).catch(() => null))) : [];
   const resultado = [...first.resultado, ...rest.flatMap((r) => r?.resultado ?? [])];
   return { resultado, totalRegistros: first.totalRegistros, paginasLidas: 1 + rest.filter(Boolean).length };
 }

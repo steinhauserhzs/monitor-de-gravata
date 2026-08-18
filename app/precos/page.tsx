@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { PageHead, Section, Notice, Empty, Sev } from "@/components/ui";
 import { KPI } from "@/components/ficha";
-import { buscarPDM, precosAmostra, estatisticas, classificar, loadPDMs, COMPRAS, linkCompraGov, termoObjeto, idCompraDe } from "@/lib/precos";
+import { buscarCatalogo, precosAmostra, estatisticas, classificar, loadPDMs, loadServicos, COMPRAS, linkCompraGov, termoObjeto, idCompraDe } from "@/lib/precos";
+import { precoDeMercado, termoVarejo, temProvedorMercado } from "@/lib/mercado";
 import { safe } from "@/lib/fetcher";
 import { brl, dateBR, nowBR } from "@/lib/format";
 import { UFS } from "@/lib/tse";
@@ -18,13 +19,24 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
   const preco = Number(String(Array.isArray(sp.preco) ? sp.preco[0] : sp.preco ?? "").replace(/\./g, "").replace(",", ".")) || 0;
   const desde = (Array.isArray(sp.desde) ? sp.desde[0] : sp.desde) || `${new Date().getFullYear() - 1}-01-01`;
 
-  const total = loadPDMs().length;
-  const candidatos = q && !pdm ? buscarPDM(q) : [];
-  const pdmSel = pdm ? loadPDMs().find((p) => p.c === pdm) : candidatos.length === 1 ? candidatos[0] : null;
-  const precos = pdmSel ? await safe(precosAmostra(pdmSel.c, { uf: uf || undefined, desde, paginas: 3 })) : { data: null, error: null };
+  const tipo = (Array.isArray(sp.tipo) ? sp.tipo[0] : sp.tipo ?? "material") as "material" | "servico";
+  const totalMat = loadPDMs().length;
+  const totalServ = loadServicos().length;
+  const candidatos = q && !pdm ? buscarCatalogo(q) : [];
+  const selecionado = pdm
+    ? tipo === "servico"
+      ? loadServicos().filter((x) => x.c === pdm).map((x) => ({ tipo: "servico" as const, codigo: x.c, nome: x.n, classe: x.kn ?? "", grupo: x.g ?? "" }))[0]
+      : loadPDMs().filter((x) => x.c === pdm).map((x) => ({ tipo: "material" as const, codigo: x.c, nome: x.n, classe: x.kn, grupo: x.g }))[0]
+    : candidatos.length === 1
+      ? candidatos[0]
+      : null;
+  const pdmSel = selecionado ? { c: selecionado.codigo, n: selecionado.nome, kn: selecionado.classe } : ({ c: 0, n: "", kn: "" } as const);
+  const precos = selecionado ? await safe(precosAmostra(selecionado.codigo, { uf: uf || undefined, desde, paginas: 3, tipo: selecionado.tipo })) : { data: null, error: null };
   const lista = precos.data?.resultado ?? [];
   const est = estatisticas(lista.map((p) => p.precoUnitario));
   const cls = preco && est ? classificar(preco, est) : null;
+  const descricaoRef = lista[0]?.descricaoItem ?? selecionado?.nome ?? q;
+  const mercado = selecionado && preco ? await precoDeMercado(termoVarejo(descricaoRef)) : null;
 
   return (
     <>
@@ -33,14 +45,14 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
         title="Comparador de preços"
         stamp="Compras.gov ao vivo"
         stampTone="verde"
-        lead={`"Esse notebook de R$ 10 mil custa R$ 4 mil em outros órgãos?" — busque o item no catálogo oficial (${total.toLocaleString("pt-BR")} padrões de material CATMAT) e veja os preços realmente pagos por outros órgãos públicos, com fornecedor, marca, UF e data. Digite o preço que você viu e receba a classificação.`}
+        lead={`"Esse notebook de R$ 10 mil custa R$ 4 mil em outros órgãos?" — busque em TODAS as compras públicas: ${totalMat.toLocaleString("pt-BR")} padrões de material (CATMAT) + ${totalServ.toLocaleString("pt-BR")} serviços (CATSER). Veja o que outros órgãos pagaram de verdade, com fornecedor, marca, UF e data, e compare com o preço que você viu.`}
         right={
           <form className="card p-4 grid gap-2 sm:grid-cols-2 w-full sm:min-w-[22rem]">
             <label className="block sm:col-span-2"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Item (ex.: notebook, ar condicionado, merenda, asfalto)</span><input name="q" defaultValue={q} className="input" placeholder="notebook" /></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Preço unitário visto (R$)</span><input name="preco" defaultValue={preco || ""} className="input" placeholder="10000" /></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">UF (opcional)</span><select name="uf" defaultValue={uf} className="input"><option value="">Todas</option>{UFS.map((u) => <option key={u}>{u}</option>)}</select></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Compras desde</span><input name="desde" type="date" defaultValue={desde} className="input" /></label>
-            {pdmSel && <input type="hidden" name="pdm" value={pdmSel.c} />}
+            {selecionado && <><input type="hidden" name="pdm" value={selecionado.codigo} /><input type="hidden" name="tipo" value={selecionado.tipo} /></>}
             <button className="btn sm:col-span-2" type="submit">Comparar</button>
           </form>
         }
@@ -51,18 +63,21 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
           {!candidatos.length && <Empty>Nenhum padrão CATMAT com todas essas palavras. Tente termos mais genéricos ("computador portátil", "condicionador ar", "veículo").</Empty>}
           <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
             {candidatos.map((p) => (
-              <Link key={p.c} href={`/precos?q=${encodeURIComponent(q)}&pdm=${p.c}&uf=${uf}&preco=${preco || ""}&desde=${desde}`} className="card p-3 hover:-translate-y-0.5 transition-transform">
-                <div className="font-semibold text-sm">{p.n}</div>
-                <div className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-3">PDM {p.c} · {p.kn}</div>
+              <Link key={`${p.tipo}-${p.codigo}`} href={`/precos?q=${encodeURIComponent(q)}&pdm=${p.codigo}&tipo=${p.tipo}&uf=${uf}&preco=${preco || ""}&desde=${desde}`} className="card p-3 hover:-translate-y-0.5 transition-transform">
+                <div className="flex items-center gap-2">
+                  <span className={`stamp stamp--flat ${p.tipo === "servico" ? "stamp--azul" : "stamp--ink"}`}>{p.tipo}</span>
+                  <div className="font-semibold text-sm">{p.nome}</div>
+                </div>
+                <div className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-3 mt-1">código {p.codigo} · {p.classe}</div>
               </Link>
             ))}
           </div>
         </Section>
       )}
 
-      {pdmSel && (
+      {selecionado && (
         <>
-          <Section kicker="Passo 2" title={`${pdmSel.n} — preços praticados${uf ? ` em ${uf}` : " no Brasil"} desde ${dateBR(desde)}`}>
+          <Section kicker="Passo 2" title={`${selecionado.nome} — preços praticados${uf ? ` em ${uf}` : " no Brasil"} desde ${dateBR(desde)}`}>
             {precos.error && <Notice tone="warn" title="Compras.gov.br">API não respondeu: {precos.error}</Notice>}
             {precos.data && !lista.length && <Empty>Nenhuma compra homologada registrada para este padrão no período/UF. Amplie a data ou tire o filtro de UF.</Empty>}
             {est && (
@@ -88,6 +103,44 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
                       {(cls.nivel === "alto" || cls.nivel === "muito-alto") && "Muito acima do praticado. Sinal objetivo de possível sobrepreço — confirme especificação, marca e se houve disputa (nº de propostas). Isso é uma pergunta, não uma sentença."}
                     </p>
                     <p className="mt-2 text-[0.68rem] text-ink-3">Regra: <Link href="/radar#sobrepreco-vs-painel-de-precos" className="underline">sobrepreco-vs-painel-de-precos</Link> — razão vs mediana dos preços homologados no período (Compras.gov.br). Limiares: ≤1,3 normal · ≤1,7 atenção · ≤2,5 alto · &gt;2,5 muito alto.</p>
+                  </div>
+                )}
+                {preco > 0 && est && (
+                  <div className="card mt-4 p-5">
+                    <div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-3">Preço pago × referências</div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div>
+                        <div className="font-mono text-[0.6rem] uppercase text-ink-3">vs. menor preço público</div>
+                        <div className="font-display text-2xl">{est.min > 0 ? `${((preco / est.min - 1) * 100).toFixed(0)}%` : "—"}</div>
+                        <div className="text-[0.7rem] text-ink-2">acima do menor já pago ({brl(est.min)})</div>
+                      </div>
+                      <div>
+                        <div className="font-mono text-[0.6rem] uppercase text-ink-3">vs. mediana pública</div>
+                        <div className="font-display text-2xl">{((preco / est.mediana - 1) * 100).toFixed(0)}%</div>
+                        <div className="text-[0.7rem] text-ink-2">{preco >= est.mediana ? "acima" : "abaixo"} da mediana ({brl(est.mediana)})</div>
+                      </div>
+                      <div>
+                        <div className="font-mono text-[0.6rem] uppercase text-ink-3">vs. varejo (3 menores)</div>
+                        <div className="font-display text-2xl">{mercado?.media3 ? `${((preco / mercado.media3 - 1) * 100).toFixed(0)}%` : "—"}</div>
+                        <div className="text-[0.7rem] text-ink-2">{mercado?.media3 ? `média de varejo ${brl(mercado.media3)}` : "sem provedor de varejo"}</div>
+                      </div>
+                    </div>
+                    {mercado?.ofertas.length ? (
+                      <ul className="mt-3 text-xs space-y-1">
+                        {mercado.ofertas.slice(0, 3).map((o, i) => (
+                          <li key={i}>
+                            {o.url ? <a href={o.url} target="_blank" rel="noopener noreferrer nofollow" className="underline">{o.titulo}</a> : o.titulo}
+                            <span className="font-mono"> — {brl(o.preco)}</span>
+                            {o.loja && <span className="text-ink-3"> · {o.loja}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    <p className="mt-3 text-[0.68rem] text-ink-3">
+                      {mercado?.nota}{" "}
+                      <strong>Preço de varejo não é preço de contrato:</strong> a compra pública costuma incluir garantia estendida, instalação, entrega em vários endereços, tributos e escala.
+                      A referência mais forte é o que <em>outros órgãos</em> pagaram pelo mesmo item — a primeira coluna.
+                    </p>
                   </div>
                 )}
                 <div className="overflow-x-auto card mt-4">
@@ -119,7 +172,7 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
                               {extremo && <div className="font-mono text-[0.55rem] uppercase text-stamp">{razao.toFixed(0)}× a mediana</div>}
                             </td>
                             <td className="text-xs whitespace-nowrap">
-                              <Link href={`/precos/compra/${idCompraDe(p)}?pdm=${pdmSel.c}&item=${p.numeroItemCompra}`} className="underline decoration-stamp underline-offset-2">abrir →</Link>
+                              <Link href={`/precos/compra/${idCompraDe(p)}?pdm=${selecionado.codigo}&tipo=${selecionado.tipo}&item=${p.numeroItemCompra}`} className="underline decoration-stamp underline-offset-2">abrir →</Link>
                             </td>
                           </tr>
                         );
@@ -132,7 +185,7 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
                     Linhas destacadas estão 10× ou mais acima da mediana. Isso pode ser <strong>sobrepreço</strong>, unidade de fornecimento diferente (caixa vs. unidade) ou <strong>erro de digitação do próprio órgão</strong> ao publicar. Clique em "abrir" para ver a licitação e conferir antes de qualquer conclusão.
                   </Notice>
                 )}
-                <div className="mt-2 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-3">fonte: <a className="underline" href={`${COMPRAS}/modulo-pesquisa-preco/1_consultarMaterial?tipo=codigoPdm&codigo=${pdmSel.c}&pagina=1&tamanhoPagina=50`} target="_blank" rel="noopener noreferrer">Compras.gov.br dados abertos</a> · coletado {nowBR()}</div>
+                <div className="mt-2 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-3">fonte: <a className="underline" href={selecionado.tipo === "servico" ? `${COMPRAS}/modulo-pesquisa-preco/3_consultarServico?codigoItemCatalogo=${selecionado.codigo}&pagina=1&tamanhoPagina=50` : `${COMPRAS}/modulo-pesquisa-preco/1_consultarMaterial?tipo=codigoPdm&codigo=${selecionado.codigo}&pagina=1&tamanhoPagina=50`} target="_blank" rel="noopener noreferrer">Compras.gov.br dados abertos</a> · coletado {nowBR()}</div>
               </>
             )}
           </Section>

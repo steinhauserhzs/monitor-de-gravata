@@ -44,6 +44,15 @@ export default async function Buscar({ searchParams }: PageProps<"/buscar">) {
     (s) => (!q || norm(s.NomeParlamentar + " " + s.NomeCompletoParlamentar).includes(norm(q))) && (!uf || s.UfParlamentar === uf) && (!partido || s.SiglaPartidoParlamentar === partido),
   );
 
+  const candidatosTotais = candLists.reduce((acc, l, i) => {
+    const n = (l.data ?? []).filter((c) => {
+      const okNome = !q || numeroUrna ? true : norm(c.nomeUrna + " " + c.nomeCompleto).includes(norm(q));
+      const okNumero = !numeroUrna || String(c.numero).startsWith(numeroUrna);
+      const okPartido = !partido || c.partido?.sigla === partido;
+      return okNome && okNumero && okPartido;
+    }).length;
+    return acc + n;
+  }, 0);
   const candidatos = candLists.flatMap((l, i) =>
     (l.data ?? [])
       .filter((c) => {
@@ -78,8 +87,16 @@ export default async function Buscar({ searchParams }: PageProps<"/buscar">) {
       />
 
       {buscarCandidatos && (
-        <Section kicker={`Candidatos ${ano}`} title={`${candidatos.length} candidato(s)${uf ? ` · ${uf}` : ""}${partido ? ` · ${partido}` : ""}${numeroUrna ? ` · número ${numeroUrna}…` : ""}`}>
+        <Section kicker={`Candidatos ${ano}`} title={`${candidatosTotais} candidato(s)${uf ? ` · ${uf}` : ""}${partido ? ` · ${partido}` : ""}${numeroUrna ? ` · número ${numeroUrna}…` : ""}`}>
           {!candidatos.length && <Empty>Nenhum candidato com esses filtros. Dica: número de urna precisa de estado; para presidente, escolha o cargo.</Empty>}
+          {candidatosTotais > candidatos.length && (
+            <Notice tone="info" title={`Mostrando ${candidatos.length} de ${candidatosTotais}`}>
+              A busca exibe os primeiros resultados de cada cargo.{" "}
+              <Link href={`/candidatos?ano=${ano}&uf=${uf}&cargo=${cargo || 6}${partido ? `&partido=${partido}` : ""}${numeroUrna ? `&numero=${numeroUrna}` : ""}${q && !numeroUrna ? `&nome=${encodeURIComponent(q)}` : ""}`} className="underline">
+                Ver a lista completa com paginação →
+              </Link>
+            </Notice>
+          )}
           <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {candidatos.map(({ c, cargo: cg }) => (
               <Link key={`${cg}-${c.id}`} href={`/candidatos/${ano}/${cg === 1 ? "BR" : uf}/${c.id}`} className="card flex items-center gap-3 p-2.5 hover:-translate-y-0.5 transition-transform">
@@ -103,7 +120,8 @@ export default async function Buscar({ searchParams }: PageProps<"/buscar">) {
 
       {buscarPoliticos && (
         <Section kicker="Em exercício" title={`Deputados e senadores (${(deps.data?.length ?? 0) + senadores.length})`}>
-          {deps.error && <Notice tone="warn" title="Câmara">API não respondeu: {deps.error}</Notice>}
+          {deps.error && <Notice tone="warn" title="Fonte indisponível — resultado incompleto">A API da Câmara não respondeu ({deps.error}); os deputados podem estar faltando nesta lista. Recarregue em alguns segundos.</Notice>}
+          {sens.error && <Notice tone="warn" title="Fonte indisponível — resultado incompleto">A API do Senado não respondeu ({sens.error}).</Notice>}
           {partidos.length > 1 && <div className="mb-3 flex flex-wrap gap-1">{partidos.map((p) => <Link key={p} href={`/buscar?q=${encodeURIComponent(q)}&uf=${uf}&partido=${p}&onde=politicos`} className="tab">{p}</Link>)}</div>}
           {!deps.data?.length && !senadores.length && <Empty>Nenhum parlamentar em exercício com esses filtros.</Empty>}
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">

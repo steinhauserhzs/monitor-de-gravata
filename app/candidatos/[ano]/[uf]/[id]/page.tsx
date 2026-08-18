@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Crumbs, Notice, Source } from "@/components/ui";
 import { KPI, Bars, Flags, NoticiasList, Panel, Timeline, type TLItem } from "@/components/ficha";
-import { getCandidato, getPrestacao, listCandidatos, ELEICOES, CARGOS, DIVULGA, fotoCandidato } from "@/lib/tse";
+import { getCandidato, getPrestacao, listCandidatos, ELEICOES, CARGOS, UFS, DIVULGA, fotoCandidato } from "@/lib/tse";
 import { safe } from "@/lib/fetcher";
 import { runRules } from "@/lib/rules";
 import { brl, dateBR, nowBR, pct } from "@/lib/format";
@@ -29,9 +29,9 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
   const { ano: anoS, uf, id } = await params;
   const ano = Number(anoS);
   const el = ELEICOES[ano];
-  if (!el) notFound();
+  if (!el || (uf !== "BR" && !UFS.includes(uf)) || !/^\d{6,}$/.test(id)) notFound();
   const c = await safe(getCandidato(ano, uf, id));
-  if (!c.data) notFound();
+  if (!c.data?.nomeUrna) notFound();
   const cand = c.data;
   const cargo = cand.cargo?.codigo;
 
