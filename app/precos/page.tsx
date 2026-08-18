@@ -58,7 +58,7 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
         }
       />
 
-      {q && !pdmSel && (
+      {q && !selecionado && (
         <Section kicker="Passo 1" title={`Qual destes é o item? (${candidatos.length} padrões encontrados)`}>
           {!candidatos.length && <Empty>Nenhum padrão CATMAT com todas essas palavras. Tente termos mais genéricos ("computador portátil", "condicionador ar", "veículo").</Empty>}
           <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
@@ -198,7 +198,7 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
           </Section>
         </>
       )}
-      {!q && (
+      {!q && !selecionado && (
         <Section>
           <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
             {[["notebook", 8435], ["computador", 17186], ["condicionador ar", 0], ["veículo", 0], ["papel a4", 0], ["merenda", 0], ["medicamento dipirona", 0], ["cimento", 0]].map(([t, c]) => (
