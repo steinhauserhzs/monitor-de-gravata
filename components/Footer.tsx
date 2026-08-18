@@ -58,7 +58,7 @@ export function Footer() {
       <div className="border-t border-paper/10">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-4 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-paper/60">
           <span>Projeto comunitário · sem partido · sem dono · sem anúncio</span>
-          <span>Fundado por Hairã Steinhauser · 3 Pontos · 2026</span>
+          <span>Projeto pessoal de Hairã Steinhauser · 2026</span>
         </div>
       </div>
     </footer>

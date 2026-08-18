@@ -211,6 +211,11 @@ export async function getOcupacoes(id: string | number) {
   return r.dados;
 }
 
+export async function getTemas(idProposicao: number | string) {
+  const r = await getJSON<Page<{ codTema: number; tema: string; relevancia: number }>>(`${CAMARA}/proposicoes/${idProposicao}/temas`, { revalidate: 86400 });
+  return r.dados;
+}
+
 /* ───────── Análise CEAP ───────── */
 export type AnaliseCEAP = {
   total: number;

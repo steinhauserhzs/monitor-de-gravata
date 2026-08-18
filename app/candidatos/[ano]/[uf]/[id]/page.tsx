@@ -9,6 +9,8 @@ import { brl, dateBR, nowBR, pct } from "@/lib/format";
 import { noticiasGoogle } from "@/lib/noticias";
 import { wdBuscar, wdTimeline } from "@/lib/wikidata";
 import { pistasDeVinculo, sobrenomesRaros, servidoresPorSobrenome } from "@/lib/vinculos";
+import { montarMandato360 } from "@/lib/mandato";
+import { Mandato360Painel } from "@/components/Mandato360";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -31,10 +33,11 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
   const cand = c.data;
   const cargo = cand.cargo?.codigo;
 
-  const [prest, noticias, wd] = await Promise.all([
+  const [prest, noticias, wd, mandato] = await Promise.all([
     cargo && cand.partido?.numero && cand.numero ? safe(getPrestacao(ano, uf, cargo, cand.partido.numero, cand.numero, cand.id)) : Promise.resolve({ data: null, error: "sem dados de partido/número" }),
     noticiasGoogle(`"${cand.nomeUrna}" candidato ${uf}`),
     safe(wdBuscar(cand.nomeCompleto)),
+    safe(montarMandato360(cand.nomeUrna, cand.nomeCompleto, uf)),
   ]);
 
   /* eleições anteriores — mesmo nome completo, mesma UF, mesmo cargo (e cargos federais correlatos) */
@@ -87,7 +90,8 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
   tl.push({ data: String(ano), tipo: "candidatura", titulo: `${cand.cargo?.nome} · ${cand.descricaoSituacao}`, detalhe: `bens declarados: ${brl(cand.totalDeBens)}`, fonte: "TSE DivulgaCand", url: `https://divulgacandcontas.tse.jus.br/divulga/#/candidato/${ano}/${el.id}/${uf}/${cand.id}` });
   tl.sort((a, b) => (a.data ?? "0").localeCompare(b.data ?? "0"));
 
-  const certidoes = (cand.arquivos ?? []).filter((a) => /certid/i.test(a.nome));
+  const certidoes = (cand.arquivos ?? []).filter((a) => /certid|TRF|TJ|justi/i.test(a.nome));
+  const plano = (cand.arquivos ?? []).find((a) => a.codTipo === "5" || /plano|proposta/i.test(a.nome));
   const coletado = nowBR();
   const foto = cand.fotoUrl || fotoCandidato(el.id, cand.id, uf);
 
@@ -134,6 +138,12 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
 
         <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
           <div className="space-y-6">
+            {mandato.data && <Mandato360Painel m={mandato.data} />}
+            {!mandato.data && (
+              <Notice tone="info" title="Sem mandato federal em exercício">
+                Não localizamos {cand.nomeUrna} entre os deputados federais e senadores em exercício. Se ele(a) é vereador(a), prefeito(a), deputado(a) estadual ou já deixou o mandato, esses dados ainda não são cobertos automaticamente — <Link href="/contribuir" className="underline">ajude a conectar a casa legislativa dele(a)</Link>.
+              </Notice>
+            )}
             <Panel kicker="§1" title="Patrimônio declarado" right={<Source url={`${DIVULGA}/candidatura/buscar/${ano}/${uf}/${el.id}/candidato/${cand.id}`} label="TSE" />}>
               {!bens.length && <p className="text-sm text-ink-3">Nenhum bem declarado.</p>}
               {bens.length > 0 && (
@@ -197,6 +207,9 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
                 <li>Prestação de contas: <span className="font-mono text-xs">{cand.numeroProcessoPrestContas ?? "—"}</span></li>
                 <li>Cassação/desconstituição registradas: <strong>{(cand.processosCassacao?.length ?? 0) + (cand.processosDesconstituicao?.length ?? 0)}</strong></li>
               </ul>
+              {plano && (
+                <p className="mt-3 text-sm"><a className="btn btn--stamp !py-2 !px-3 !text-[0.65rem]" href={`https://sig.tse.jus.br/${plano.url}${encodeURIComponent(plano.nome)}`} target="_blank" rel="noopener noreferrer">Plano de governo (PDF) ↗</a></p>
+              )}
               {certidoes.length > 0 && (
                 <details className="mt-3">
                   <summary className="cursor-pointer font-mono text-[0.65rem] uppercase tracking-[0.16em]">{certidoes.length} certidões anexadas ao registro</summary>

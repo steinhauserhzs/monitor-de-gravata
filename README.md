@@ -138,4 +138,4 @@ Operação Serenata de Amor / Rosie / Jarbas (OKBR), Querido Diário (OKBR), OPS
 
 Código: [MIT](LICENSE). Dados e textos deste repositório: [CC-BY 4.0](LICENSE-DADOS.md) — cite o órgão de origem e o Monitor. Dados de terceiros mantêm suas licenças (indicadas no catálogo).
 
-<p align="center"><sub>Fundado por <a href="https://github.com/steinhauserhzs">Hairã Steinhauser</a> (3 Pontos), 2026 · sem partido · sem dono · sem anúncio</sub></p>
+<p align="center"><sub>Projeto pessoal de <a href="https://github.com/steinhauserhzs">Hairã Steinhauser</a>, 2026 · sem partido · sem dono · sem anúncio</sub></p>

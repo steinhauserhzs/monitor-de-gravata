@@ -12,6 +12,9 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
   const uf = (Array.isArray(sp.uf) ? sp.uf[0] : sp.uf ?? "").toUpperCase();
   const cargo = Number(Array.isArray(sp.cargo) ? sp.cargo[0] : sp.cargo) || 0;
   const nome = (Array.isArray(sp.nome) ? sp.nome[0] : sp.nome ?? "").trim().toLowerCase();
+  const partido = (Array.isArray(sp.partido) ? sp.partido[0] : sp.partido ?? "").trim().toUpperCase();
+  const numero = (Array.isArray(sp.numero) ? sp.numero[0] : sp.numero ?? "").replace(/\D/g, "");
+  const situacao = (Array.isArray(sp.situacao) ? sp.situacao[0] : sp.situacao ?? "").trim();
   const el = ELEICOES[ano];
   const cargosDisponiveis = el?.abrangencia === "M" ? [11, 13] : [1, 3, 5, 6, 7, 8];
   const ufEfetiva = cargo === 1 ? "BR" : uf;
@@ -19,12 +22,30 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
   const pagina = Math.max(1, Number(Array.isArray(sp.pagina) ? sp.pagina[0] : sp.pagina) || 1);
   const POR_PAGINA = 240;
   const lista = uf && cargo ? await safe(listCandidatos(ano, ufEfetiva, cargo)) : { data: null, error: null };
-  const todos = (lista.data ?? []).filter((c) => !nome || (c.nomeUrna + " " + c.nomeCompleto).toLowerCase().includes(nome));
+  const base = lista.data ?? [];
+  const partidosDisponiveis = [...new Set(base.map((c) => c.partido?.sigla).filter(Boolean))].sort();
+  const situacoesDisponiveis = [...new Set(base.map((c) => c.descricaoSituacao).filter(Boolean))].sort();
+  const todos = base.filter(
+    (c) =>
+      (!nome || (c.nomeUrna + " " + c.nomeCompleto).toLowerCase().includes(nome)) &&
+      (!partido || c.partido?.sigla === partido) &&
+      (!numero || String(c.numero).startsWith(numero)) &&
+      (!situacao || c.descricaoSituacao === situacao),
+  );
   const totalPaginas = Math.max(1, Math.ceil(todos.length / POR_PAGINA));
   const cands = todos.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
   const porSituacao = new Map<string, number>();
   for (const c of todos) porSituacao.set(c.descricaoSituacao, (porSituacao.get(c.descricaoSituacao) ?? 0) + 1);
-  const linkPagina = (p: number) => `/candidatos?ano=${ano}&uf=${uf}&cargo=${cargo}&nome=${encodeURIComponent(nome)}&pagina=${p}`;
+  const qs = (extra: Record<string, string | number>) => {
+    const u = new URLSearchParams({ ano: String(ano), uf, cargo: String(cargo) });
+    if (nome) u.set("nome", nome);
+    if (partido) u.set("partido", partido);
+    if (numero) u.set("numero", numero);
+    if (situacao) u.set("situacao", situacao);
+    for (const [k, v] of Object.entries(extra)) v === "" ? u.delete(k) : u.set(k, String(v));
+    return `/candidatos?${u}`;
+  };
+  const linkPagina = (p: number) => qs({ pagina: p });
 
   return (
     <>
@@ -43,6 +64,8 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Cargo</span>
               <select name="cargo" defaultValue={cargo || ""} className="input"><option value="">—</option>{cargosDisponiveis.map((c) => <option key={c} value={c}>{CARGOS[c]}</option>)}</select></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Nome</span><input name="nome" defaultValue={nome} className="input" placeholder="opcional" /></label>
+            <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Nº de urna</span><input name="numero" defaultValue={numero} className="input" placeholder="ex.: 2222" inputMode="numeric" /></label>
+            <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Partido</span><input name="partido" defaultValue={partido} className="input" placeholder="PT, PL…" /></label>
             <button className="btn" type="submit">Listar</button>
           </form>
         }
@@ -74,9 +97,19 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
           {lista.error && <Notice tone="warn" title="TSE">O DivulgaCand não respondeu: {lista.error}</Notice>}
           <div className="mb-4 flex flex-wrap gap-2">
             {[...porSituacao.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => (
-              <span key={k} className="tab">{k} · {v}</span>
+              <Link key={k} href={qs({ situacao: situacao === k ? "" : k, pagina: 1 })} className={`tab ${situacao === k ? "!bg-ink !text-paper" : ""}`}>{k} · {v}</Link>
             ))}
           </div>
+          {(partidosDisponiveis.length > 1 || partido || numero || situacao) && (
+            <div className="mb-4 flex flex-wrap items-center gap-1">
+              <span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mr-1">Partido:</span>
+              {partido && <Link href={qs({ partido: "", pagina: 1 })} className="btn btn--ghost !py-1 !px-2 !text-[0.6rem]">limpar ✕</Link>}
+              {partidosDisponiveis.slice(0, 40).map((p) => (
+                <Link key={p} href={qs({ partido: p === partido ? "" : p!, pagina: 1 })} className={`px-2 py-1 border border-linha font-mono text-[0.6rem] ${p === partido ? "bg-ink text-paper" : "hover:bg-paper-2"}`}>{p}</Link>
+              ))}
+              {situacoesDisponiveis.length > 1 && situacao && <Link href={qs({ situacao: "", pagina: 1 })} className="btn btn--ghost !py-1 !px-2 !text-[0.6rem] ml-2">situação: {situacao} ✕</Link>}
+            </div>
+          )}
           {lista.data && !todos.length && <Empty>Nenhum candidato para esse filtro.</Empty>}
           {totalPaginas > 1 && (
             <div className="mb-3 flex flex-wrap items-center gap-2 font-mono text-[0.65rem] uppercase tracking-[0.12em]">

@@ -126,7 +126,7 @@ export default function Sobre() {
       <Section id="quem" kicker="6" title="Quem faz">
         <div className="prose-mg">
           <p>
-            Fundado por <strong>Hairã Steinhauser</strong> (3 Pontos), com a comunidade que chegar. Sem partido, sem financiamento político,
+            Fundado por <strong>Hairã Steinhauser</strong>, com a comunidade que chegar. Sem partido, sem financiamento político,
             sem anúncio. Código MIT, dados CC-BY 4.0. Roadmap: entidade jurídica própria (associação), conselho editorial independente,
             parcerias com organizações de transparência, auditoria externa anual das regras.
           </p>
