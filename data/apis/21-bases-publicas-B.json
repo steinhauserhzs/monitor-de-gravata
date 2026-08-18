@@ -1,0 +1,1786 @@
+[
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado (limit=20 por página)",
+    "exemplo_resposta": "{\"estabelecimentos\":[{\"codigo_cnes\":9629866,\"numero_cnpj_entidade\":null,\"nome_razao_social\":\"FERNANDO NUNES AGUIAR\",\"tipo_gestao\":\"M\",\"descricao_esfera_administrativa\":\"MUNICIPAL\",...}]}",
+    "notas": "Swagger em /static/swagger.json (~80 paths). Testado /cnes/estabelecimentos?limit=1 → 200 JSON. Muitas rotas antigas mudaram de nome — sempre reler o swagger.",
+    "id": "datasus-api-dados-abertos-demas",
+    "nome": "Ministério da Saúde — API de Dados Abertos (DEMAS)",
+    "orgao": "Ministério da Saúde / DATASUS-DEMAS",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "saude",
+      "cnes",
+      "sim",
+      "vacinacao",
+      "estoques"
+    ],
+    "base_url": "https://apidadosabertos.saude.gov.br",
+    "docs_url": "https://apidadosabertos.saude.gov.br/v1/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave; paginação limit/offset (limit máx 20)",
+    "formato": [
+      "json"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/cnes/estabelecimentos?limit=20&offset=0&codigo_municipio=355030",
+        "descricao": "Estabelecimentos de saúde (CNES) por município"
+      },
+      {
+        "metodo": "GET",
+        "path": "/cnes/estabelecimentos/{codigo_cnes}",
+        "descricao": "Ficha de um estabelecimento (CNPJ mantenedora, gestão, leitos)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/vigilancia-e-meio-ambiente/sistema-de-informacao-sobre-mortalidade",
+        "descricao": "SIM — óbitos (microdados agregados)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/daf/estoque-medicamentos-bnafar-horus",
+        "descricao": "Estoque de medicamentos por município (BNAFAR/Hórus)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/assistencia-a-saude/hospitais-e-leitos",
+        "descricao": "Hospitais e leitos SUS"
+      }
+    ],
+    "utilidade_anticorrupcao": "CNES liga unidade de saúde ao CNPJ mantenedor e ao gestor municipal; cruzar com contratos de OS/OSCIP, estoques de medicamentos vs. licitações e óbitos vs. hospitais.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "opendatasus.saude.gov.br redireciona (302) para dadosabertos.saude.gov.br. /dataset/sim → 200. Endpoint CKAN JSON não disponível (404).",
+    "id": "datasus-opendatasus-ckan",
+    "nome": "OpenDataSUS — Portal de Dados Abertos da Saúde (CKAN)",
+    "orgao": "Ministério da Saúde / DATASUS",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "saude",
+      "sim",
+      "sinan",
+      "sih",
+      "srag",
+      "vacinacao"
+    ],
+    "base_url": "https://dadosabertos.saude.gov.br",
+    "docs_url": "https://dadosabertos.saude.gov.br/dataset",
+    "auth": "bulk-download",
+    "auth_como": "Download CSV/DBC por dataset; API CKAN /api/3 respondeu 404 hoje",
+    "formato": [
+      "csv",
+      "dbc",
+      "json"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/dataset/sim",
+        "descricao": "SIM — Sistema de Informação sobre Mortalidade (microdados anuais)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/dataset/",
+        "descricao": "Lista de datasets (SINAN, SIH, SRAG, vacinação, e-SUS)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Séries de mortalidade/internação por município para detectar hospitais fantasmas, superfaturamento de AIH e desvios em epidemias (dengue, SRAG).",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Página 200; FTP direto (ftp.datasus.gov.br) não respondeu via curl HTTP hoje (000) — usar cliente FTP/pysus. Tabnet (tabnet.datasus.gov.br) é só interface HTML.",
+    "id": "datasus-ftp-transferencia-arquivos",
+    "nome": "DATASUS — Transferência de Arquivos (SIH/SIM/CNES/SINAN)",
+    "orgao": "DATASUS",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "saude",
+      "sih",
+      "sim",
+      "cnes",
+      "sinan",
+      "sia"
+    ],
+    "base_url": "https://datasus.saude.gov.br/transferencia-de-arquivos",
+    "docs_url": "https://datasus.saude.gov.br/transferencia-de-arquivos/",
+    "auth": "bulk-download",
+    "auth_como": "Download de arquivos .DBC (formato próprio; converter com read.dbc/pysus). FTP ftp.datasus.gov.br/dissemin/publicos/",
+    "formato": [
+      "dbc",
+      "dbf"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ (SIHSUS → RD{UF}{AAMM}.dbc)",
+        "descricao": "AIH reduzida: internações pagas por hospital/CNES, valor"
+      },
+      {
+        "metodo": "GET",
+        "path": "/ (CNES → ST{UF}{AAMM}.dbc)",
+        "descricao": "Cadastro de estabelecimentos mensal"
+      },
+      {
+        "metodo": "GET",
+        "path": "/ (SIM → DO{UF}{AAAA}.dbc)",
+        "descricao": "Declarações de óbito"
+      }
+    ],
+    "utilidade_anticorrupcao": "Base primária p/ auditar produção hospitalar (AIH) x repasses do Fundo Nacional de Saúde x contratos com OS; ferramenta pysus (Python) automatiza.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Preferir apidadosabertos.saude.gov.br/cnes para JSON estável.",
+    "id": "datasus-cnes-portal",
+    "nome": "CNES — Cadastro Nacional de Estabelecimentos de Saúde (portal)",
+    "orgao": "DATASUS",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "saude",
+      "cnes",
+      "estabelecimentos",
+      "profissionais"
+    ],
+    "base_url": "https://cnes.datasus.gov.br",
+    "docs_url": "https://cnes.datasus.gov.br/",
+    "auth": "nenhuma",
+    "auth_como": "Consulta web; endpoints internos /services/* (instáveis)",
+    "formato": [
+      "html",
+      "json"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/services/estabelecimentos?cnes={cnes}",
+        "descricao": "Ficha do estabelecimento (endpoint interno do SPA)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/pages/estabelecimentos/consulta.jsp",
+        "descricao": "Consulta pública por CNPJ/nome/município"
+      }
+    ],
+    "utilidade_anticorrupcao": "Verificar se hospital/clínica contratada existe, quem é o mantenedor (CNPJ) e quais profissionais estão vinculados (médicos fantasmas em folha).",
+    "status_verificado": "2026-08-18 falhou: 503 no /services/estabelecimentos; portal raiz 200"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Páginas 200. dadosabertos.dataprev.gov.br não resolve (000). Não há API JSON — só arquivos.",
+    "id": "inss-dados-abertos-previdencia",
+    "nome": "INSS / MPS — Dados Abertos da Previdência (benefícios concedidos)",
+    "orgao": "INSS / Ministério da Previdência Social (DATAPREV)",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "previdencia",
+      "beneficios",
+      "aposentadorias"
+    ],
+    "base_url": "https://www.gov.br/inss/pt-br/acesso-a-informacao/dados-abertos",
+    "docs_url": "https://www.gov.br/previdencia/pt-br/acesso-a-informacao/dados-abertos",
+    "auth": "bulk-download",
+    "auth_como": "CSV mensais de benefícios concedidos/cessados publicados no gov.br e dados.gov.br (busca 'Previdência Social')",
+    "formato": [
+      "csv",
+      "xlsx"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ (Benefícios concedidos por mês — CSV)",
+        "descricao": "Benefícios concedidos por espécie, UF, APS, valor"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://dados.gov.br/dados/busca?termo=Previd%C3%AAncia%20Social",
+        "descricao": "Catálogo dos datasets previdenciários no dados.gov.br"
+      }
+    ],
+    "utilidade_anticorrupcao": "Picos anormais de concessão por agência (fraude em benefícios), cruzar CPF de servidores/políticos com BPC/aposentadoria (via Portal da Transparência), e volume de descontos associativos ilegais.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "URL correta tem 'acesso-a-informacao-1'. Somente arquivos.",
+    "id": "previc-dados-abertos-fundos-pensao",
+    "nome": "PREVIC — Dados Abertos (fundos de pensão / EFPC)",
+    "orgao": "PREVIC (Superintendência Nacional de Previdência Complementar)",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "previdencia-complementar",
+      "fundos-pensao",
+      "investimentos"
+    ],
+    "base_url": "https://www.gov.br/previc/pt-br/acesso-a-informacao-1/dados-abertos",
+    "docs_url": "https://dados.gov.br/dados/organizacoes/visualizar/superintendencia-nacional-de-previdencia-complementar-previc",
+    "auth": "bulk-download",
+    "auth_como": "Arquivos CSV/XLSX (cadastro de EFPC, planos, patrocinadores, investimentos, autos de infração)",
+    "formato": [
+      "csv",
+      "xlsx"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ (Cadastro de entidades e planos)",
+        "descricao": "EFPC (Postalis, Petros, Funcef...) e patrocinadores"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://dados.gov.br/dados/organizacoes/visualizar/superintendencia-nacional-de-previdencia-complementar-previc",
+        "descricao": "Datasets no dados.gov.br (investimentos, penalidades)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Fundos de pensão de estatais foram foco da Lava Jato/Greenfield: cruzar dirigentes indicados politicamente x investimentos em FIPs x empresas sancionadas.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "nao",
+    "rate_limit": "nao-documentado (Elasticsearch, size máx 10000, usar search_after)",
+    "exemplo_resposta": "{\"took\":5,\"hits\":{\"total\":{\"value\":10000,\"relation\":\"gte\"},\"hits\":[{\"_index\":\"api_publica_tjsp\",\"_source\":{\"tribunal\":\"TJSP\",\"grau\":\"JE\",\"numeroProcesso\":\"00001333920258260334\",\"dataAjuizamento\":\"20250312134505\",...}}]}}",
+    "notas": "Testado POST TJSP com chave pública → 200. Chave pode rotacionar: ler sempre da wiki. Sem nome de partes (LGPD).",
+    "id": "cnj-datajud-api-publica",
+    "nome": "DataJud — API Pública (CNJ)",
+    "orgao": "CNJ (Conselho Nacional de Justiça)",
+    "esfera": "judiciario",
+    "uf": "BR",
+    "categorias": [
+      "processos",
+      "judiciario",
+      "metadados-processuais"
+    ],
+    "base_url": "https://api-publica.datajud.cnj.jus.br",
+    "docs_url": "https://datajud-wiki.cnj.jus.br/api-publica/acesso",
+    "auth": "chave-gratuita",
+    "auth_como": "Header 'Authorization: APIKey <chave pública oficial>' publicada na wiki (hoje: cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==); POST JSON no formato Elasticsearch",
+    "formato": [
+      "json"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "POST",
+        "path": "/api_publica_tjsp/_search  {\"query\":{\"match\":{\"numeroProcesso\":\"...\"}}}",
+        "descricao": "Metadados de processo no TJSP (classe, assuntos, movimentos, órgão julgador)"
+      },
+      {
+        "metodo": "POST",
+        "path": "/api_publica_trf1/_search  {\"query\":{\"match_all\":{}},\"size\":10}",
+        "descricao": "TRF1 (índice por tribunal: api_publica_{sigla})"
+      },
+      {
+        "metodo": "POST",
+        "path": "/api_publica_stj/_search",
+        "descricao": "STJ"
+      }
+    ],
+    "utilidade_anticorrupcao": "Contar/acompanhar ações de improbidade, ações penais e execuções contra CNPJ/CPF (não expõe partes; usar número CNJ obtido em diários/DOU). Base para 'ficha judicial' de candidatos e fornecedores.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "sim",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "[{\"id\":\"63\",\"variavel\":\"IPCA - Variação mensal\",\"unidade\":\"%\",\"resultados\":[{\"series\":[{\"localidade\":{\"id\":\"1\",\"nome\":\"Brasil\"},\"serie\":{\"202607\":\"0.07\"}}]}]}]",
+    "notas": "Todos os 6 agregados testados → 200. Alternativa: https://apisidra.ibge.gov.br/values/t/1737/n1/all/v/63/p/last%201 (200).",
+    "id": "ibge-agregados-sidra-v3",
+    "nome": "IBGE — API de Agregados (SIDRA v3): Censo, PNAD, IPCA/INPC, PIB, PMC, PIM-PF, POF",
+    "orgao": "IBGE",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "estatisticas",
+      "populacao",
+      "inflacao",
+      "pib",
+      "emprego",
+      "comercio",
+      "industria"
+    ],
+    "base_url": "https://servicodados.ibge.gov.br/api/v3/agregados",
+    "docs_url": "https://servicodados.ibge.gov.br/api/docs/agregados?versao=3",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave",
+    "formato": [
+      "json"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/1737/periodos/-1/variaveis/63?localidades=N1[all]",
+        "descricao": "IPCA variação mensal (último período)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/5938/periodos/-1/variaveis/37?localidades=N6[3550308]",
+        "descricao": "PIB municipal (São Paulo)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/6579/periodos/-1/variaveis/9324?localidades=N6[{ibge}]",
+        "descricao": "População estimada por município"
+      },
+      {
+        "metodo": "GET",
+        "path": "/4093/periodos/-1/variaveis/4099?localidades=N1[all]",
+        "descricao": "PNAD Contínua — taxa de desocupação"
+      },
+      {
+        "metodo": "GET",
+        "path": "/8880/periodos/-1/variaveis/7169?localidades=N1[all]",
+        "descricao": "PMC — volume de vendas do varejo"
+      },
+      {
+        "metodo": "GET",
+        "path": "/8888/periodos/-1/variaveis/11602?localidades=N1[all]",
+        "descricao": "PIM-PF — produção industrial"
+      },
+      {
+        "metodo": "GET",
+        "path": "/ (lista de agregados)",
+        "descricao": "Catálogo completo de tabelas (Censo 2022, POF, INPC etc.)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Denominadores para per capita (gasto por habitante, contratos por PIB municipal), deflacionar contratos por IPCA/INPC e detectar municípios com despesa desproporcional à população.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "sim",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Testado /estados/35/municipios → 200.",
+    "id": "ibge-localidades-v1",
+    "nome": "IBGE — API de Localidades (municípios, UFs, regiões, distritos)",
+    "orgao": "IBGE",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "geografia",
+      "codigos-ibge",
+      "municipios"
+    ],
+    "base_url": "https://servicodados.ibge.gov.br/api/v1/localidades",
+    "docs_url": "https://servicodados.ibge.gov.br/api/docs/localidades",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave",
+    "formato": [
+      "json"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/estados/35/municipios",
+        "descricao": "Municípios de SP com código IBGE"
+      },
+      {
+        "metodo": "GET",
+        "path": "/municipios/{id}",
+        "descricao": "Município → microrregião/mesorregião/UF"
+      },
+      {
+        "metodo": "GET",
+        "path": "/estados",
+        "descricao": "27 UFs"
+      }
+    ],
+    "utilidade_anticorrupcao": "Chave-mestra de junção: código IBGE conecta TSE, SICONFI, FNDE, DATASUS, TCEs. Obrigatório para o Radar de Contratos por município.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "sim",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",...",
+    "notas": "Malhas do Censo 2022 e microdados em https://ftp.ibge.gov.br/Censos/Censo_Demografico_2022/ (200); POF em https://ftp.ibge.gov.br/Orcamentos_Familiares/... (200).",
+    "id": "ibge-malhas-v3",
+    "nome": "IBGE — API de Malhas Territoriais (GeoJSON/TopoJSON/SVG)",
+    "orgao": "IBGE",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "geociencias",
+      "malhas",
+      "geojson"
+    ],
+    "base_url": "https://servicodados.ibge.gov.br/api/v3/malhas",
+    "docs_url": "https://servicodados.ibge.gov.br/api/docs/malhas?versao=3",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave; parâmetro formato=application/vnd.geo+json | application/json (topojson) | image/svg+xml",
+    "formato": [
+      "geojson",
+      "topojson",
+      "svg"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/estados/35?formato=application/vnd.geo+json&intrarregiao=municipio",
+        "descricao": "Malha dos municípios de SP"
+      },
+      {
+        "metodo": "GET",
+        "path": "/paises/BR?formato=application/vnd.geo+json&intrarregiao=UF",
+        "descricao": "Malha das UFs"
+      }
+    ],
+    "utilidade_anticorrupcao": "Mapas coropléticos de gasto/sanções/obras paradas por município; geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/ para shapefiles completos (200).",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Censo 2022 e POF diretórios → 200.",
+    "id": "ibge-ftp-microdados",
+    "nome": "IBGE — FTP de microdados (Censo 2022, POF, PNAD)",
+    "orgao": "IBGE",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "censo",
+      "pof",
+      "pnad",
+      "microdados"
+    ],
+    "base_url": "https://ftp.ibge.gov.br",
+    "docs_url": "https://www.ibge.gov.br/estatisticas/downloads-estatisticas.html",
+    "auth": "bulk-download",
+    "auth_como": "Download direto de ZIP/CSV",
+    "formato": [
+      "csv",
+      "zip",
+      "xlsx"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/Censos/Censo_Demografico_2022/",
+        "descricao": "Resultados e agregados por setor censitário"
+      },
+      {
+        "metodo": "GET",
+        "path": "/Orcamentos_Familiares/Pesquisa_de_Orcamentos_Familiares_2017_2018/Microdados/",
+        "descricao": "POF microdados"
+      },
+      {
+        "metodo": "GET",
+        "path": "/Trabalho_e_Rendimento/Pesquisa_Nacional_por_Amostra_de_Domicilios_continua/",
+        "descricao": "PNAD Contínua microdados"
+      }
+    ],
+    "utilidade_anticorrupcao": "Setor censitário permite medir vulnerabilidade da população onde obras foram paralisadas ou onde políticos concentram emendas.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "ZIP 2024 → 200 (arquivo grande, centenas de MB).",
+    "id": "inep-censo-escolar-microdados",
+    "nome": "INEP — Microdados do Censo Escolar",
+    "orgao": "INEP",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "educacao",
+      "escolas",
+      "matriculas"
+    ],
+    "base_url": "https://download.inep.gov.br/dados_abertos",
+    "docs_url": "https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-escolar",
+    "auth": "bulk-download",
+    "auth_como": "ZIP anual com CSV + dicionário",
+    "formato": [
+      "csv",
+      "zip"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/microdados_censo_escolar_2024.zip",
+        "descricao": "Censo Escolar 2024 (escolas, turmas, matrículas, docentes)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/microdados_censo_escolar_2023.zip",
+        "descricao": "Censo Escolar 2023"
+      }
+    ],
+    "utilidade_anticorrupcao": "Número de matrículas por escola/município é o denominador do FUNDEB e do PNAE (merenda) e do PNATE (transporte): detectar 'alunos fantasmas' e repasses inflados.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "ZIP 2023 → 200.",
+    "id": "inep-enem-microdados",
+    "nome": "INEP — Microdados do ENEM",
+    "orgao": "INEP",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "educacao",
+      "enem",
+      "avaliacao"
+    ],
+    "base_url": "https://download.inep.gov.br/microdados",
+    "docs_url": "https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/enem",
+    "auth": "bulk-download",
+    "auth_como": "ZIP anual",
+    "formato": [
+      "csv",
+      "zip"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/microdados_enem_2023.zip",
+        "descricao": "ENEM 2023 (notas por escola/município anonimizadas)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/microdados_enem_2022.zip",
+        "descricao": "ENEM 2022"
+      }
+    ],
+    "utilidade_anticorrupcao": "Resultado educacional x gasto per capita em educação (SIOPE) expõe municípios que gastam muito e entregam pouco — sinal de desvio.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "fnde.gov.br/dadosabertos redireciona ao dados.gov.br. Relatório local → 200 (HTML).",
+    "id": "fnde-siope",
+    "nome": "FNDE — SIOPE (Sistema de Informações sobre Orçamentos Públicos em Educação)",
+    "orgao": "FNDE",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "educacao",
+      "orcamento",
+      "fundeb",
+      "municipios"
+    ],
+    "base_url": "https://www.fnde.gov.br/siope",
+    "docs_url": "https://www.fnde.gov.br/siope/apresentacao.do",
+    "auth": "nenhuma",
+    "auth_como": "Relatórios HTML/XLS por município e ano; datasets CSV via dados.gov.br (organização FNDE)",
+    "formato": [
+      "html",
+      "xls",
+      "csv"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/consultarRelatorioLocalMunicipal.do",
+        "descricao": "Relatório de receitas/despesas em educação por município (RREO educação)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://dados.gov.br/dados/organizacoes/visualizar/fundo-nacional-de-desenvolvimento-da-educacao",
+        "descricao": "Datasets FNDE (SIOPE, PNAE, PNATE, PDDE, Fundeb)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Verifica se prefeitura aplicou o mínimo constitucional (25%) e o FUNDEB (70% em profissionais); cruzar com contratos de merenda/transporte escolar e com prefeito candidato à reeleição.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Ambas as páginas → 200. Sem API JSON; scraping de formulário Oracle PL/SQL.",
+    "id": "fnde-liberacoes-repasses",
+    "nome": "FNDE — Liberações de Recursos (SIMAD) e SIGPC (prestação de contas)",
+    "orgao": "FNDE",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "educacao",
+      "repasses",
+      "transferencias",
+      "prestacao-contas"
+    ],
+    "base_url": "https://www.fnde.gov.br/pls/simad/internet_fnde.LIBERACOES_01_PC",
+    "docs_url": "https://dados.gov.br/dados/conjuntos-dados/liberacoes-de-recursos",
+    "auth": "nenhuma",
+    "auth_como": "Consulta pública por UF/município/programa/ano; SIGPC em https://www.fnde.gov.br/sigpcadm/sistema.pu",
+    "formato": [
+      "html",
+      "csv"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ (formulário: UF, município, programa PNAE/PNATE/PDDE, ano)",
+        "descricao": "Liberações de recursos por entidade executora e ordem bancária"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://www.fnde.gov.br/sigpcadm/sistema.pu",
+        "descricao": "SIGPC — situação da prestação de contas (aprovada/reprovada/omissa)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Prefeituras com prestação de contas reprovada/omissa que continuam recebendo; valores de merenda por aluno x preços do contrato; comparar com Censo Escolar.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "{\"success\":true,\"result\":{\"count\":6,\"results\":[{\"author\":\"Cenima\",\"license_id\":\"odc-odbl\",...}]}}",
+    "notas": "package_search → 200; ambos ZIP CSV → 200. Diretório /dados/SINAFLOR/ → 403 (usar busca CKAN).",
+    "id": "ibama-dados-abertos-ckan",
+    "nome": "IBAMA — Portal de Dados Abertos (CKAN): embargos, autos de infração, SINAFLOR, CTF",
+    "orgao": "IBAMA",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "meio-ambiente",
+      "embargos",
+      "multas",
+      "licenciamento",
+      "sinaflor"
+    ],
+    "base_url": "https://dadosabertos.ibama.gov.br",
+    "docs_url": "https://dadosabertos.ibama.gov.br/dataset/",
+    "auth": "nenhuma",
+    "auth_como": "API CKAN sem chave; arquivos CSV/ZIP diretos",
+    "formato": [
+      "json",
+      "csv",
+      "zip"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/api/3/action/package_search?q=embargo&rows=10",
+        "descricao": "Busca datasets (embargos, autos de infração)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/dados/SIFISC/termo_embargo/termo_embargo/termo_embargo_csv.zip",
+        "descricao": "Termos de embargo (CPF/CNPJ, área, município)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/dados/SIFISC/auto_infracao/auto_infracao/auto_infracao_csv.zip",
+        "descricao": "Autos de infração ambiental (valor da multa, autuado)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/api/3/action/package_search?q=sinaflor",
+        "descricao": "SINAFLOR — autorizações florestais / DOF"
+      }
+    ],
+    "utilidade_anticorrupcao": "Cruzar CNPJ embargado/multado com contratos públicos e doações eleitorais; fazendas de políticos com embargo; madeireiras autorizadas no SINAFLOR ligadas a candidatos.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "<Name>deter-amz:deter_amz</Name>",
+    "notas": "GetCapabilities DETER e PRODES → 200. GetFeature grande deu timeout em 20s — usar bbox/CQL_FILTER e maxFeatures. A antiga /api/v1 → 404.",
+    "id": "inpe-terrabrasilis-deter-prodes",
+    "nome": "INPE — TerraBrasilis (DETER / PRODES) via GeoServer WFS/WMS",
+    "orgao": "INPE",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "meio-ambiente",
+      "desmatamento",
+      "geoespacial"
+    ],
+    "base_url": "https://terrabrasilis.dpi.inpe.br/geoserver",
+    "docs_url": "https://terrabrasilis.dpi.inpe.br/downloads/",
+    "auth": "nenhuma",
+    "auth_como": "OGC WFS/WMS sem chave; outputFormat=application/json p/ GeoJSON",
+    "formato": [
+      "geojson",
+      "gml",
+      "shp"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/deter-amz/deter_amz/ows?service=WFS&version=1.0.0&request=GetCapabilities",
+        "descricao": "DETER Amazônia — alertas de desmatamento (capabilities)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/deter-amz/deter_amz/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=deter-amz:deter_amz&outputFormat=application/json&maxFeatures=100",
+        "descricao": "Alertas DETER em GeoJSON"
+      },
+      {
+        "metodo": "GET",
+        "path": "/prodes-amazon-nb/ows?service=WFS&request=GetCapabilities",
+        "descricao": "PRODES Amazônia — desmatamento anual consolidado"
+      }
+    ],
+    "utilidade_anticorrupcao": "Sobrepor polígonos de desmatamento com CAR/SIGEF de políticos e fornecedores; municípios campeões de desmatamento x emendas e licenças.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Sem API; captcha impede automação direta. Alternativa: base 'CAR' já tratada por MapBiomas/Imaflora (esfera civil).",
+    "id": "sfb-sicar-car-downloads",
+    "nome": "SICAR — Cadastro Ambiental Rural (downloads por município/UF)",
+    "orgao": "Serviço Florestal Brasileiro (MMA)",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "meio-ambiente",
+      "imoveis-rurais",
+      "geoespacial"
+    ],
+    "base_url": "https://consultapublica.car.gov.br/publico",
+    "docs_url": "https://www.car.gov.br/publico/municipios/downloads",
+    "auth": "nenhuma",
+    "auth_como": "Download de shapefile por município exige resolver captcha na página; consulta pública por número CAR",
+    "formato": [
+      "shp",
+      "zip",
+      "html"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/imoveis/index",
+        "descricao": "Consulta pública de imóveis rurais cadastrados"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://www.car.gov.br/publico/municipios/downloads",
+        "descricao": "Download de shapefiles CAR por município (com captcha)"
+      }
+    ],
+    "utilidade_anticorrupcao": "CAR autodeclarado revela fazendas de políticos/candidatos e sobreposição com terras públicas, TI e embargos IBAMA.",
+    "status_verificado": "2026-08-18 falhou: 302 redirect (login/captcha) nas duas URLs; site no ar"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "export_shp.py → 200; ZIP SP → 200. acervofundiario → 302 (login).",
+    "id": "incra-sigef-acervo-fundiario",
+    "nome": "INCRA — SIGEF / Acervo Fundiário (parcelas certificadas)",
+    "orgao": "INCRA",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "fundiario",
+      "imoveis-rurais",
+      "geoespacial"
+    ],
+    "base_url": "https://certificacao.incra.gov.br/csv_shp",
+    "docs_url": "https://acervofundiario.incra.gov.br/acervo/acv.php",
+    "auth": "bulk-download",
+    "auth_como": "Download de shapefiles/CSV por UF sem login (export_shp.py); Acervo Fundiário exige cadastro",
+    "formato": [
+      "shp",
+      "csv",
+      "zip"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/export_shp.py",
+        "descricao": "Página de exportação de parcelas SIGEF/SNCI por UF"
+      },
+      {
+        "metodo": "GET",
+        "path": "/zip/Sigef%20Brasil_SP.zip",
+        "descricao": "Parcelas SIGEF certificadas em SP (shapefile)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Parcelas georreferenciadas com nome do detentor: cruzar com candidatos, grilagem em assentamentos e sobreposição com áreas embargadas.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "REST ?f=json → 200; downloads → 200; geoportal.cprm.gov.br antigo não responde.",
+    "id": "sgb-cprm-geoportal-arcgis",
+    "nome": "SGB/CPRM — GeoSGB / GeoPortal (ArcGIS REST)",
+    "orgao": "Serviço Geológico do Brasil (SGB-CPRM)",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "geologia",
+      "mineracao",
+      "geoespacial",
+      "riscos"
+    ],
+    "base_url": "https://geoportal.sgb.gov.br/server/rest/services",
+    "docs_url": "https://geosgb.sgb.gov.br/",
+    "auth": "nenhuma",
+    "auth_como": "ArcGIS REST (?f=json) e downloads em geosgb.sgb.gov.br/geosgb/downloads.html",
+    "formato": [
+      "json",
+      "geojson",
+      "shp"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "?f=json",
+        "descricao": "Catálogo de serviços (geologia, recursos minerais, áreas de risco)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://geosgb.sgb.gov.br/geosgb/downloads.html",
+        "descricao": "Downloads de bases geológicas e de risco geológico"
+      }
+    ],
+    "utilidade_anticorrupcao": "Setorização de risco geológico x obras de contenção contratadas e emendas de defesa civil (obras em área sem risco ou risco sem obra).",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "GetCapabilities → 200; catalog.search → 200; inde.gov.br/api/catalogo bloqueia curl (WAF 'Request Rejected').",
+    "id": "inde-catalogo-geoservicos",
+    "nome": "INDE — Catálogo de Metadados (GeoNetwork) e GeoServiços (WFS/WMS)",
+    "orgao": "INDE / CONCAR (IBGE)",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "geoespacial",
+      "catalogo",
+      "metadados"
+    ],
+    "base_url": "https://geoservicos.inde.gov.br/geoserver",
+    "docs_url": "https://metadados.inde.gov.br/geonetwork/srv/por/catalog.search",
+    "auth": "nenhuma",
+    "auth_como": "OGC WFS/WMS sem chave; GeoNetwork API /geonetwork/srv/api/records",
+    "formato": [
+      "xml",
+      "geojson",
+      "json"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ows?service=WFS&request=GetCapabilities",
+        "descricao": "Camadas geoespaciais federais agregadas"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://metadados.inde.gov.br/geonetwork/srv/api/records?any=embargo",
+        "descricao": "Busca de metadados (redireciona 303 com paginação)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Ponto único para achar camadas oficiais (unidades de conservação, terras indígenas, obras) e cruzar com fazendas/obras de interesse.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Página 2026 → 200 com links XLSX.",
+    "id": "senatran-frota-veiculos",
+    "nome": "SENATRAN — Frota de Veículos (RENAVAM agregado)",
+    "orgao": "SENATRAN / Ministério dos Transportes",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "transito",
+      "frota",
+      "veiculos"
+    ],
+    "base_url": "https://www.gov.br/transportes/pt-br/assuntos/transito/conteudo-Senatran/frota-de-veiculos-2026",
+    "docs_url": "https://dados.gov.br/dados/conjuntos-dados/frota-de-veiculos",
+    "auth": "bulk-download",
+    "auth_como": "XLSX mensais por UF/município/tipo/combustível/ano-fabricação",
+    "formato": [
+      "xlsx"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/frota-de-veiculos-2026-2/Frota_por_municipio_e_tipo_Julho_2026.xlsx",
+        "descricao": "Frota por município e tipo (jul/2026)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/frota-de-veiculos-2026-2/F_Frota_por_UF_Municipio_ANO_FAB_MOD_Julho_2026.xlsx",
+        "descricao": "Frota por UF/município/ano/modelo"
+      }
+    ],
+    "utilidade_anticorrupcao": "Denominador para contratos de sinalização, radares e transporte; frota oficial x locação de veículos por prefeituras. RENAVAM individual não é público.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "CSV → 200.",
+    "id": "anac-rab-registro-aeronautico",
+    "nome": "ANAC — Dados Abertos: RAB (Registro Aeronáutico Brasileiro)",
+    "orgao": "ANAC",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "aviacao",
+      "aeronaves",
+      "proprietarios"
+    ],
+    "base_url": "https://sistemas.anac.gov.br/dadosabertos",
+    "docs_url": "https://www.gov.br/anac/pt-br/acesso-a-informacao/dados-abertos",
+    "auth": "bulk-download",
+    "auth_como": "CSV direto",
+    "formato": [
+      "csv"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/Aeronaves/RAB/dados_aeronaves.csv",
+        "descricao": "Todas as aeronaves: matrícula, proprietário, operador, CPF/CNPJ mascarado"
+      },
+      {
+        "metodo": "GET",
+        "path": "/",
+        "descricao": "Índice de todos os datasets (voos, tarifas, aeródromos, ocorrências)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Aeronaves em nome de empresas contratadas ou de políticos (patrimônio incompatível); operadores de táxi-aéreo usados em campanhas.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "{\"success\":true,\"result\":{\"count\":5,\"results\":[{\"license_title\":\"Creative Commons Atribuição\",...}]}}",
+    "notas": "package_search → 200.",
+    "id": "antt-dados-abertos-ckan",
+    "nome": "ANTT — Portal de Dados Abertos (CKAN)",
+    "orgao": "ANTT",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "transporte-terrestre",
+      "concessoes",
+      "multas",
+      "rodovias"
+    ],
+    "base_url": "https://dados.antt.gov.br",
+    "docs_url": "https://dados.antt.gov.br/dataset/",
+    "auth": "nenhuma",
+    "auth_como": "API CKAN sem chave",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/api/3/action/package_search?q=multas&rows=10",
+        "descricao": "Datasets de multas/autos de infração"
+      },
+      {
+        "metodo": "GET",
+        "path": "/api/3/action/package_list",
+        "descricao": "Lista de datasets (concessões rodoviárias, pedágio, transporte de passageiros)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Concessionárias rodoviárias: fiscalizações, multas e reequilíbrios contratuais x doações a políticos; empresas de ônibus fretado usadas em campanha.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Reverificar web3.antaq.gov.br/ea/sense/download.html.",
+    "id": "antaq-estatistico-aquaviario",
+    "nome": "ANTAQ — Estatístico Aquaviário / Dados Abertos",
+    "orgao": "ANTAQ",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "portos",
+      "transporte-aquaviario",
+      "concessoes"
+    ],
+    "base_url": "https://dados.gov.br/dados/organizacoes/visualizar/agencia-nacional-de-transportes-aquaviarios-antaq",
+    "docs_url": "https://www.gov.br/antaq/pt-br",
+    "auth": "bulk-download",
+    "auth_como": "Datasets no dados.gov.br; Estatístico Aquaviário (web3.antaq.gov.br) fora do ar hoje",
+    "formato": [
+      "csv",
+      "txt"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ (organização ANTAQ no dados.gov.br)",
+        "descricao": "Movimentação portuária, arrendamentos, instalações autorizadas"
+      }
+    ],
+    "utilidade_anticorrupcao": "Arrendamentos e autorizações de terminais portuários x empresas doadoras; movimentação de carga como indício de subfaturamento em concessões.",
+    "status_verificado": "2026-08-18 falhou: web3.antaq.gov.br não respondeu (000); página dados.gov.br 200"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Portal CKAN → 200 com datasets listados.",
+    "id": "dnit-dados-abertos-ckan",
+    "nome": "DNIT — Dados Abertos (CKAN)",
+    "orgao": "DNIT",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "rodovias",
+      "obras",
+      "infraestrutura"
+    ],
+    "base_url": "https://servicos.dnit.gov.br/dadosabertos",
+    "docs_url": "https://servicos.dnit.gov.br/dadosabertos/dataset/",
+    "auth": "nenhuma",
+    "auth_como": "CKAN; api em /dadosabertos/api/3/action/*",
+    "formato": [
+      "json",
+      "csv",
+      "shp"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/dataset/condicoes-do-pavimento",
+        "descricao": "Condição do pavimento das rodovias federais"
+      },
+      {
+        "metodo": "GET",
+        "path": "/api/3/action/package_list",
+        "descricao": "Lista de datasets (SNV, radares, obras)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Trechos com pavimento ruim logo após obra contratada = indício de superfaturamento/má execução; cruzar contratos DNIT (Transparência) com condição da via.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Página → 200; downloads via Google Drive.",
+    "id": "prf-acidentes-dados-abertos",
+    "nome": "PRF — Dados Abertos de Acidentes e Infrações",
+    "orgao": "Polícia Rodoviária Federal",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "seguranca",
+      "acidentes",
+      "rodovias"
+    ],
+    "base_url": "https://www.gov.br/prf/pt-br/acesso-a-informacao/dados-abertos/dados-abertos-da-prf",
+    "docs_url": "https://dados.gov.br/dados/conjuntos-dados/acidentes-rodovias-federais",
+    "auth": "bulk-download",
+    "auth_como": "CSV anuais hospedados no Google Drive (links na página) e /arqcsv",
+    "formato": [
+      "csv",
+      "zip"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/arqcsv",
+        "descricao": "Arquivos CSV de acidentes por ano"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://dados.gov.br/dados/conjuntos-dados/acidentes-rodovias-federais",
+        "descricao": "Catálogo dos datasets de acidentes"
+      }
+    ],
+    "utilidade_anticorrupcao": "Trechos com muitos acidentes x obras de segurança viária prometidas/contratadas e não entregues; base para 'obras que salvariam vidas'.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "{\"success\":true,\"result\":{\"count\":3,\"results\":[{\"author\":\"SGA/ANEEL\",\"license_id\":\"odc-odbl\",...}]}}",
+    "notas": "package_search → 200. datastore_search exige resource_id válido (409 sem ele).",
+    "id": "aneel-dados-abertos-ckan",
+    "nome": "ANEEL — Portal de Dados Abertos (CKAN)",
+    "orgao": "ANEEL",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "energia",
+      "concessoes",
+      "multas",
+      "tarifas",
+      "geracao"
+    ],
+    "base_url": "https://dadosabertos.aneel.gov.br",
+    "docs_url": "https://dadosabertos.aneel.gov.br/dataset/",
+    "auth": "nenhuma",
+    "auth_como": "CKAN + datastore_search (SQL-like) sem chave",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/api/3/action/package_search?q=multas&rows=10",
+        "descricao": "Multas/autos de infração aplicados pela ANEEL"
+      },
+      {
+        "metodo": "GET",
+        "path": "/api/3/action/datastore_search?resource_id={id}&limit=100",
+        "descricao": "Consulta tabular em qualquer recurso (usinas, empreendimentos, tarifas)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/api/3/action/package_list",
+        "descricao": "Lista de datasets"
+      }
+    ],
+    "utilidade_anticorrupcao": "Empreendimentos de geração e distribuidoras (CNPJ) x sanções x doações; multas não pagas por concessionárias; subsídios (CDE) por beneficiário.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Páginas multas/fiscalização/preços → 200.",
+    "id": "anp-dados-abertos",
+    "nome": "ANP — Dados Abertos (revendas, fiscalização, multas, preços)",
+    "orgao": "ANP",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "combustiveis",
+      "fiscalizacao",
+      "multas",
+      "precos",
+      "revendas"
+    ],
+    "base_url": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos",
+    "docs_url": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos",
+    "auth": "bulk-download",
+    "auth_como": "CSV/XLSX por tema (páginas gov.br)",
+    "formato": [
+      "csv",
+      "xlsx"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/multas-aplicadas-com-vencimento-a-partir-de-2016",
+        "descricao": "Multas aplicadas em fiscalização (CNPJ autuado, valor)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/acoes-de-fiscalizacao",
+        "descricao": "Ações de fiscalização do abastecimento"
+      },
+      {
+        "metodo": "GET",
+        "path": "/dados-cadastrais-dos-revendedores-varejistas-de-combustiveis-automotivos",
+        "descricao": "Cadastro de postos (CNPJ, bandeira, sócios)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/serie-historica-de-precos-de-combustiveis",
+        "descricao": "Série de preços por posto (Levantamento de Preços)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Postos que abastecem frotas públicas: preço cobrado x média ANP da cidade; postos autuados vencendo licitação; postos de políticos.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "ZIP → 200. dados.anatel.gov.br redireciona p/ /dados/hub/ (vazio via curl).",
+    "id": "anatel-dados-abertos",
+    "nome": "ANATEL — Dados Abertos (acessos, outorgas, licenciamento, fiscalização)",
+    "orgao": "ANATEL",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "telecom",
+      "outorgas",
+      "acessos",
+      "fiscalizacao"
+    ],
+    "base_url": "https://www.anatel.gov.br/dadosabertos",
+    "docs_url": "https://www.gov.br/anatel/pt-br/dados",
+    "auth": "bulk-download",
+    "auth_como": "ZIP/CSV direto; painéis em informacoes.anatel.gov.br",
+    "formato": [
+      "csv",
+      "zip"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/paineis_de_dados/acessos/acessos_banda_larga_fixa.zip",
+        "descricao": "Acessos banda larga fixa por município/prestadora"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://sistemas.anatel.gov.br/se/public/view/b/licenciamento.php",
+        "descricao": "Estações licenciadas (Mosaico)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://informacoes.anatel.gov.br/paineis/acessos",
+        "descricao": "Painel de acessos"
+      }
+    ],
+    "utilidade_anticorrupcao": "Provedores de internet contratados por prefeituras/escolas (conectividade) x cobertura real declarada; rádios comunitárias e outorgas de políticos.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Diretório → 200 com CSVs listados.",
+    "id": "anvisa-dados-abertos",
+    "nome": "ANVISA — Dados Abertos (petições, empresas, SNGPC, consultas)",
+    "orgao": "ANVISA",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "saude",
+      "regulacao",
+      "medicamentos",
+      "empresas"
+    ],
+    "base_url": "https://dados.anvisa.gov.br/dados",
+    "docs_url": "https://dados.gov.br/dados/organizacoes/visualizar/agencia-nacional-de-vigilancia-sanitaria-anvisa",
+    "auth": "bulk-download",
+    "auth_como": "Diretório h5ai com CSV",
+    "formato": [
+      "csv"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/CICLO_ANALISE_PETICOES_ANDAMENTO_EMPRESA.CSV",
+        "descricao": "Petições de empresas (AFE/autorizações)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/CONSULTAS/",
+        "descricao": "Bases de consultas (produtos, empresas regularizadas)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/SNGPC/",
+        "descricao": "Controle de medicamentos controlados"
+      }
+    ],
+    "utilidade_anticorrupcao": "Fornecedores de medicamentos/EPIs sem AFE vencendo licitações (pandemia); tempo de análise de petições x lobby.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Diretório → 200.",
+    "id": "ans-dados-abertos-ftp",
+    "nome": "ANS — Dados Abertos (FTP/PDA: operadoras, beneficiários, ressarcimento SUS)",
+    "orgao": "ANS",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "saude-suplementar",
+      "operadoras",
+      "ressarcimento",
+      "demonstracoes-contabeis"
+    ],
+    "base_url": "https://dadosabertos.ans.gov.br/FTP/PDA",
+    "docs_url": "https://dadosabertos.ans.gov.br/FTP/PDA/",
+    "auth": "bulk-download",
+    "auth_como": "Diretório HTTP com CSV/ZIP",
+    "formato": [
+      "csv",
+      "zip"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/dados_ressarcimento_SUS_operadora_planos_saude/",
+        "descricao": "Ressarcimento ao SUS devido por operadora"
+      },
+      {
+        "metodo": "GET",
+        "path": "/demonstracoes_contabeis/",
+        "descricao": "Balanços das operadoras"
+      },
+      {
+        "metodo": "GET",
+        "path": "/dados_de_beneficiarios_por_operadora/",
+        "descricao": "Beneficiários por operadora/município"
+      }
+    ],
+    "utilidade_anticorrupcao": "Planos de saúde de servidores contratados por estados/municípios: operadora com dívida de ressarcimento ao SUS ou classificação prudencial ruim; agenda de autoridades da ANS.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "dados.ancine.gov.br → 403; usar gov.br/dados.gov.br.",
+    "id": "ancine-dados-abertos",
+    "nome": "ANCINE — Dados Abertos (OCA): agentes econômicos, obras, fomento",
+    "orgao": "ANCINE",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "cultura",
+      "audiovisual",
+      "fomento",
+      "empresas"
+    ],
+    "base_url": "https://www.gov.br/ancine/pt-br/oca/dados-abertos",
+    "docs_url": "https://www.gov.br/ancine/pt-br/oca/dados-abertos",
+    "auth": "bulk-download",
+    "auth_como": "Datasets no dados.gov.br (CSV)",
+    "formato": [
+      "csv"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "https://dados.gov.br/dados/conjuntos-dados/agentes-economicos-regulares-registrados-na-ancine",
+        "descricao": "Produtoras/distribuidoras registradas (CNPJ)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://dados.gov.br/dados/conjuntos-dados/crt-obras-nao-publicitarias-registradas",
+        "descricao": "Obras registradas (CRT)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Produtoras beneficiadas por FSA/Lei Rouanet ligadas a políticos ou a agências de publicidade governamental.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "sim",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "{\"@odata.context\":\"http://ipeadata.gov.br/api/odata4/$metadata#Metadados\",\"value\":[{\"SERCODIGO\":\"ABATE_ABPEAV\",\"SERNOME\":\"Abate - aves - peso das carcaças\",...}]}",
+    "notas": "Metadados?$top=1 → 200. HTTP (sem TLS) — usar proxy server-side.",
+    "id": "ipea-ipeadata-odata4",
+    "nome": "IPEADATA — API OData4 (séries macro, regionais e sociais)",
+    "orgao": "IPEA",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "economia",
+      "series-temporais",
+      "indicadores"
+    ],
+    "base_url": "http://ipeadata.gov.br/api/odata4",
+    "docs_url": "http://www.ipeadata.gov.br/api/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave; OData ($filter, $top)",
+    "formato": [
+      "json"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/Metadados?$top=10",
+        "descricao": "Catálogo de séries (SERCODIGO, nome, fonte, periodicidade)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/Metadados('PRECOS12_IPCA12')/Valores",
+        "descricao": "Valores de uma série (ex.: IPCA acumulado)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/Territorios",
+        "descricao": "Territórios (municípios/UF) para séries regionais"
+      }
+    ],
+    "utilidade_anticorrupcao": "Deflatores, PIB municipal, indicadores sociais e de segurança para contextualizar gastos e emendas.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "{\"certidoes\":[{\"descricao\":\"Licitantes Inidôneos\",\"emissor\":\"TCU\",\"situacao\":\"NADA_CONSTA\",\"tipo\":\"Inidôneos\"},...]} | POST inidôneos: [{\"numeroProcessoFormatado\":\"007.720/2012-2\",\"nome\":\"A. P. B. J. CONSTRUCOES E SERVICOS LTDA\",\"numeroRegistro\":\"07.405.573/0001-44\",\"uf\":\"CE\",\"numeroAcordaoFormatado\":\"2099/2015-PL\",...}]",
+    "notas": "GET certidão → 200; POST lista inidôneos → 200 (GET dá 405). Lista para o TSE (implicação eleitoral) em https://certidoes.apps.tcu.gov.br/lista-implicacao-eleitoral.",
+    "id": "tcu-certidoes-inidoneos-inabilitados",
+    "nome": "TCU — API de Certidões e Listas (inidôneos, inabilitados, contas irregulares)",
+    "orgao": "TCU (Tribunal de Contas da União)",
+    "esfera": "controle",
+    "uf": "BR",
+    "categorias": [
+      "sancoes",
+      "inidoneos",
+      "contas-irregulares",
+      "certidoes"
+    ],
+    "base_url": "https://certidoes-apf.apps.tcu.gov.br/api/rest/publico",
+    "docs_url": "https://sites.tcu.gov.br/dados-abertos/webservices-tcu/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave",
+    "formato": [
+      "json",
+      "pdf"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/certidoes/{cnpj}?seEmitirPDF=false",
+        "descricao": "Certidão consolidada por CNPJ (inidôneos, inabilitados, contas julgadas irregulares)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/tipos-certidoes",
+        "descricao": "Tipos de certidão disponíveis"
+      },
+      {
+        "metodo": "POST",
+        "path": "https://certidoes.apps.tcu.gov.br/api/publico/responsaveis-inidoneos  (body {})",
+        "descricao": "Lista completa de licitantes inidôneos (JSON)"
+      },
+      {
+        "metodo": "POST",
+        "path": "https://certidoes.apps.tcu.gov.br/api/publico/responsaveis-inabilitados  (body {})",
+        "descricao": "Lista de responsáveis inabilitados para função pública"
+      }
+    ],
+    "utilidade_anticorrupcao": "Checagem instantânea de fornecedor/candidato: inidôneo TCU, inabilitado ou com contas irregulares (lista enviada ao TSE — inelegibilidade Ficha Limpa).",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "[{\"key\":\"ACORDAO-COMPLETO-2776646\",\"tipo\":\"ACÓRDÃO DE RELAÇÃO\",\"anoAcordao\":\"2026\",\"numeroAcordao\":\"4620\",\"colegiado\":\"Primeira Câmara\",\"dataSessao\":\"11/08/2026\",\"relator\":\"WEDER DE OLIVEIRA\",...}]",
+    "notas": "recupera-acordaos → 200; termos-contratuais → 200. dadosabertos.tcu.gov.br / dados.tcu.gov.br não resolvem mais — usar sites.tcu.gov.br/dados-abertos.",
+    "id": "tcu-dados-abertos-acordaos-contratos",
+    "nome": "TCU — Dados Abertos: Acórdãos, Atos Normativos, Contratos do TCU, Pedidos do Congresso",
+    "orgao": "TCU",
+    "esfera": "controle",
+    "uf": "BR",
+    "categorias": [
+      "acordaos",
+      "jurisprudencia",
+      "auditorias",
+      "contratos"
+    ],
+    "base_url": "https://dados-abertos.apps.tcu.gov.br/api",
+    "docs_url": "https://sites.tcu.gov.br/dados-abertos/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave",
+    "formato": [
+      "json"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/acordao/recupera-acordaos?inicio=0&quantidade=100",
+        "descricao": "Acórdãos (relator, colegiado, sumário, situação) — paginado"
+      },
+      {
+        "metodo": "GET",
+        "path": "/atonormativo/recupera-atos-normativos",
+        "descricao": "Atos normativos do TCU"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://contas.tcu.gov.br/contrata2RS/api/publico/termos-contratuais",
+        "descricao": "Contratos firmados pelo próprio TCU (fornecedor CNPJ, objeto)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://contas.tcu.gov.br/ords/api/publica/scn/pedidos_congresso",
+        "descricao": "Pedidos de fiscalização do Congresso ao TCU"
+      }
+    ],
+    "utilidade_anticorrupcao": "Acórdãos citam CNPJ/CPF, órgãos e obras auditadas: minerar por fornecedor ou por município; painel de dirigentes (INDICADOR:DIRIGENTES) e obras paralisadas.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "{\"success\":true,\"result\":[\"balancete-de-despesa-agencia-mun-de-regul-dos-serv-publ-deleg-de-sao-borja-agesb-2013\",...]}",
+    "notas": "package_list → 200; package_search licitações → 200 com URLs CSV.",
+    "id": "tce-rs-dados-abertos-ckan",
+    "nome": "TCE-RS — Portal de Dados Abertos (CKAN): licitações (LicitaCon), despesas, balancetes",
+    "orgao": "TCE-RS",
+    "esfera": "controle",
+    "uf": "RS",
+    "categorias": [
+      "licitacoes",
+      "contratos",
+      "despesas",
+      "municipios"
+    ],
+    "base_url": "https://dados.tce.rs.gov.br",
+    "docs_url": "https://dados.tce.rs.gov.br/dataset/",
+    "auth": "nenhuma",
+    "auth_como": "CKAN sem chave; CSV.zip por órgão/ano",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/api/3/action/package_search?q=licitacoes&rows=20",
+        "descricao": "Datasets de licitações por órgão (LicitaCon)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/dados/licitacon/licitacao/orgao/{cod_orgao}.csv.zip",
+        "descricao": "Licitações de um órgão (CSV)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/api/3/action/package_list",
+        "descricao": "Todos os datasets (balancetes, remuneração, obras)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Licitações municipais do RS com vencedor/CNPJ e valor: direcionamento, fracionamento, fornecedor único; cruzar com doadores de prefeitos.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "[{\"orgao\":\"PREFEITURA MUNICIPAL DE ADAMANTINA\",\"mes\":\"Janeiro\",\"evento\":\"Empenhado\",\"nr_empenho\":\"1006-2024\",\"id_fornecedor\":\"CNPJ - PESSOA JURÍDICA - 43004936000101\",\"nm_fornecedor\":\"AMÉRICO DE LIMA CIA LTDA\",\"vl_despesa\":\"100,00\"}]",
+    "notas": "/municipios → 200; /despesas/adamantina/2024/01 → 200. Dados abertos AUDESP em massa: transparencia.tce.sp.gov.br/conjunto-de-dados.",
+    "id": "tce-sp-transparencia-municipal-api",
+    "nome": "TCE-SP — API de Transparência Municipal (despesas por município/mês)",
+    "orgao": "TCE-SP",
+    "esfera": "controle",
+    "uf": "SP",
+    "categorias": [
+      "despesas",
+      "fornecedores",
+      "municipios",
+      "audesp"
+    ],
+    "base_url": "https://transparencia.tce.sp.gov.br/api/json",
+    "docs_url": "https://transparencia.tce.sp.gov.br/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave; JSON por município (slug) / ano / mês",
+    "formato": [
+      "json"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/municipios",
+        "descricao": "Lista de slugs de municípios paulistas"
+      },
+      {
+        "metodo": "GET",
+        "path": "/despesas/{municipio}/{ano}/{mes}",
+        "descricao": "Empenhos do mês: fornecedor (CNPJ/CPF), valor, órgão"
+      }
+    ],
+    "utilidade_anticorrupcao": "Despesa municipal linha a linha (AUDESP) para todos os 644 municípios de SP: ranking de fornecedores por prefeitura, cruzar com CEIS/CNEP e doações.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Raiz → 200 (SPA); endpoints CKAN 404. Descobrir links de download via XHR do SPA.",
+    "id": "tce-mg-dados-abertos",
+    "nome": "TCE-MG — Portal de Dados Abertos (SICOM: licitações, contratos, despesas municipais)",
+    "orgao": "TCE-MG",
+    "esfera": "controle",
+    "uf": "MG",
+    "categorias": [
+      "licitacoes",
+      "contratos",
+      "despesas",
+      "municipios"
+    ],
+    "base_url": "https://dadosabertos.tce.mg.gov.br",
+    "docs_url": "https://dadosabertos.tce.mg.gov.br/",
+    "auth": "bulk-download",
+    "auth_como": "SPA Angular com download de CSV/ZIP por tema/ano (sem API CKAN — /api/3 → 404)",
+    "formato": [
+      "csv",
+      "zip"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ (SICOM → Licitações / Contratos / Despesa por ano)",
+        "descricao": "Arquivos anuais consolidados dos 853 municípios"
+      }
+    ],
+    "utilidade_anticorrupcao": "Licitações e contratos municipais de MG com CNPJ vencedor: mesma lógica do TCE-RS/SP.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Reverificar; site instável hoje.",
+    "id": "tce-pr-dados-abertos",
+    "nome": "TCE-PR — Dados Abertos (Portal do Cidadão / SIM-AM)",
+    "orgao": "TCE-PR",
+    "esfera": "controle",
+    "uf": "PR",
+    "categorias": [
+      "licitacoes",
+      "contratos",
+      "despesas",
+      "municipios"
+    ],
+    "base_url": "https://servicos.tce.pr.gov.br/TCEPR/Tribunal/Relacon/Dados",
+    "docs_url": "https://www1.tce.pr.gov.br/",
+    "auth": "bulk-download",
+    "auth_como": "Downloads CSV por município/ano (SIM-AM)",
+    "formato": [
+      "csv"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ (SIM-AM: Licitações, Contratos, Empenhos)",
+        "descricao": "Arquivos municipais anuais"
+      }
+    ],
+    "utilidade_anticorrupcao": "Licitações/contratos municipais do PR.",
+    "status_verificado": "2026-08-18 falhou: 503 em servicos.tce.pr.gov.br e dadosabertos.tce.pr.gov.br não resolve"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Página → 200; sem API JSON identificada.",
+    "id": "tcm-sp-dados-abertos",
+    "nome": "TCM-SP — Dados Abertos (município de São Paulo)",
+    "orgao": "TCM-SP",
+    "esfera": "controle",
+    "uf": "SP",
+    "categorias": [
+      "contratos",
+      "despesas",
+      "auditorias",
+      "municipal"
+    ],
+    "base_url": "https://portal.tcm.sp.gov.br",
+    "docs_url": "https://portal.tcm.sp.gov.br/Pagina/8010",
+    "auth": "bulk-download",
+    "auth_como": "Página de dados abertos com arquivos (CSV/XLSX) e sistema de processos",
+    "formato": [
+      "csv",
+      "xlsx",
+      "html"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/Pagina/8010",
+        "descricao": "Página de dados abertos do TCM-SP"
+      }
+    ],
+    "utilidade_anticorrupcao": "Auditorias e julgamentos de contratos da Prefeitura de SP (maior orçamento municipal do país).",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Raiz → 200 (SPA Angular). Paths REST não descobertos por curl — abrir no navegador para ver catálogo.",
+    "id": "tcm-go-api-servicos-web",
+    "nome": "TCM-GO — API de Serviços Web (municípios goianos)",
+    "orgao": "TCM-GO",
+    "esfera": "controle",
+    "uf": "GO",
+    "categorias": [
+      "licitacoes",
+      "contratos",
+      "despesas",
+      "municipios"
+    ],
+    "base_url": "https://api.tcm.go.gov.br/api",
+    "docs_url": "https://api.tcm.go.gov.br/api/",
+    "auth": "nenhuma",
+    "auth_como": "Catálogo de serviços REST listado no SPA (servico-rest-list); alguns exigem token",
+    "formato": [
+      "json"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ (SPA 'TCM - Serviços Web' → lista de serviços REST)",
+        "descricao": "Catálogo de endpoints (obras, contratos, licitações municipais)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Licitações/contratos dos 246 municípios de GO.",
+    "status_verificado": "2026-08-18 ok"
+  },
+  {
+    "cors": "desconhecido",
+    "rate_limit": "nao-documentado",
+    "exemplo_resposta": "",
+    "notas": "Páginas HTML → 200; /api/publico sem chave → 401.",
+    "id": "dados-gov-br-catalogo",
+    "nome": "dados.gov.br — Portal Brasileiro de Dados Abertos (catálogo)",
+    "orgao": "CGU / MGI",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "catalogo",
+      "metadados",
+      "todas"
+    ],
+    "base_url": "https://dados.gov.br/dados",
+    "docs_url": "https://dados.gov.br/swagger-ui/index.html",
+    "auth": "chave-gratuita",
+    "auth_como": "API /api/publico/* exige header chave-api-dados (cadastro em dados.gov.br); páginas HTML públicas",
+    "formato": [
+      "json",
+      "html"
+    ],
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/conjuntos-dados/frota-de-veiculos",
+        "descricao": "Página de dataset (SENATRAN)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://dados.gov.br/api/publico/conjuntos-dados?nomeConjuntoDados=licitacoes",
+        "descricao": "Busca de datasets (JSON, com chave)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/organizacoes/visualizar/fundo-nacional-de-desenvolvimento-da-educacao",
+        "descricao": "Datasets por órgão (FNDE, INSS, PREVIC, ANTAQ, ANP, ANCINE...)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Índice para localizar CSVs de órgãos sem portal próprio (INSS, PREVIC, ANTAQ, ANCINE, ANVISA); não é fonte primária.",
+    "status_verificado": "2026-08-18 ok"
+  }
+]

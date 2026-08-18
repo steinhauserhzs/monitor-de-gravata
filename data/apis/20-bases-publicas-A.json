@@ -1,0 +1,1695 @@
+[
+  {
+    "id": "dadosgov-ckan-api",
+    "nome": "Portal Brasileiro de Dados Abertos (dados.gov.br) — API pública",
+    "orgao": "CGU / Ministério da Gestão (MGI)",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "catalogo",
+      "metadados",
+      "datasets"
+    ],
+    "base_url": "https://dados.gov.br/dados/api/publico",
+    "docs_url": "https://dados.gov.br/swagger-ui/index.html",
+    "auth": "chave-gratuita",
+    "auth_como": "Login gov.br em dados.gov.br > Perfil > 'Chave de acesso'; header chave-api-dados-abertos",
+    "formato": [
+      "json"
+    ],
+    "cors": "nao",
+    "rate_limit": "não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/conjuntos-dados?pagina=1&tamanhoPagina=10&nomeConjuntoDados=contratos",
+        "descricao": "Busca de conjuntos de dados (metadados + recursos/URLs)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/organizacoes?pagina=1",
+        "descricao": "Órgãos publicadores"
+      },
+      {
+        "metodo": "GET",
+        "path": "/conjuntos-dados/{id}",
+        "descricao": "Detalhe de um dataset com lista de recursos (CSV/JSON)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Descoberta programática de fontes: localizar URL atual de CSVs (CNPJ, CEIS, servidores etc.) sem hardcode. Catálogo, não dado final.",
+    "status_verificado": "2026-08-18 falhou: 401 sem chave (esperado; endpoint existe)",
+    "exemplo_resposta": "401 sem header chave-api-dados-abertos",
+    "notas": "A antiga API CKAN /api/3/action também responde 401 hoje. Página do dataset é HTML público (200)."
+  },
+  {
+    "id": "cgu-portal-transparencia-api",
+    "nome": "Portal da Transparência — API de Dados",
+    "orgao": "CGU (Controladoria-Geral da União)",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "contratos",
+      "licitacoes",
+      "servidores",
+      "sancoes",
+      "despesas",
+      "emendas",
+      "beneficios",
+      "convenios",
+      "viagens",
+      "cartoes"
+    ],
+    "base_url": "https://api.portaldatransparencia.gov.br/api-de-dados",
+    "docs_url": "https://api.portaldatransparencia.gov.br/swagger-ui/index.html",
+    "auth": "chave-gratuita",
+    "auth_como": "Cadastro em portaldatransparencia.gov.br/api-de-dados/cadastrar-email; header chave-api-dados",
+    "formato": [
+      "json"
+    ],
+    "cors": "nao",
+    "rate_limit": "90 req/min (6h-24h) / 300 req/min (0h-6h)",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/contratos?codigoOrgao=26000&pagina=1",
+        "descricao": "Contratos federais por órgão (SIAFI/SIASG)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/contratos/cpf-cnpj?cpfCnpj=00000000000191&pagina=1",
+        "descricao": "Contratos por fornecedor"
+      },
+      {
+        "metodo": "GET",
+        "path": "/despesas/documentos-por-favorecido?codigoPessoa=...&fase=3&ano=2026",
+        "descricao": "Pagamentos SIAFI a um favorecido"
+      },
+      {
+        "metodo": "GET",
+        "path": "/emendas?ano=2026&pagina=1",
+        "descricao": "Emendas parlamentares (autor, valor, favorecido)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/servidores?cpf=...&pagina=1",
+        "descricao": "Servidores federais (vínculo, cargo, remuneração)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/licitacoes?codigoOrgao=26000&dataInicial=01/01/2026&dataFinal=31/01/2026&pagina=1",
+        "descricao": "Licitações por órgão"
+      }
+    ],
+    "utilidade_anticorrupcao": "Núcleo do cruzamento: contrato x fornecedor x sanção x servidor x emenda. Base da 'Ficha do Político' e 'Radar de Contratos'.",
+    "status_verificado": "2026-08-18 falhou: 401 sem chave (esperado; /v3/api-docs público 200)",
+    "exemplo_resposta": "401 sem header chave-api-dados",
+    "notas": "OpenAPI público em /v3/api-docs. Sem CORS: proxy server-side obrigatório."
+  },
+  {
+    "id": "cgu-ceis-api",
+    "nome": "CEIS — Cadastro de Empresas Inidôneas e Suspensas (API + CSV)",
+    "orgao": "CGU",
+    "esfera": "controle",
+    "uf": "BR",
+    "categorias": [
+      "sancoes",
+      "empresas"
+    ],
+    "base_url": "https://api.portaldatransparencia.gov.br/api-de-dados",
+    "docs_url": "https://portaldatransparencia.gov.br/download-de-dados/ceis",
+    "auth": "chave-gratuita",
+    "auth_como": "Mesma chave do Portal da Transparência (chave-api-dados). CSV diário sem auth.",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "nao",
+    "rate_limit": "90 req/min",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ceis?codigoSancionado=00000000000191&pagina=1",
+        "descricao": "Sanções CEIS por CNPJ/CPF"
+      },
+      {
+        "metodo": "GET",
+        "path": "/ceis?pagina=1",
+        "descricao": "Listagem paginada completa"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://portaldatransparencia.gov.br/download-de-dados/ceis/{AAAAMMDD}",
+        "descricao": "ZIP/CSV diário completo (bulk)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Detectar fornecedor punido ganhando contrato/licitação; alerta vermelho automático no CNPJ.",
+    "status_verificado": "2026-08-18 ok (página bulk 200; download /ceis/{data} 302 p/ arquivo)",
+    "exemplo_resposta": "[{\"id\":...,\"sancionado\":{\"nome\":...,\"codigoFormatado\":...},\"tipoSancao\":{...},\"dataInicioSancao\":...}]",
+    "notas": "Também disponível no dataset 'ceis' no dados.gov.br."
+  },
+  {
+    "id": "cgu-cnep-api",
+    "nome": "CNEP — Cadastro Nacional de Empresas Punidas (Lei Anticorrupção)",
+    "orgao": "CGU",
+    "esfera": "controle",
+    "uf": "BR",
+    "categorias": [
+      "sancoes",
+      "empresas",
+      "acordos-leniencia"
+    ],
+    "base_url": "https://api.portaldatransparencia.gov.br/api-de-dados",
+    "docs_url": "https://portaldatransparencia.gov.br/download-de-dados/cnep",
+    "auth": "chave-gratuita",
+    "auth_como": "chave-api-dados; CSV sem auth",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "nao",
+    "rate_limit": "90 req/min",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/cnep?codigoSancionado=...&pagina=1",
+        "descricao": "Punições Lei 12.846 por CNPJ"
+      },
+      {
+        "metodo": "GET",
+        "path": "/acordos-leniencia?pagina=1",
+        "descricao": "Acordos de leniência firmados"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://portaldatransparencia.gov.br/download-de-dados/cnep/{AAAAMMDD}",
+        "descricao": "CSV diário (bulk)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Empresas condenadas por corrupção; cruzar com doações eleitorais e contratos vigentes.",
+    "status_verificado": "2026-08-18 ok (página bulk 200)",
+    "exemplo_resposta": "",
+    "notas": ""
+  },
+  {
+    "id": "cgu-cepim-ceaf-api",
+    "nome": "CEPIM (entidades sem fins lucrativos impedidas) + CEAF (expulsões de servidores)",
+    "orgao": "CGU",
+    "esfera": "controle",
+    "uf": "BR",
+    "categorias": [
+      "sancoes",
+      "ongs",
+      "servidores"
+    ],
+    "base_url": "https://api.portaldatransparencia.gov.br/api-de-dados",
+    "docs_url": "https://portaldatransparencia.gov.br/download-de-dados/cepim",
+    "auth": "chave-gratuita",
+    "auth_como": "chave-api-dados; CSV sem auth em /download-de-dados/cepim e /download-de-dados/ceaf",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "nao",
+    "rate_limit": "90 req/min",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/cepim?pagina=1",
+        "descricao": "ONGs/OSCs impedidas de receber convênios"
+      },
+      {
+        "metodo": "GET",
+        "path": "/ceaf?pagina=1",
+        "descricao": "Servidores demitidos/expulsos (nome, cargo, fundamento)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Ex-servidor expulso virando sócio de fornecedora; OSC impedida recebendo emenda.",
+    "status_verificado": "2026-08-18 ok (bulk 200; API exige chave)",
+    "exemplo_resposta": "",
+    "notas": ""
+  },
+  {
+    "id": "tesouro-transparente-ckan",
+    "nome": "Tesouro Transparente — CKAN (datasets STN)",
+    "orgao": "Secretaria do Tesouro Nacional",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "fiscal",
+      "divida",
+      "transferencias",
+      "precatorios",
+      "estatais"
+    ],
+    "base_url": "https://www.tesourotransparente.gov.br/ckan/api/3/action",
+    "docs_url": "https://www.tesourotransparente.gov.br/ckan/dataset",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json",
+      "csv",
+      "xlsx"
+    ],
+    "cors": "desconhecido",
+    "rate_limit": "não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/package_search?q=transferencias&rows=10",
+        "descricao": "Busca datasets (36 resultados p/ 'divida')"
+      },
+      {
+        "metodo": "GET",
+        "path": "/package_show?id={slug}",
+        "descricao": "Recursos e URLs de download de um dataset"
+      },
+      {
+        "metodo": "GET",
+        "path": "/resource_search?query=name:fpm",
+        "descricao": "Busca por recurso"
+      }
+    ],
+    "utilidade_anticorrupcao": "Transferências FPM/FPE por município, precatórios, garantias da União a estados: base para 'quanto seu município recebeu vs. o que licitou'.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "{\"success\": true, \"result\": {\"count\": 36, ...}}",
+    "notas": "CKAN padrão; slugs de dataset descobertos via package_search."
+  },
+  {
+    "id": "tesouro-siconfi-api",
+    "nome": "SICONFI — API de dados fiscais de estados e municípios",
+    "orgao": "Secretaria do Tesouro Nacional",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "fiscal",
+      "orcamento",
+      "municipios",
+      "estados"
+    ],
+    "base_url": "https://apidatalake.tesouro.gov.br/ords/siconfi/tt",
+    "docs_url": "https://apidatalake.tesouro.gov.br/docs/siconfi/",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json"
+    ],
+    "cors": "desconhecido",
+    "rate_limit": "não documentado (paginação de 5000)",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/entes",
+        "descricao": "Todos os entes (cod_ibge, cnpj, população, esfera)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/rreo?an_exercicio=2024&nr_periodo=1&co_tipo_demonstrativo=RREO&id_ente=35",
+        "descricao": "Relatório Resumido de Execução Orçamentária"
+      },
+      {
+        "metodo": "GET",
+        "path": "/rgf?an_exercicio=2024&in_periodicidade=Q&nr_periodo=1&co_tipo_demonstrativo=RGF&co_poder=E&id_ente=35",
+        "descricao": "Relatório de Gestão Fiscal (despesa com pessoal, dívida)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/dca?an_exercicio=2023&id_ente=3550308",
+        "descricao": "Declaração de Contas Anuais (balanço do município)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/msc_orcamentaria?id_ente=3550308&an_referencia=2024&me_referencia=1&co_tipo_matriz=MSCC&classe_conta=5&id_tv=beginning_balance",
+        "descricao": "Matriz de Saldos Contábeis mensal"
+      },
+      {
+        "metodo": "GET",
+        "path": "/extrato_entregas?id_ente=3550308&an_referencia=2024",
+        "descricao": "Quem entregou/atrasou prestação de contas"
+      }
+    ],
+    "utilidade_anticorrupcao": "Saúde fiscal de cada prefeitura/estado; gasto com pessoal e restos a pagar em ano eleitoral; município que não entrega contas = red flag.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "{\"items\":[{\"cod_ibge\":1504950,\"ente\":\"Nova Esperança do Piriá\",\"uf\":\"PA\",\"esfera\":\"M\",\"populacao\":21304,\"cnpj\":\"84263862000105\"}...",
+    "notas": "id_ente = código IBGE (2 dígitos p/ UF, 7 p/ município)."
+  },
+  {
+    "id": "tesouro-siafi-dados-abertos",
+    "nome": "SIAFI — execução orçamentária federal (via Portal da Transparência e Tesouro Gerencial)",
+    "orgao": "STN / CGU",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "despesas",
+      "orcamento",
+      "pagamentos",
+      "empenhos"
+    ],
+    "base_url": "https://portaldatransparencia.gov.br/download-de-dados/despesas-execucao",
+    "docs_url": "https://portaldatransparencia.gov.br/download-de-dados",
+    "auth": "bulk-download",
+    "auth_como": "CSV mensal sem auth; consulta granular via API Portal da Transparência (chave)",
+    "formato": [
+      "csv",
+      "json"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/{AAAAMM}",
+        "descricao": "ZIP com despesa executada do mês (empenho/liquidação/pagamento por favorecido)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://api.portaldatransparencia.gov.br/api-de-dados/despesas/por-orgao?ano=2026&pagina=1",
+        "descricao": "Despesa por órgão (API, chave)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://api.portaldatransparencia.gov.br/api-de-dados/despesas/documentos?codigoDocumento=...",
+        "descricao": "Nota de empenho/OB específica"
+      }
+    ],
+    "utilidade_anticorrupcao": "Seguir o dinheiro do empenho ao pagamento; picos de pagamento pré-eleição; favorecidos recorrentes.",
+    "status_verificado": "2026-08-18 ok (página de download 200)",
+    "exemplo_resposta": "",
+    "notas": "SIAFI em si não tem API pública; Tesouro Gerencial exige credencial de servidor. O aberto é o espelho no Portal da Transparência."
+  },
+  {
+    "id": "siop-orcamento-federal",
+    "nome": "SIOP — Painel do Orçamento Federal + Dados Abertos (dotação x execução)",
+    "orgao": "Ministério do Planejamento e Orçamento (SOF)",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "orcamento",
+      "emendas",
+      "programas"
+    ],
+    "base_url": "https://www1.siop.planejamento.gov.br/siopdoc/doku.php/acesso_publico:dados_abertos",
+    "docs_url": "https://www1.siop.planejamento.gov.br/siopdoc/doku.php/acesso_publico:dados_abertos",
+    "auth": "bulk-download",
+    "auth_como": "Painel Qlik público (sem login) + arquivos CSV anuais; API SOAP/JSON antiga descontinuada",
+    "formato": [
+      "csv",
+      "html"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "https://www.siop.planejamento.gov.br/modulo/main/index.html",
+        "descricao": "Painel do Orçamento (Qlik, público)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://www1.siop.planejamento.gov.br/siopdoc/doku.php/acesso_publico:dados_abertos",
+        "descricao": "Índice dos CSVs de dotação/execução por ano"
+      }
+    ],
+    "utilidade_anticorrupcao": "Emendas RP6/RP8/RP9 (relator/comissão) por autor e localidade; dotação inflada vs. executada.",
+    "status_verificado": "2026-08-18 ok (docs 200; painel 200 em www., 403 sem www.)",
+    "exemplo_resposta": "",
+    "notas": "Para JSON use Portal da Transparência /emendas ou dataset 'orcamento-federal' no dados.gov.br."
+  },
+  {
+    "id": "basedosdados-graphql-bigquery",
+    "nome": "Base dos Dados — GraphQL de metadados + BigQuery público (basedosdados)",
+    "orgao": "Base dos Dados (OSC)",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "agregador",
+      "eleicoes",
+      "cnpj",
+      "compras",
+      "orcamento",
+      "diarios"
+    ],
+    "base_url": "https://backend.basedosdados.org/api/v1/graphql",
+    "docs_url": "https://basedosdados.org/docs",
+    "auth": "chave-gratuita",
+    "auth_como": "GraphQL de metadados sem auth (POST). Dados: BigQuery projeto 'basedosdados' com conta Google (1 TB/mês grátis) ou pacote pip basedosdados",
+    "formato": [
+      "json",
+      "sql"
+    ],
+    "cors": "desconhecido",
+    "rate_limit": "BigQuery: 1 TB/mês grátis",
+    "endpoints_chave": [
+      {
+        "metodo": "POST",
+        "path": "/ (query { allDataset(first:10){ edges{ node{ slug name } } } })",
+        "descricao": "Catálogo de datasets/tabelas"
+      },
+      {
+        "metodo": "SQL",
+        "path": "SELECT * FROM `basedosdados.br_tse_eleicoes.candidatos` WHERE ano=2026 LIMIT 10",
+        "descricao": "Candidatos TSE tratados"
+      },
+      {
+        "metodo": "SQL",
+        "path": "SELECT * FROM `basedosdados.br_me_cnpj.socios` WHERE cnpj_basico='...'",
+        "descricao": "Sócios da Receita já tratados"
+      },
+      {
+        "metodo": "SQL",
+        "path": "SELECT * FROM `basedosdados.br_cgu_licitacao_contrato.contrato` LIMIT 10",
+        "descricao": "Contratos federais (espelho CGU)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Join pronto entre TSE x CNPJ x contratos federais x sanções sem baixar ZIPs; ideal para batch noturno.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "{\"data\":{\"allDataset\":{\"edges\":[{\"node\":{\"slug\":\"absp\",\"name\":\"Anuário Brasileiro de Segurança Pública\"}}]}}}",
+    "notas": "GET no endpoint retorna 400 (só POST). Atualização de algumas tabelas atrasa meses."
+  },
+  {
+    "id": "receita-cnpj-dados-abertos",
+    "nome": "Receita Federal — Dados Abertos do CNPJ (empresas, estabelecimentos, sócios)",
+    "orgao": "Receita Federal do Brasil",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "empresas",
+      "socios",
+      "qsa"
+    ],
+    "base_url": "https://arquivos.receitafederal.gov.br/index.php/s/gn672Ad4CF8N6TK",
+    "docs_url": "https://dados.gov.br/dados/conjuntos-dados/cadastro-nacional-da-pessoa-juridica---cnpj",
+    "auth": "bulk-download",
+    "auth_como": "Sem auth; ZIPs mensais (Empresas0..9, Estabelecimentos0..9, Socios0..9, Simples, tabelas de domínio) em pasta Nextcloud",
+    "formato": [
+      "csv"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a (arquivos de 100MB-1GB)",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/download?path=%2F&files={AAAA-MM}",
+        "descricao": "Pasta do mês (navegar via Nextcloud share)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/download?path=%2F{AAAA-MM}&files=Socios0.zip",
+        "descricao": "Quadro societário (CPF mascarado ***xxxxxx**, nome, qualificação, data de entrada)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Base do grafo empresa-sócio: laranjas, empresas de fachada, sócio de fornecedor = parente/assessor de político.",
+    "status_verificado": "2026-08-18 ok (share Nextcloud 200; caminho antigo /dados/cnpj/dados_abertos_cnpj/ agora 404)",
+    "exemplo_resposta": "",
+    "notas": "Layout em PDF no dataset do dados.gov.br. CPF de sócio vem mascarado; cruzar por nome+faixa etária."
+  },
+  {
+    "id": "minhareceita-cnpj",
+    "nome": "Minha Receita — API CNPJ (Receita Federal em JSON, open source)",
+    "orgao": "Minha Receita (Eduardo Cuducos, OSS)",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "empresas",
+      "qsa"
+    ],
+    "base_url": "https://minhareceita.org",
+    "docs_url": "https://docs.minhareceita.org",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json"
+    ],
+    "cors": "sim",
+    "rate_limit": "não documentado; self-host recomendado (Docker + dados abertos)",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/{cnpj}",
+        "descricao": "Ficha completa com QSA, CNAEs secundários, Simples/MEI"
+      },
+      {
+        "metodo": "GET",
+        "path": "/updated",
+        "descricao": "Data da última carga da Receita"
+      }
+    ],
+    "utilidade_anticorrupcao": "Mesma utilidade da BrasilAPI, com opção de rodar localmente para consultas em massa (milhares de fornecedores).",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "Ideal para hospedar cópia própria e evitar rate limit."
+  },
+  {
+    "id": "redesim-juntas-comerciais",
+    "nome": "Juntas Comerciais / REDESIM (JUCESP, JUCERJA, JUCEMG…) — consultas de atos societários",
+    "orgao": "DREI/MDIC + Juntas estaduais",
+    "esfera": "estadual",
+    "uf": "BR",
+    "categorias": [
+      "empresas",
+      "atos-societarios"
+    ],
+    "base_url": "https://www.jucesponline.sp.gov.br",
+    "docs_url": "https://www.gov.br/empresas-e-negocios/pt-br/redesim",
+    "auth": "token",
+    "auth_como": "Sem API pública aberta. JUCESP Online exige cadastro/login e cobra por certidão; REDESIM oferece consulta de viabilidade e 'Consulta CNPJ' web sem API. Dados societários abertos = arquivos da Receita.",
+    "formato": [
+      "html",
+      "pdf"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "https://www.jucesponline.sp.gov.br/Pre_Visualiza.aspx",
+        "descricao": "Ficha cadastral simplificada JUCESP (web, login)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://www.gov.br/empresas-e-negocios/pt-br/redesim/consultas",
+        "descricao": "Consultas REDESIM (viabilidade, andamento) — web"
+      }
+    ],
+    "utilidade_anticorrupcao": "Histórico de alterações contratuais (troca de sócio às vésperas de contrato) só via certidão; use CNPJ aberto da Receita como proxy.",
+    "status_verificado": "2026-08-18 ok (portais 200; sem API JSON pública)",
+    "exemplo_resposta": "",
+    "notas": "Lacuna real: nenhuma junta expõe API aberta. Alternativa paga: SERPRO/Infosimples."
+  },
+  {
+    "id": "cvm-dados-abertos-ckan",
+    "nome": "CVM Dados Abertos — CKAN (índice de todos os datasets)",
+    "orgao": "CVM (Comissão de Valores Mobiliários)",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "mercado-capitais",
+      "catalogo"
+    ],
+    "base_url": "https://dados.cvm.gov.br/api/3/action",
+    "docs_url": "https://dados.cvm.gov.br/dataset/",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "desconhecido",
+    "rate_limit": "não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/package_search?q=fre&rows=10",
+        "descricao": "Busca datasets (FRE, IPE, VLMO, FI…)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/package_show?id=cia_aberta-doc-fre",
+        "descricao": "Recursos do Formulário de Referência"
+      }
+    ],
+    "utilidade_anticorrupcao": "Ponto de entrada para localizar CSVs atuais de cias abertas e fundos.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "Diretórios /dados/... são navegáveis (Apache index)."
+  },
+  {
+    "id": "cvm-fre-formulario-referencia",
+    "nome": "CVM — Formulário de Referência (FRE) das companhias abertas",
+    "orgao": "CVM",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "empresas",
+      "administradores",
+      "remuneracao",
+      "acionistas",
+      "partes-relacionadas"
+    ],
+    "base_url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/FRE/DADOS",
+    "docs_url": "https://dados.cvm.gov.br/dataset/cia_aberta-doc-fre",
+    "auth": "bulk-download",
+    "auth_como": "ZIP anual sem auth",
+    "formato": [
+      "csv"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/fre_cia_aberta_{AAAA}.zip",
+        "descricao": "ZIP com dezenas de CSVs: administradores, posição acionária, remuneração, transações c/ partes relacionadas"
+      },
+      {
+        "metodo": "GET",
+        "path": "/",
+        "descricao": "Listagem dos anos disponíveis"
+      }
+    ],
+    "utilidade_anticorrupcao": "Conselheiros/diretores de estatais e concessionárias com histórico político; acionistas controladores atrás de fornecedores do Estado; transações com partes relacionadas.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "Inclui fre_cia_aberta_administrador_membro_conselho_fiscal, fre_cia_aberta_posicao_acionaria, etc."
+  },
+  {
+    "id": "cvm-ipe-fatos-relevantes",
+    "nome": "CVM — IPE (Fatos Relevantes, Comunicados, Atas)",
+    "orgao": "CVM",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "empresas",
+      "fatos-relevantes"
+    ],
+    "base_url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/IPE/DADOS",
+    "docs_url": "https://dados.cvm.gov.br/dataset/cia_aberta-doc-ipe",
+    "auth": "bulk-download",
+    "auth_como": "ZIP anual sem auth; contém link para o PDF de cada documento",
+    "formato": [
+      "csv"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ipe_cia_aberta_{AAAA}.zip",
+        "descricao": "Metadados de todos os documentos IPE do ano (categoria, assunto, data, Link_Download)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/",
+        "descricao": "Listagem"
+      }
+    ],
+    "utilidade_anticorrupcao": "Fatos relevantes de estatais e concessionárias (contratos, investigações, acordos de leniência) com data para cruzar com negociações e decisões públicas.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": ""
+  },
+  {
+    "id": "cvm-vlmo-insider-art-11",
+    "nome": "CVM — VLMO (Valores Mobiliários negociados por administradores, art. 11 Res. 44)",
+    "orgao": "CVM",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "insider",
+      "administradores",
+      "negociacoes"
+    ],
+    "base_url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/VLMO/DADOS",
+    "docs_url": "https://dados.cvm.gov.br/dataset/cia_aberta-doc-vlmo",
+    "auth": "bulk-download",
+    "auth_como": "ZIP anual sem auth",
+    "formato": [
+      "csv"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/vlmo_cia_aberta_{AAAA}.zip",
+        "descricao": "Movimentações mensais de administradores/controladores por companhia (consolidado, sem nome individual)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/",
+        "descricao": "Listagem"
+      }
+    ],
+    "utilidade_anticorrupcao": "Compras/vendas de insiders em estatais (Petrobras, BB, Eletrobras) antes de anúncios governamentais; sinal de vazamento de informação.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "Dados agregados por grupo (diretoria, conselho, controlador), não por pessoa."
+  },
+  {
+    "id": "cvm-fundos-inf-diario-cad-fi",
+    "nome": "CVM — Fundos de Investimento (CAD_FI cadastro + INF_DIARIO cotas/patrimônio)",
+    "orgao": "CVM",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "fundos",
+      "gestoras",
+      "patrimonio"
+    ],
+    "base_url": "https://dados.cvm.gov.br/dados/FI",
+    "docs_url": "https://dados.cvm.gov.br/dataset/fi-doc-inf_diario",
+    "auth": "bulk-download",
+    "auth_como": "CSV/ZIP sem auth",
+    "formato": [
+      "csv"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/CAD/DADOS/cad_fi.csv",
+        "descricao": "Cadastro de todos os fundos (CNPJ, gestor, administrador, situação)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/DOC/INF_DIARIO/DADOS/inf_diario_fi_{AAAAMM}.zip",
+        "descricao": "Cota, PL e captação diária por fundo"
+      },
+      {
+        "metodo": "GET",
+        "path": "/DOC/CDA/DADOS/cda_fi_{AAAAMM}.zip",
+        "descricao": "Composição da carteira (CDA)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Fundos exclusivos de políticos/agentes públicos (bens declarados no TSE citam CNPJ do fundo); RPPS municipais aplicando em fundos podres.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "cad_fi.csv tem ~40 MB; usar cad_fi_hist para histórico."
+  },
+  {
+    "id": "b3-cotahist-historico",
+    "nome": "B3 — Séries históricas COTAHIST (cotações diárias, sem login)",
+    "orgao": "B3 S.A.",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "cotacoes",
+      "mercado-capitais"
+    ],
+    "base_url": "https://bvmf.bmfbovespa.com.br/InstDados/SerHist",
+    "docs_url": "https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/historico/mercado-a-vista/series-historicas/",
+    "auth": "bulk-download",
+    "auth_como": "ZIP anual/mensal/diário sem auth (layout posicional)",
+    "formato": [
+      "txt"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/COTAHIST_A{AAAA}.ZIP",
+        "descricao": "Cotações do ano inteiro (abertura, fechamento, volume por papel)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/COTAHIST_D{DDMMAAAA}.ZIP",
+        "descricao": "Cotações de um dia"
+      }
+    ],
+    "utilidade_anticorrupcao": "Preço/volume de estatais em torno de decisões governamentais e insider (VLMO); avaliar bens declarados em ações.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "Layout fixo de 245 caracteres; documentação no site B3."
+  },
+  {
+    "id": "b3-arquivos-api-download",
+    "nome": "B3 — arquivos.b3.com.br (Instruments/TradeInformation Consolidated, negócios por ticker)",
+    "orgao": "B3 S.A.",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "cotacoes",
+      "negociacoes",
+      "instrumentos"
+    ],
+    "base_url": "https://arquivos.b3.com.br",
+    "docs_url": "https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/cotacoes/cotacoes/",
+    "auth": "nenhuma",
+    "auth_como": "Endpoint /api/download/requestname retorna token; depois /api/download/?token=... baixa CSV",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "nao",
+    "rate_limit": "não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/api/download/requestname?fileName=InstrumentsConsolidated&date=2026-08-14",
+        "descricao": "Cadastro de instrumentos do dia (token p/ download)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/api/download/requestname?fileName=TradeInformationConsolidated&date=2026-08-14",
+        "descricao": "Resumo de negociação diária"
+      },
+      {
+        "metodo": "GET",
+        "path": "/rapinegocios/tickercsv/2026-08-14",
+        "descricao": "Negócios tick-a-tick do dia (ZIP)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Volume anômalo em ação de estatal antes de fato relevante; complementa COTAHIST com dados intradiários.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "up2data é produto pago; o que é público sem login está aqui e no COTAHIST. Cotações em tempo real não são abertas."
+  },
+  {
+    "id": "b3-listed-companies-proxy",
+    "nome": "B3 — listedCompaniesProxy (cadastro de cias listadas, JSON)",
+    "orgao": "B3 S.A.",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "empresas",
+      "listadas"
+    ],
+    "base_url": "https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyCall",
+    "docs_url": "https://www.b3.com.br/pt_br/produtos-e-servicos/negociacao/renda-variavel/empresas-listadas.htm",
+    "auth": "nenhuma",
+    "auth_como": "Parâmetro é JSON base64 na URL",
+    "formato": [
+      "json"
+    ],
+    "cors": "nao",
+    "rate_limit": "não documentado (endpoint interno do site)",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/GetInitialCompanies/{base64({\"language\":\"pt-br\",\"pageNumber\":1,\"pageSize\":120})}",
+        "descricao": "Lista de empresas listadas (codeCVM, cnpj, segmento)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/GetDetail/{base64({\"codeCVM\":\"9512\",\"language\":\"pt-br\"})}",
+        "descricao": "Detalhe da companhia"
+      }
+    ],
+    "utilidade_anticorrupcao": "Mapear CNPJ de listada -> códigoCVM -> FRE/IPE; identificar concessionárias e estatais no grafo.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "Não oficial/documentado; pode mudar sem aviso."
+  },
+  {
+    "id": "bcb-sgs-series-temporais",
+    "nome": "BCB — SGS (Sistema Gerenciador de Séries Temporais) API JSON",
+    "orgao": "Banco Central do Brasil",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "cambio",
+      "juros",
+      "inflacao",
+      "macro"
+    ],
+    "base_url": "https://api.bcb.gov.br/dados/serie",
+    "docs_url": "https://dadosabertos.bcb.gov.br/dataset/20542-saldo-da-carteira-de-credito-com-recursos-livres---total",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "sim",
+    "rate_limit": "máx 10 anos por consulta em séries diárias",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/bcdata.sgs.1/dados/ultimos/1?formato=json",
+        "descricao": "PTAX dólar venda (série 1)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/bcdata.sgs.11/dados?formato=json&dataInicial=01/01/2026&dataFinal=17/08/2026",
+        "descricao": "Selic diária (11); 432 = meta Selic"
+      },
+      {
+        "metodo": "GET",
+        "path": "/bcdata.sgs.433/dados/ultimos/12?formato=json",
+        "descricao": "IPCA mensal (433); 13621 = IPCA-15... "
+      },
+      {
+        "metodo": "GET",
+        "path": "/bcdata.sgs.1788/dados/ultimos/1?formato=json",
+        "descricao": "Base monetária"
+      }
+    ],
+    "utilidade_anticorrupcao": "Deflacionar contratos e patrimônio (IPCA), converter contratos em dólar (PTAX), comparar reajustes contratuais vs. inflação.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "[{\"data\":\"17/08/2026\",\"valor\":\"5.2014\"}]",
+    "notas": "Busca de códigos de série em www3.bcb.gov.br/sgspub."
+  },
+  {
+    "id": "bcb-olinda-ptax",
+    "nome": "BCB Olinda — PTAX (cotações oficiais de moedas)",
+    "orgao": "Banco Central do Brasil",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "cambio"
+    ],
+    "base_url": "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata",
+    "docs_url": "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/aplicacao",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json",
+      "csv",
+      "xml"
+    ],
+    "cors": "sim",
+    "rate_limit": "não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/CotacaoDolarDia(dataCotacao=@dataCotacao)?@dataCotacao='08-15-2026'&$format=json",
+        "descricao": "Dólar do dia (MM-DD-AAAA)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/CotacaoMoedaPeriodo(moeda=@moeda,dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)?@moeda='EUR'&@dataInicial='01-01-2026'&@dataFinalCotacao='08-17-2026'&$format=json",
+        "descricao": "Série de qualquer moeda"
+      }
+    ],
+    "utilidade_anticorrupcao": "Converter contratos/importações em moeda estrangeira; comparar câmbio contratado vs. oficial em compras superfaturadas.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "OData v4; $filter/$select suportados."
+  },
+  {
+    "id": "bcb-olinda-pix-estatisticas",
+    "nome": "BCB Olinda — Pix Dados Abertos (transações por município, chaves)",
+    "orgao": "Banco Central do Brasil",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "pagamentos",
+      "municipios"
+    ],
+    "base_url": "https://olinda.bcb.gov.br/olinda/servico/Pix_DadosAbertos/versao/v1/odata",
+    "docs_url": "https://olinda.bcb.gov.br/olinda/servico/Pix_DadosAbertos/versao/v1/aplicacao",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "sim",
+    "rate_limit": "não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/TransacoesPixPorMunicipio(DataBase=@DataBase)?@DataBase='202601'&$top=10&$format=json",
+        "descricao": "Volume/valor Pix por município e mês"
+      },
+      {
+        "metodo": "GET",
+        "path": "/ChavesPix(Data=@Data)?@Data='2026-01-01'&$format=json",
+        "descricao": "Estoque de chaves Pix"
+      }
+    ],
+    "utilidade_anticorrupcao": "Proxy de atividade econômica municipal (contraste com receita própria declarada no SICONFI); dado agregado, sem CPF.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": ""
+  },
+  {
+    "id": "bcb-olinda-ifdata",
+    "nome": "BCB Olinda — IF.data (balancetes e cadastro de instituições financeiras)",
+    "orgao": "Banco Central do Brasil",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "bancos",
+      "balancos"
+    ],
+    "base_url": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata",
+    "docs_url": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/aplicacao",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "sim",
+    "rate_limit": "não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ListaDeRelatorio()?$format=json",
+        "descricao": "Lista de relatórios disponíveis"
+      },
+      {
+        "metodo": "GET",
+        "path": "/IfDataCadastro(AnoMes=@AnoMes)?@AnoMes=202503&$format=json",
+        "descricao": "Cadastro das IFs na data-base"
+      },
+      {
+        "metodo": "GET",
+        "path": "/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?@AnoMes=202503&@TipoInstituicao=1&@Relatorio='1'&$format=json",
+        "descricao": "Valores do relatório (ativos, PL, resultado)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Bancos públicos estaduais/regionais e cooperativas ligadas a políticos; saúde de banco que recebe depósitos judiciais/folha de prefeitura.",
+    "status_verificado": "2026-08-18 ok (ListaDeRelatorio() 200; funções com parâmetro deram 500 no teste — instabilidade)",
+    "exemplo_resposta": "",
+    "notas": "Chamar função sem parâmetro exige '()' no path. Testar AnoMes com data-base publicada (trimestral)."
+  },
+  {
+    "id": "bcb-olinda-outros-servicos",
+    "nome": "BCB Olinda — demais serviços (taxaJuros, Expectativas/Focus, Agências, Tarifas, Dinheiro em circulação, DASFN, MPV)",
+    "orgao": "Banco Central do Brasil",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "juros",
+      "expectativas",
+      "agencias",
+      "tarifas",
+      "macro"
+    ],
+    "base_url": "https://olinda.bcb.gov.br/olinda/servico",
+    "docs_url": "https://dadosabertos.bcb.gov.br",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "sim",
+    "rate_limit": "não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/taxaJuros/versao/v2/odata/TaxasJurosDiariaPorInicioPeriodo?$top=10&$format=json",
+        "descricao": "Taxas de juros por instituição/modalidade"
+      },
+      {
+        "metodo": "GET",
+        "path": "/Expectativas/versao/v1/odata/ExpectativaMercadoMensais?$top=10&$format=json",
+        "descricao": "Boletim Focus"
+      },
+      {
+        "metodo": "GET",
+        "path": "/Informes_Agencias/versao/v1/odata/Agencias?$top=10&$format=json",
+        "descricao": "Agências bancárias por município"
+      },
+      {
+        "metodo": "GET",
+        "path": "/mecir_dinheiro_em_circulacao/versao/v1/odata/informacoes_diarias?$top=10&$format=json",
+        "descricao": "Dinheiro em circulação"
+      }
+    ],
+    "utilidade_anticorrupcao": "Contexto macro; taxa de juros praticada vs. juros de empréstimos consignados/precatórios em contratos públicos.",
+    "status_verificado": "2026-08-18 ok (raiz de cada serviço 200)",
+    "exemplo_resposta": "",
+    "notas": "Não existem em Olinda hoje: Reservas_Internacionais, CapitaisEstrangeiros, scr_agregados (404) — usar SGS (reservas: série 13621; base monetária 1788) e dadosabertos.bcb.gov.br p/ SCR agregado (CSV)."
+  },
+  {
+    "id": "bcb-dados-abertos-scr-agregado",
+    "nome": "BCB Dados Abertos — SCR.data (crédito agregado por município/UF/porte) e Capitais Estrangeiros",
+    "orgao": "Banco Central do Brasil",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "credito",
+      "municipios",
+      "capitais-estrangeiros"
+    ],
+    "base_url": "https://dadosabertos.bcb.gov.br/api/3/action",
+    "docs_url": "https://dadosabertos.bcb.gov.br/dataset/scr_data",
+    "auth": "nenhuma",
+    "auth_como": "CKAN sem auth; dados em CSV",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/package_search?q=scr&rows=10",
+        "descricao": "Localiza dataset SCR.data (crédito agregado por município/porte/CNAE)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/package_search?q=capitais+estrangeiros&rows=10",
+        "descricao": "Capitais estrangeiros no país (IED por país/setor)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/package_show?id={slug}",
+        "descricao": "URLs dos CSVs do dataset"
+      }
+    ],
+    "utilidade_anticorrupcao": "Crédito rural/empresarial explodindo em município específico; fluxo de capital estrangeiro por país (paraísos fiscais).",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "SCR individual é sigiloso; só agregado é público. Olinda não tem serviço scr_agregados/CapitaisEstrangeiros hoje (404)."
+  },
+  {
+    "id": "compras-gov-dados-abertos-api",
+    "nome": "Compras.gov.br — API de Dados Abertos (SIASG: contratos, fornecedores, licitações legado, ARP, PNCP 14.133)",
+    "orgao": "Ministério da Gestão e Inovação (SEGES)",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "contratos",
+      "licitacoes",
+      "fornecedores",
+      "atas",
+      "compras"
+    ],
+    "base_url": "https://dadosabertos.compras.gov.br",
+    "docs_url": "https://dadosabertos.compras.gov.br/swagger-ui/index.html",
+    "auth": "nenhuma",
+    "auth_como": "Consulta pública sem auth (rotas /usuarios e /alice exigem login)",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "desconhecido",
+    "rate_limit": "não documentado; tamanhoPagina máx 500",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/modulo-contratos/1_consultarContratos?pagina=1&tamanhoPagina=10&codigoOrgao=26000&dataVigenciaInicialMin=2025-01-01&dataVigenciaInicialMax=2025-01-31",
+        "descricao": "Contratos (params obrigatórios: codigoOrgao + faixa dataVigenciaInicial)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/modulo-fornecedor/1_consultarFornecedor?pagina=1&tamanhoPagina=10&ativo=true&cnpj=00000000000191",
+        "descricao": "Fornecedor SICAF (ativo* obrigatório)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/modulo-legado/1_consultarLicitacao?pagina=1&tamanhoPagina=10&data_publicacao_inicial=2023-01-01&data_publicacao_final=2023-01-05",
+        "descricao": "Licitações Lei 8.666 (legado)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/modulo-legado/5_consultarComprasSemLicitacao?pagina=1&tamanhoPagina=10&dt_ano_aviso=2023",
+        "descricao": "Dispensas/inexigibilidades"
+      },
+      {
+        "metodo": "GET",
+        "path": "/modulo-contratacoes/1_consultarContratacoes_PNCP_14133?pagina=1&tamanhoPagina=10&dataPublicacaoPncpInicial=2025-08-01&dataPublicacaoPncpFinal=2025-08-05&codigoModalidade=6",
+        "descricao": "Contratações Lei 14.133 (pregão=6, dispensa=8)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/modulo-arp/1_consultarARP?pagina=1&tamanhoPagina=10&dataVigenciaInicialMin=2025-01-01&dataVigenciaInicialMax=2025-01-31",
+        "descricao": "Atas de registro de preço"
+      }
+    ],
+    "utilidade_anticorrupcao": "Dispensas em série abaixo do teto, fornecedor único vencendo tudo num órgão, ata carona; item x preço p/ superfaturamento.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "Sem parâmetros obrigatórios retorna 404 (não 400) — atenção. OpenAPI em /v3/api-docs."
+  },
+  {
+    "id": "pncp-api-consulta",
+    "nome": "PNCP — Portal Nacional de Contratações Públicas (API de consulta, todos os entes)",
+    "orgao": "MGI / Rede Nacional de Contratações Públicas",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "contratos",
+      "licitacoes",
+      "atas",
+      "pca",
+      "municipios",
+      "estados"
+    ],
+    "base_url": "https://pncp.gov.br/api/consulta/v1",
+    "docs_url": "https://pncp.gov.br/api/consulta/swagger-ui/index.html",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json"
+    ],
+    "cors": "desconhecido",
+    "rate_limit": "não documentado; tamanhoPagina máx 500; intervalo de datas limitado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/contratos?dataInicial=20260801&dataFinal=20260801&pagina=1&tamanhoPagina=10",
+        "descricao": "Contratos publicados por período (federal, estadual, municipal)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/contratacoes/publicacao?dataInicial=20260801&dataFinal=20260801&codigoModalidadeContratacao=6&pagina=1",
+        "descricao": "Editais/avisos por modalidade"
+      },
+      {
+        "metodo": "GET",
+        "path": "/contratacoes/proposta?dataFinal=20260901&pagina=1",
+        "descricao": "Contratações com propostas abertas"
+      },
+      {
+        "metodo": "GET",
+        "path": "/atas?dataInicial=20260801&dataFinal=20260801&pagina=1",
+        "descricao": "Atas de registro de preço"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://pncp.gov.br/api/pncp/v1/orgaos/{cnpj}/contratos/{ano}/{seq}",
+        "descricao": "Detalhe de contrato/edital (API pncp)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Única fonte nacional obrigatória (Lei 14.133) que cobre prefeituras: dispensas municipais, mesmo fornecedor em N municípios, contratos assinados em período eleitoral.",
+    "status_verificado": "2026-08-18 ok (lento: 1 timeout em 3 tentativas)",
+    "exemplo_resposta": "",
+    "notas": "Também há /api/search/ (busca textual) que resetou conexão no teste. Cobertura municipal cresce desde 2024."
+  },
+  {
+    "id": "tse-dados-abertos-ckan-a",
+    "nome": "TSE Dados Abertos — CKAN (candidatos, bens, prestação de contas, resultados)",
+    "orgao": "Tribunal Superior Eleitoral",
+    "esfera": "eleitoral",
+    "uf": "BR",
+    "categorias": [
+      "candidatos",
+      "bens",
+      "doacoes",
+      "resultados",
+      "eleitorado"
+    ],
+    "base_url": "https://dadosabertos.tse.jus.br/api/3/action",
+    "docs_url": "https://dadosabertos.tse.jus.br/dataset/",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "desconhecido",
+    "rate_limit": "não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/package_search?q=candidatos+2026&rows=10",
+        "descricao": "Datasets de candidatura"
+      },
+      {
+        "metodo": "GET",
+        "path": "/package_show?id=candidatos-2026",
+        "descricao": "Recursos ZIP (consulta_cand, bem_candidato, motivo cassação)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2026.zip",
+        "descricao": "Candidatos 2026 (bulk)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://cdn.tse.jus.br/estatistica/sead/odsele/bem_candidato/bem_candidato_2024.zip",
+        "descricao": "Bens declarados (bulk)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_de_contas_eleitorais_candidatos_2024.zip",
+        "descricao": "Receitas/despesas de campanha (1,3 GB)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2024.zip",
+        "descricao": "Votação por município/zona"
+      }
+    ],
+    "utilidade_anticorrupcao": "Doador (CNPJ/CPF) x fornecedor do governo; evolução patrimonial do candidato entre eleições; empresa doadora que vira contratada.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "Detalhado em apis-eleitoral.json (ids tse-*). Aqui só o índice CKAN + CDN."
+  },
+  {
+    "id": "tse-divulgacandcontas-rest-a",
+    "nome": "TSE DivulgaCandContas — REST (candidaturas, bens, contas em tempo quase real)",
+    "orgao": "Tribunal Superior Eleitoral",
+    "esfera": "eleitoral",
+    "uf": "BR",
+    "categorias": [
+      "candidatos",
+      "bens",
+      "doacoes"
+    ],
+    "base_url": "https://divulgacandcontas.tse.jus.br/divulga/rest/v1",
+    "docs_url": "https://divulgacandcontas.tse.jus.br/divulga/",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json"
+    ],
+    "cors": "nao",
+    "rate_limit": "não documentado (WAF agressivo)",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/eleicao/ordinarias",
+        "descricao": "Eleições e seus códigos (2026 = 2062262026)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/candidatura/listar/2026/BR/2062262026/1/candidatos",
+        "descricao": "Candidatos a presidente 2026 (UF=BR, cargo=1)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/candidatura/buscar/2024/71072/2045202024/candidato/250001918934",
+        "descricao": "Ficha do candidato com bens e sócios declarados"
+      },
+      {
+        "metodo": "GET",
+        "path": "/prestador/consulta/2062262026/2026/{ue}/{cargo}/{partido}/{sqCandidato}",
+        "descricao": "Prestação de contas (receitas/despesas) — retorna 404 até haver contas"
+      }
+    ],
+    "utilidade_anticorrupcao": "Ficha do político em tempo real na campanha 2026: bens, empresas em que é sócio, doadores.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "Ver apis-eleitoral.json para detalhes."
+  },
+  {
+    "id": "tse-resultados-json-a",
+    "nome": "TSE Resultados — JSON oficial de apuração",
+    "orgao": "Tribunal Superior Eleitoral",
+    "esfera": "eleitoral",
+    "uf": "BR",
+    "categorias": [
+      "resultados",
+      "apuracao"
+    ],
+    "base_url": "https://resultados.tse.jus.br/oficial",
+    "docs_url": "https://www.tse.jus.br/eleicoes/eleicoes-2026",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json"
+    ],
+    "cors": "sim",
+    "rate_limit": "não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ele2024/619/config/mun-e000619-cm.json",
+        "descricao": "Configuração de municípios da eleição (2024, cod 619)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/ele2024/619/dados-simplificados/{uf}/{uf}-c0011-e000619-r.json",
+        "descricao": "Resultado simplificado por UF/cargo"
+      }
+    ],
+    "utilidade_anticorrupcao": "Vinculação eleito -> mandato -> contratos assinados no mandato.",
+    "status_verificado": "2026-08-18 ok (2024; estrutura 2026 ainda não publicada, 404)",
+    "exemplo_resposta": "",
+    "notas": "Código da eleição 2026 provável 2062262026 (padrão DivulgaCand); confirmar quando publicado."
+  },
+  {
+    "id": "imprensa-nacional-inlabs-dou",
+    "nome": "INLABS — Diário Oficial da União em XML/PDF (Imprensa Nacional)",
+    "orgao": "Imprensa Nacional",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "diario-oficial",
+      "atos",
+      "contratos",
+      "nomeacoes"
+    ],
+    "base_url": "https://inlabs.in.gov.br",
+    "docs_url": "https://www.gov.br/imprensanacional/pt-br/acesso-a-informacao/dados-abertos",
+    "auth": "chave-gratuita",
+    "auth_como": "Cadastro gratuito em inlabs.in.gov.br/acessar.php; login por sessão (cookie) e download de ZIP diário por seção",
+    "formato": [
+      "xml",
+      "pdf"
+    ],
+    "cors": "nao",
+    "rate_limit": "não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "POST",
+        "path": "/logar.php (email, password)",
+        "descricao": "Autentica e devolve cookie inlabs_session_cookie"
+      },
+      {
+        "metodo": "GET",
+        "path": "/index.php?p={AAAA-MM-DD}&dl={AAAA-MM-DD}-DO3.zip",
+        "descricao": "ZIP com XMLs da Seção 3 (contratos, extratos, licitações)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/index.php?p={AAAA-MM-DD}&dl={AAAA-MM-DD}-DO2.zip",
+        "descricao": "Seção 2 (nomeações/exonerações)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Extratos de contrato/dispensa/inexigibilidade e nomeações no dia; base p/ alertas 'novo contrato com empresa X'.",
+    "status_verificado": "2026-08-18 ok (302 p/ login; acessar.php 200)",
+    "exemplo_resposta": "",
+    "notas": "Busca web in.gov.br/consulta falhou hoje (HTTP/2 PROTOCOL_ERROR / empty reply) — instável para scraping."
+  },
+  {
+    "id": "queridodiario-api",
+    "nome": "Querido Diário — API de diários oficiais municipais (Open Knowledge Brasil)",
+    "orgao": "Open Knowledge Brasil (OKBR)",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "diario-oficial",
+      "municipios",
+      "contratos",
+      "nomeacoes"
+    ],
+    "base_url": "https://api.queridodiario.ok.org.br",
+    "docs_url": "https://api.queridodiario.ok.org.br/docs",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json"
+    ],
+    "cors": "sim",
+    "rate_limit": "não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/gazettes?querystring=contrato&size=10",
+        "descricao": "Busca full-text nos diários (excerpts + URL do PDF/TXT)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/gazettes?territory_ids=3550308&published_since=2026-01-01&querystring=dispensa",
+        "descricao": "Filtro por município (IBGE) e data"
+      },
+      {
+        "metodo": "GET",
+        "path": "/cities?city_name=Campinas",
+        "descricao": "Municípios cobertos e status do raspador"
+      },
+      {
+        "metodo": "GET",
+        "path": "/gazettes/by_theme/{tema}",
+        "descricao": "Diários classificados por tema (ex.: licitação)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Onde não há PNCP nem API municipal, é a única via automatizável para dispensas, nomeações e decretos de prefeituras.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "{\"total_gazettes\":10000,\"gazettes\":[{\"territory_id\":\"3205309\",\"date\":\"2022-04-18\",\"url\":\"https://data.queridodiario.ok.org.br/3205309/2022-04-18/....pdf\",\"territory_name\":\"Vitória\",\"state_code\":\"ES\",\"excerpts\":[...]}]}",
+    "notas": "Domínio queridodiario.ok.org.br/api devolve HTML do front; usar api.queridodiario.ok.org.br. Cobertura ~parcial dos 5.570 municípios."
+  },
+  {
+    "id": "doe-sp-imprensa-oficial",
+    "nome": "Diário Oficial do Estado de SP — busca (Imprensa Oficial SP)",
+    "orgao": "Imprensa Oficial do Estado de São Paulo",
+    "esfera": "estadual",
+    "uf": "SP",
+    "categorias": [
+      "diario-oficial",
+      "contratos",
+      "nomeacoes"
+    ],
+    "base_url": "https://www.imprensaoficial.com.br/DO/BuscaDO2001Resultado_11_3.aspx",
+    "docs_url": "https://www.doe.sp.gov.br",
+    "auth": "nenhuma",
+    "auth_como": "Sem API JSON documentada; busca web/ASPX e novo portal doe.sp.gov.br (Next.js) com endpoints internos",
+    "formato": [
+      "html",
+      "pdf"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "?filtropalavraschave=dispensa&filtrodatafimsalvar=20260817",
+        "descricao": "Busca textual (HTML)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://www.doe.sp.gov.br",
+        "descricao": "Portal novo (verificar chamadas XHR internas)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Atos do governo paulista (maior orçamento estadual). Só scraping.",
+    "status_verificado": "2026-08-18 ok (HTML 200; sem API)",
+    "exemplo_resposta": "",
+    "notas": "Levantamento geral: nenhum DOE estadual tem API JSON pública documentada; RJ (ioerj.com.br) e SP são HTML/PDF; alguns (ES, PR, MG-JusBrasil) só PDF. Querido Diário cobre parte."
+  },
+  {
+    "id": "doe-rj-ioerj",
+    "nome": "Diário Oficial do Estado do RJ — IOERJ (PDF por edição)",
+    "orgao": "Imprensa Oficial do Estado do Rio de Janeiro",
+    "esfera": "estadual",
+    "uf": "RJ",
+    "categorias": [
+      "diario-oficial"
+    ],
+    "base_url": "https://www.ioerj.com.br/portal/modules/conteudoonline",
+    "docs_url": "https://www.ioerj.com.br",
+    "auth": "nenhuma",
+    "auth_como": "Sem API; PDFs por edição",
+    "formato": [
+      "html",
+      "pdf"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/mostra_edicao.php",
+        "descricao": "Edição do dia (HTML com links de PDF)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://doweb.rio.rj.gov.br",
+        "descricao": "DO do Município do Rio (apifront interna, instável — 500 hoje)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Atos estaduais RJ; requer OCR/parsing de PDF.",
+    "status_verificado": "2026-08-18 ok (HTML 200)",
+    "exemplo_resposta": "",
+    "notas": ""
+  },
+  {
+    "id": "cgu-portal-transparencia-bulk-download",
+    "nome": "Portal da Transparência — Download de Dados (servidores, emendas, cartões, viagens, convênios) em CSV",
+    "orgao": "CGU",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "servidores",
+      "emendas",
+      "cartoes",
+      "viagens",
+      "convenios",
+      "beneficios"
+    ],
+    "base_url": "https://portaldatransparencia.gov.br/download-de-dados",
+    "docs_url": "https://portaldatransparencia.gov.br/download-de-dados",
+    "auth": "bulk-download",
+    "auth_como": "Sem auth; ZIP por mês/dia; padrão /{tema}/{AAAAMM} ou /{tema}/{AAAAMMDD}",
+    "formato": [
+      "csv"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/servidores/{AAAAMM}_Servidores_SIAPE",
+        "descricao": "Cadastro + remuneração de servidores civis"
+      },
+      {
+        "metodo": "GET",
+        "path": "/emendas-parlamentares/{AAAA}",
+        "descricao": "Emendas por autor/favorecido/localidade"
+      },
+      {
+        "metodo": "GET",
+        "path": "/cpgf/{AAAAMM}",
+        "descricao": "Cartão de pagamento do governo federal (gasto individual)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/viagens/{AAAA}",
+        "descricao": "Diárias e passagens"
+      },
+      {
+        "metodo": "GET",
+        "path": "/convenios/{AAAAMMDD}",
+        "descricao": "Convênios/transferências voluntárias"
+      }
+    ],
+    "utilidade_anticorrupcao": "Carga completa para o banco local (sem rate limit da API): servidor sócio de fornecedor, emenda para município do próprio parlamentar, cartão corporativo em ano eleitoral.",
+    "status_verificado": "2026-08-18 ok (páginas servidores/emendas 200)",
+    "exemplo_resposta": "",
+    "notas": "Nomes exatos de arquivo mudam por tema; ver página de cada tema."
+  },
+  {
+    "id": "compras-gov-ocds-releases",
+    "nome": "Compras.gov.br — módulo OCDS (Open Contracting Data Standard)",
+    "orgao": "MGI (SEGES)",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "contratos",
+      "licitacoes",
+      "ocds"
+    ],
+    "base_url": "https://dadosabertos.compras.gov.br/modulo-ocds",
+    "docs_url": "https://dadosabertos.compras.gov.br/swagger-ui/index.html",
+    "auth": "nenhuma",
+    "auth_como": "",
+    "formato": [
+      "json"
+    ],
+    "cors": "desconhecido",
+    "rate_limit": "não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/1_releases?page=1&buyerID=00394460000141&releaseStartDate=2025-01-01&releaseEndDate=2025-01-31",
+        "descricao": "Releases OCDS por comprador (CNPJ do órgão) e período"
+      }
+    ],
+    "utilidade_anticorrupcao": "Formato internacional padronizado (tender/award/contract) — facilita reuso de ferramentas OCDS (Kingfisher, red flags do Open Contracting Partnership).",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": "buyerID, releaseStartDate e releaseEndDate obrigatórios."
+  },
+  {
+    "id": "cvm-cad-cia-aberta-dfp",
+    "nome": "CVM — Cadastro de companhias abertas (cad_cia_aberta) + DFP/ITR (demonstrações financeiras)",
+    "orgao": "CVM",
+    "esfera": "economico",
+    "uf": "BR",
+    "categorias": [
+      "empresas",
+      "balancos",
+      "cadastro"
+    ],
+    "base_url": "https://dados.cvm.gov.br/dados/CIA_ABERTA",
+    "docs_url": "https://dados.cvm.gov.br/dataset/cia_aberta-cad",
+    "auth": "bulk-download",
+    "auth_como": "CSV/ZIP sem auth",
+    "formato": [
+      "csv"
+    ],
+    "cors": "nao",
+    "rate_limit": "n/a",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/CAD/DADOS/cad_cia_aberta.csv",
+        "descricao": "Todas as cias registradas: CNPJ, código CVM, situação, setor, auditor"
+      },
+      {
+        "metodo": "GET",
+        "path": "/DOC/DFP/DADOS/dfp_cia_aberta_{AAAA}.zip",
+        "descricao": "Demonstrações financeiras anuais padronizadas"
+      },
+      {
+        "metodo": "GET",
+        "path": "/DOC/ITR/DADOS/itr_cia_aberta_{AAAA}.zip",
+        "descricao": "Informações trimestrais"
+      }
+    ],
+    "utilidade_anticorrupcao": "Chave CNPJ->código CVM para ligar fornecedores/concessionárias ao FRE/IPE; receita da empresa vs. volume contratado com o Estado (dependência do governo).",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "",
+    "notas": ""
+  }
+]

@@ -1,0 +1,1065 @@
+[
+  {
+    "id": "google-news-rss",
+    "nome": "Google Notícias — RSS de busca",
+    "orgao": "Google",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "agregador",
+      "busca-por-nome"
+    ],
+    "base_url": "https://news.google.com/rss",
+    "docs_url": "https://news.google.com/rss/search?q=%22Arthur+Lira%22&hl=pt-BR&gl=BR&ceid=BR:pt-419",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave. Só HTTP GET.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado; bloqueio por abuso (429/captcha). Cache >= 30 min por query.",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/search?q=%22NOME%22+when:7d&hl=pt-BR&gl=BR&ceid=BR:pt-419",
+        "descricao": "Busca por nome (aspas = frase exata; when:7d, after:/before: YYYY-MM-DD; site:dominio)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/headlines/section/topic/NATION?hl=pt-BR&gl=BR&ceid=BR:pt-419",
+        "descricao": "Manchetes de Brasil (topic feed)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Coletânea de mídia de qualquer político em segundos (100 itens/consulta, título+link+veículo+data). Base do 'Radar de Mídia' da Ficha do Político.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<item><title>Empresário de 20 anos, filho de Arthur Lira declara não ter bens... - O GLOBO</title><link>https://news.google.com/rss/articles/CBMi...</link><pubDate>...</pubDate><source url=\"https://oglobo.globo.com\">O GLOBO</source>",
+    "notas": "COPYRIGHT explícito no feed: 'made available solely for the purpose of rendering Google News results within a personal feed reader for personal, non-commercial use. Any other use is expressly prohibited'. Uso em produto público é zona cinzenta -> exibir só título+veículo+data e linkar; nunca armazenar corpo; considerar substituir por RSS diretos dos veículos + GDELT. Links são redirecionadores news.google.com/rss/articles/... (não é a URL final; resolver server-side com cuidado). Máx 100 itens; título vem com sufixo ' - Veículo'."
+  },
+  {
+    "id": "gdelt-doc-api",
+    "nome": "GDELT 2.0 DOC API (Full Text Search)",
+    "orgao": "The GDELT Project",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "agregador",
+      "busca-por-nome",
+      "tendencias"
+    ],
+    "base_url": "https://api.gdeltproject.org/api/v2/doc/doc",
+    "docs_url": "https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "json",
+      "csv",
+      "rss",
+      "html"
+    ],
+    "cors": "sim",
+    "rate_limit": "1 requisição a cada 5 s por IP (mensagem oficial retornada como texto puro em vez de JSON quando excede)",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "?query=%22Arthur%20Lira%22%20sourcelang:por%20sourcecountry:BR&mode=artlist&format=json&maxrecords=50&timespan=7d",
+        "descricao": "Lista de artigos (url, title, seendate, domain, language, sourcecountry)"
+      },
+      {
+        "metodo": "GET",
+        "path": "?query=%22Arthur%20Lira%22%20sourcelang:por&mode=timelinevolinfo&format=json&timespan=3m",
+        "descricao": "Volume de cobertura ao longo do tempo (série temporal)"
+      },
+      {
+        "metodo": "GET",
+        "path": "?query=%22Arthur%20Lira%22%20sourcelang:por&mode=tonechart&format=json",
+        "descricao": "Distribuição de tom (positivo/negativo)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Índice global gratuito de notícias c/ 3 meses de janela (ou startdatetime/enddatetime desde 2017). Serve como agregador SEM restrição de copyright do Google, para linha do tempo de escândalos e picos de cobertura.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "{\"articles\":[{\"url\":\"https://g1.globo.com/politica/eleicoes/2026/...\",\"title\":\"Pesquisa Quaest 1º turno...\",\"seendate\":\"20260814T224500Z\",\"domain\":\"g1.globo.com\",\"language\":\"Portuguese\",\"sourcecountry\":\"Brazil\"}]}",
+    "notas": "Testado: sourcelang:por funciona; sourcecountry:BR filtra domínios BR. Títulos às vezes perdem acentos ('inteno de voto por posio'). Query precisa >= 1 termo textual (aspas p/ frase). Retorna texto plano de rate limit em vez de JSON — tratar parse error como retry após 6 s. Timespan máximo default 3 meses; usar startdatetime=YYYYMMDDHHMMSS para histórico. maxrecords até 250."
+  },
+  {
+    "id": "google-factcheck-tools-api",
+    "nome": "Google Fact Check Tools API (ClaimReview search)",
+    "orgao": "Google",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "checagem",
+      "desinformacao"
+    ],
+    "base_url": "https://factchecktools.googleapis.com/v1alpha1",
+    "docs_url": "https://developers.google.com/fact-check/tools/api/reference/rest",
+    "auth": "chave-gratuita",
+    "auth_como": "API key do Google Cloud (habilitar 'Fact Check Tools API'); ?key=... na query string",
+    "formato": [
+      "json"
+    ],
+    "cors": "sim",
+    "rate_limit": "Cota padrão do Google Cloud (~1000 req/dia por projeto, ajustável)",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/claims:search?query=Arthur%20Lira&languageCode=pt-BR&pageSize=20&key=KEY",
+        "descricao": "Busca checagens (ClaimReview) por texto, idioma, publisher"
+      },
+      {
+        "metodo": "GET",
+        "path": "/claims:search?reviewPublisherSiteFilter=aosfatos.org&languageCode=pt-BR&key=KEY",
+        "descricao": "Checagens de um publisher específico"
+      }
+    ],
+    "utilidade_anticorrupcao": "Agrega em 1 chamada as checagens de Aos Fatos, Lupa, Comprova, Estadão Verifica, AFP Checamos, UOL Confere etc. (todas publicam ClaimReview). Aba 'Checagens' da Ficha do Político.",
+    "status_verificado": "2026-08-18 falhou: 403 sem chave (PERMISSION_DENIED — esperado; endpoint responde)",
+    "exemplo_resposta": "{\"claims\":[{\"text\":\"...\",\"claimant\":\"...\",\"claimDate\":\"...\",\"claimReview\":[{\"publisher\":{\"name\":\"Aos Fatos\",\"site\":\"aosfatos.org\"},\"url\":\"...\",\"title\":\"...\",\"textualRating\":\"Falso\",\"languageCode\":\"pt\"}]}]}",
+    "notas": "Gratuita, mas exige chave; guardar server-side. Também existe o Fact Check Explorer (UI) em toolbox.google.com/factcheck/explorer. Cobertura depende dos veículos marcarem ClaimReview."
+  },
+  {
+    "id": "wikidata-api",
+    "nome": "Wikidata — API + SPARQL (cargos P39, partidos P102)",
+    "orgao": "Wikimedia Foundation",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "biografia",
+      "cargos",
+      "partidos",
+      "identificadores",
+      "desambiguacao"
+    ],
+    "base_url": "https://www.wikidata.org/w/api.php",
+    "docs_url": "https://www.wikidata.org/wiki/Wikidata:Data_access",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave. Enviar User-Agent identificável (obrigatório na SPARQL).",
+    "formato": [
+      "json"
+    ],
+    "cors": "sim",
+    "rate_limit": "SPARQL: 60 s por consulta, ~5 paralelas por IP; API: uso razoável",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "?action=wbsearchentities&search=Arthur%20Lira&language=pt&format=json",
+        "descricao": "Busca entidade por nome (retorna QID + descrição)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://www.wikidata.org/wiki/Special:EntityData/Q23904977.json",
+        "descricao": "Entidade completa (labels, claims P39 cargo, P102 partido, P18 foto, P4348 ID Câmara etc.)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://query.wikidata.org/sparql?format=json&query=SELECT%20%3FcargoLabel%20%3FpartidoLabel%20WHERE%20%7B%20wd%3AQ23904977%20wdt%3AP39%20%3Fcargo%20.%20OPTIONAL%7Bwd%3AQ23904977%20wdt%3AP102%20%3Fpartido%7D%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22pt%2Cen%22%20%7D%20%7D",
+        "descricao": "SPARQL: cargos e partidos com rótulo em PT"
+      },
+      {
+        "metodo": "GET",
+        "path": "?action=wbgetclaims&entity=Q23904977&property=P102&format=json",
+        "descricao": "Só as claims de uma propriedade"
+      }
+    ],
+    "utilidade_anticorrupcao": "Chave de desambiguação de homônimos e 'cola' entre bases: QID -> IDs da Câmara (P4348), Senado (P4360)?, TSE, foto livre, cargos c/ datas (P580/P582 qualifiers), partidos históricos. Alimenta cabeçalho da Ficha do Político.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "{\"cargoLabel\":{\"value\":\"deputado(a) federal do Brasil\"},\"partidoLabel\":{\"value\":\"Partido da Social Democracia Brasileira\"}}",
+    "notas": "Atenção: busca 'Arthur Lira' retorna 1º Q23904977 (o político); Q18348563 é outro item. P102 pode listar partidos antigos sem qualificador de data — checar P580/P582. Licença CC0."
+  },
+  {
+    "id": "wikipedia-pt-api",
+    "nome": "Wikipédia PT — Action API + REST summary",
+    "orgao": "Wikimedia Foundation",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "biografia",
+      "busca-por-nome",
+      "resumo"
+    ],
+    "base_url": "https://pt.wikipedia.org",
+    "docs_url": "https://www.mediawiki.org/wiki/API:Main_page",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave; enviar User-Agent.",
+    "formato": [
+      "json"
+    ],
+    "cors": "sim",
+    "rate_limit": "Uso razoável (~200 req/s global por cliente; ser educado)",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/w/api.php?action=query&list=search&srsearch=Arthur%20Lira&format=json&srlimit=5",
+        "descricao": "Busca full-text de artigos"
+      },
+      {
+        "metodo": "GET",
+        "path": "/api/rest_v1/page/summary/Arthur_Lira",
+        "descricao": "Resumo + thumbnail + wikibase_item (QID) — liga à Wikidata"
+      },
+      {
+        "metodo": "GET",
+        "path": "/w/api.php?action=parse&page=Arthur_Lira&prop=sections&format=json",
+        "descricao": "Seções do artigo (ex.: 'Controvérsias')"
+      }
+    ],
+    "utilidade_anticorrupcao": "Bio curta + foto + link p/ seção de controvérsias; summary devolve o QID para cruzar com Wikidata.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "{\"type\":\"standard\",\"title\":\"Arthur Lira\",\"wikibase_item\":\"Q23904977\",\"extract\":\"...\"}",
+    "notas": "Conteúdo CC BY-SA: exibir com atribuição. Texto pode ter viés/vandalismo — usar só como ponto de partida."
+  },
+  {
+    "id": "wikimedia-pageviews-api",
+    "nome": "Wikimedia Pageviews API (atenção pública)",
+    "orgao": "Wikimedia Foundation",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "tendencias",
+      "metricas"
+    ],
+    "base_url": "https://wikimedia.org/api/rest_v1/metrics/pageviews",
+    "docs_url": "https://wikimedia.org/api/rest_v1/#/Pageviews%20data",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave; User-Agent obrigatório.",
+    "formato": [
+      "json"
+    ],
+    "cors": "sim",
+    "rate_limit": "100 req/s",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/per-article/pt.wikipedia/all-access/all-agents/Arthur_Lira/daily/20260801/20260817",
+        "descricao": "Visitas diárias ao artigo (proxy de atenção pública)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/top/pt.wikipedia/all-access/2026/08/17",
+        "descricao": "Artigos mais vistos do dia (detectar políticos em alta)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Picos de visualização = escândalo/evento; cruzar com timeline GDELT. Barato e sem copyright.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "{\"items\":[{\"article\":\"Arthur_Lira\",\"timestamp\":\"2026081000\",\"views\":213}]}",
+    "notas": "Dados a partir de 2015-07. Sem PII."
+  },
+  {
+    "id": "agencia-camara-rss",
+    "nome": "Agência Câmara de Notícias — RSS por editoria",
+    "orgao": "Câmara dos Deputados",
+    "esfera": "legislativo",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "legislativo",
+      "eleicoes"
+    ],
+    "base_url": "https://www.camara.leg.br/noticias/rss/dinamico",
+    "docs_url": "https://www.camara.leg.br/noticias/rss",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "desconhecido",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/ULTIMAS-NOTICIAS",
+        "descricao": "Últimas notícias"
+      },
+      {
+        "metodo": "GET",
+        "path": "/POLITICA",
+        "descricao": "Editoria Política"
+      },
+      {
+        "metodo": "GET",
+        "path": "/ELEICOES",
+        "descricao": "Editoria Eleições (também: ADMINISTRACAO-PUBLICA, DIREITO-E-JUSTICA, ECONOMIA, SEGURANCA...)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Fonte oficial (domínio público) do que cada deputado faz/vota; filtrar por nome no título/descrição para a coletânea sem risco de copyright.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<item><title>Eleição para Câmara dos Deputados terá menos candidatos neste ano</title><link>https://www.camara.leg.br/noticias/1298079-...</link>",
+    "notas": "Slugs de editoria em CAIXA-ALTA com hífen. Conteúdo institucional (tende a ser neutro/positivo)."
+  },
+  {
+    "id": "agencia-senado-rss",
+    "nome": "Agência Senado — RSS",
+    "orgao": "Senado Federal",
+    "esfera": "legislativo",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "legislativo"
+    ],
+    "base_url": "https://www12.senado.leg.br/noticias",
+    "docs_url": "https://www12.senado.leg.br/noticias/feed",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "desconhecido",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/RSS",
+        "descricao": "Feed geral (notícias, áudios, vídeos)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/feed/rss",
+        "descricao": "Índice de feeds (todasnoticias, simplificou)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Atividade oficial de senadores; filtrar por nome. Domínio público.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<item><title>Áudio: Senado fará debate sobre regras para o mercado de queijo artesanal</title><link>https://www12.senado.leg.br/noticias/audios/2026/08/...</link>",
+    "notas": "ATENÇÃO: /noticias/feed e /noticias/feed/todasnoticias devolvem HTML (página Plone), não XML. O XML real é /noticias/RSS. Feed mistura áudio/vídeo/texto — filtrar prefixo 'Áudio:'/'Vídeo:' se quiser só texto."
+  },
+  {
+    "id": "agencia-brasil-rss",
+    "nome": "Agência Brasil (EBC) — RSS Política",
+    "orgao": "EBC — Empresa Brasil de Comunicação",
+    "esfera": "federal",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "politica"
+    ],
+    "base_url": "https://agenciabrasil.ebc.com.br/rss",
+    "docs_url": "https://agenciabrasil.ebc.com.br/rss/politica/feed.xml",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "desconhecido",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/politica/feed.xml",
+        "descricao": "Editoria Política"
+      },
+      {
+        "metodo": "GET",
+        "path": "/justica/feed.xml",
+        "descricao": "Editoria Justiça (não testado, mesmo padrão)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Agência pública com licença CC BY (reprodução permitida com crédito) — a única fonte jornalística cujo texto integral pode ser reproduzido legalmente.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<item><title>Marina Silva sofre tentativa de intimidação durante campanha em SP</title>",
+    "notas": "Estatal: risco de viés pró-governo do momento; sinalizar."
+  },
+  {
+    "id": "poder360-rss",
+    "nome": "Poder360 — RSS",
+    "orgao": "Poder360",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "politica"
+    ],
+    "base_url": "https://www.poder360.com.br",
+    "docs_url": "https://www.poder360.com.br/feed/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/feed/",
+        "descricao": "Feed geral (WordPress)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/?s=Arthur+Lira&feed=rss2",
+        "descricao": "Busca por nome via feed WordPress (padrão WP; não testado)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Veículo político especializado, cobertura de Congresso e bastidores; ótimo p/ coletânea.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<item><title>Aprovação de Trump cai para 33%, menor nível do 2º mandato</title>",
+    "notas": "/poder-politica/feed/ redireciona p/ home (não existe). Só título+link+data; conteúdo é copyright do veículo."
+  },
+  {
+    "id": "congresso-em-foco-rss",
+    "nome": "Congresso em Foco — RSS",
+    "orgao": "Congresso em Foco",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "politica",
+      "legislativo"
+    ],
+    "base_url": "https://www.congressoemfoco.com.br",
+    "docs_url": "https://www.congressoemfoco.com.br/feed/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/feed/",
+        "descricao": "Feed geral (WordPress)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/?s=NOME&feed=rss2",
+        "descricao": "Busca por nome (padrão WP; não testado)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Especializado em Congresso, ética parlamentar e escândalos; histórico de prêmio 'Congresso em Foco'.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<title>Congresso em Foco</title>",
+    "notas": "Domínio antigo congressoemfoco.uol.com.br redireciona (301) para www.congressoemfoco.com.br."
+  },
+  {
+    "id": "g1-politica-rss",
+    "nome": "g1 Política — RSS",
+    "orgao": "Globo (g1)",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "politica"
+    ],
+    "base_url": "https://g1.globo.com/rss/g1",
+    "docs_url": "https://g1.globo.com/rss/g1/politica/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/politica/",
+        "descricao": "Editoria Política"
+      },
+      {
+        "metodo": "GET",
+        "path": "/fato-ou-fake/",
+        "descricao": "Editoria de checagem Fato ou Fake"
+      }
+    ],
+    "utilidade_anticorrupcao": "Maior portal do país; feed limpo com título/link/data. Fato ou Fake é a checagem do grupo.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<title>g1 &gt; Política</title>",
+    "notas": "Resposta vem gzip — usar Accept-Encoding/--compressed. Copyright Globo: só metadados."
+  },
+  {
+    "id": "folha-poder-rss",
+    "nome": "Folha de S.Paulo — RSS Poder",
+    "orgao": "Folha de S.Paulo",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "politica"
+    ],
+    "base_url": "https://feeds.folha.uol.com.br",
+    "docs_url": "https://www1.folha.uol.com.br/folha/rss/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/poder/rss091.xml",
+        "descricao": "Editoria Poder (política)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/emcimadahora/rss091.xml",
+        "descricao": "Em cima da hora (últimas) — padrão do índice; não testado"
+      }
+    ],
+    "utilidade_anticorrupcao": "Referência nacional; muitos furos de investigação.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<title>Folha de S.Paulo - Poder - Principal</title>",
+    "notas": "RSS 0.91 (sem pubDate em alguns itens). Paywall no destino."
+  },
+  {
+    "id": "estadao-politica-rss",
+    "nome": "Estadão — RSS Política (Arc outboundfeeds)",
+    "orgao": "O Estado de S. Paulo",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "politica",
+      "checagem"
+    ],
+    "base_url": "https://www.estadao.com.br/arc/outboundfeeds/feeds/rss/sections",
+    "docs_url": "https://www.estadao.com.br/rss/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/politica/?outputType=xml",
+        "descricao": "Editoria Política"
+      },
+      {
+        "metodo": "GET",
+        "path": "/estadao-verifica/?outputType=xml",
+        "descricao": "Estadão Verifica (respondeu 200 mas com título genérico — validar itens)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Cobertura política + Estadão Verifica (checagem, membro IFCN).",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<title>Estadão | As Últimas Notícias do Brasil e do Mundo</title>",
+    "notas": "Feed do Estadão Verifica dedicado não confirmado (título do canal veio genérico); /estadao-verifica/feed/ = 404. Alternativa: Fact Check Tools API filtrando reviewPublisherSiteFilter=estadao.com.br."
+  },
+  {
+    "id": "metropoles-rss",
+    "nome": "Metrópoles — RSS",
+    "orgao": "Metrópoles",
+    "esfera": "civil",
+    "uf": "DF",
+    "categorias": [
+      "noticias",
+      "politica",
+      "brasilia"
+    ],
+    "base_url": "https://www.metropoles.com",
+    "docs_url": "https://www.metropoles.com/feed",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/feed",
+        "descricao": "Feed geral"
+      },
+      {
+        "metodo": "GET",
+        "path": "/brasil/feed",
+        "descricao": "Editoria Brasil (política nacional)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Forte em Brasília/bastidores e denúncias; feed por editoria (WordPress).",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<title>Brasil – Metrópoles</title>",
+    "notas": "Provavelmente existe /colunas/.../feed e busca ?s=&feed=rss2 (padrão WP)."
+  },
+  {
+    "id": "cnn-brasil-rss",
+    "nome": "CNN Brasil — RSS",
+    "orgao": "CNN Brasil",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "politica"
+    ],
+    "base_url": "https://www.cnnbrasil.com.br",
+    "docs_url": "https://www.cnnbrasil.com.br/feed/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/feed/",
+        "descricao": "Feed geral (redireciona p/ admin.cnnbrasil.com.br/feed/)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Volume alto de política; filtrar por nome.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<title>CNN Brasil</title>",
+    "notas": "/politica/feed/ = 404; usar geral e filtrar por categoria."
+  },
+  {
+    "id": "jota-rss",
+    "nome": "JOTA — RSS",
+    "orgao": "JOTA Jornalismo",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "politica",
+      "judiciario",
+      "legislativo"
+    ],
+    "base_url": "https://www.jota.info",
+    "docs_url": "https://www.jota.info/feed",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/feed",
+        "descricao": "Feed geral"
+      }
+    ],
+    "utilidade_anticorrupcao": "Especializado em Judiciário/STF/TSE e Congresso — decisões que atingem políticos.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<title>Quem são os candidatos a senador por Alagoas (AL) nas eleições 2026</title>",
+    "notas": "Parte do conteúdo é paywall (JOTA PRO)."
+  },
+  {
+    "id": "nexo-rss",
+    "nome": "Nexo Jornal — RSS",
+    "orgao": "Nexo Jornal",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "explicativo"
+    ],
+    "base_url": "https://www.nexojornal.com.br",
+    "docs_url": "https://www.nexojornal.com.br/rss.xml",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/rss.xml",
+        "descricao": "Feed geral"
+      }
+    ],
+    "utilidade_anticorrupcao": "Explicadores e contexto (bom p/ 'entenda o caso').",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<title>Nexo Jornal</title>",
+    "notas": "Paywall parcial."
+  },
+  {
+    "id": "agencia-publica-rss",
+    "nome": "Agência Pública — RSS",
+    "orgao": "Agência Pública de Jornalismo Investigativo",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "investigativo"
+    ],
+    "base_url": "https://apublica.org",
+    "docs_url": "https://apublica.org/feed/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/feed/",
+        "descricao": "Feed geral (WordPress)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/?s=NOME&feed=rss2",
+        "descricao": "Busca (padrão WP; não testado)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Investigativo sem fins lucrativos; licença Creative Commons (CC BY-ND) — permite republicar com crédito.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<title>Agência Pública</title>",
+    "notas": "Também mantém o Truco (checagem) historicamente."
+  },
+  {
+    "id": "intercept-brasil-rss",
+    "nome": "Intercept Brasil — RSS",
+    "orgao": "The Intercept Brasil",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "noticias",
+      "investigativo"
+    ],
+    "base_url": "https://www.intercept.com.br",
+    "docs_url": "https://www.intercept.com.br/feed/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/feed/",
+        "descricao": "Feed geral"
+      }
+    ],
+    "utilidade_anticorrupcao": "Investigativo (Vaza Jato etc.); linha editorial declaradamente progressista — marcar viés.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<title>Intercept Brasil</title>",
+    "notas": ""
+  },
+  {
+    "id": "bbc-brasil-rss",
+    "nome": "BBC News Brasil — RSS",
+    "orgao": "BBC",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "noticias"
+    ],
+    "base_url": "https://feeds.bbci.co.uk/portuguese",
+    "docs_url": "https://feeds.bbci.co.uk/portuguese/rss.xml",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/rss.xml",
+        "descricao": "Feed geral em português"
+      }
+    ],
+    "utilidade_anticorrupcao": "Cobertura internacional/independente de escândalos BR; útil como contraponto de viés.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<title>BBC Brasil</title>",
+    "notas": ""
+  },
+  {
+    "id": "aos-fatos-rss",
+    "nome": "Aos Fatos — RSS de checagens",
+    "orgao": "Aos Fatos",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "checagem",
+      "desinformacao"
+    ],
+    "base_url": "https://www.aosfatos.org",
+    "docs_url": "https://www.aosfatos.org/noticias/feed/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/noticias/feed/",
+        "descricao": "Últimas checagens/notícias"
+      }
+    ],
+    "utilidade_anticorrupcao": "Checagem signatária IFCN; também mantém o Radar Aos Fatos (monitor de desinformação). Filtrar por nome no título.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<item><title>É falso que Lula disse que teve perna amputada em 2023</title><link>https://www.aosfatos.org/noticias/lula-perna-amputada-2023/</link>",
+    "notas": "/feed/ na raiz = 404. Descrição do item traz o 1º parágrafo (não armazenar)."
+  },
+  {
+    "id": "lupa-rss",
+    "nome": "Agência Lupa — RSS",
+    "orgao": "Agência Lupa",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "checagem",
+      "desinformacao"
+    ],
+    "base_url": "https://www.agencialupa.org",
+    "docs_url": "https://www.agencialupa.org/feed/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/feed/",
+        "descricao": "Feed geral (WordPress)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/jornalismo/feed/",
+        "descricao": "Feed da seção Jornalismo"
+      }
+    ],
+    "utilidade_anticorrupcao": "1ª agência de checagem do país (IFCN); ótima cobertura de campanha 2026.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<item><title>Em pontapé da campanha, Flávio e Lula cometem erros sobre desempenho de gestões passadas</title><link>https://www.agencialupa.org/noticias/2026/08/17/...</link>",
+    "notas": "lupa.uol.com.br redireciona (301) para www.agencialupa.org."
+  },
+  {
+    "id": "comprova-rss",
+    "nome": "Projeto Comprova — RSS de publicações",
+    "orgao": "Projeto Comprova (coalizão de 40+ veículos)",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "checagem",
+      "desinformacao",
+      "eleicoes"
+    ],
+    "base_url": "https://projetocomprova.com.br",
+    "docs_url": "https://projetocomprova.com.br/publicações/feed/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/publica%C3%A7%C3%B5es/feed/",
+        "descricao": "Feed das checagens publicadas (usar este)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/feed/",
+        "descricao": "Feed raiz — só retorna 'Test Document' de 2019 (inútil)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Checagem colaborativa focada em eleições e políticas públicas; conteúdo republicável pelos veículos-membro.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<item><title>Entenda a segurança das urnas e por que o TSE abriu um aparelho ao vivo</title>",
+    "notas": "Path com acento (publicações) — URL-encode."
+  },
+  {
+    "id": "boatos-org-rss",
+    "nome": "Boatos.org — RSS",
+    "orgao": "Boatos.org",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "checagem",
+      "desinformacao"
+    ],
+    "base_url": "https://www.boatos.org",
+    "docs_url": "https://www.boatos.org/feed",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/feed",
+        "descricao": "Feed geral"
+      },
+      {
+        "metodo": "GET",
+        "path": "/politica/feed",
+        "descricao": "Categoria política (padrão WP; não testado)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Desmente correntes de WhatsApp sobre políticos; complementa agências IFCN.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<title>Boatos.org</title>",
+    "notas": "Independente; metodologia menos formal que Lupa/Aos Fatos."
+  },
+  {
+    "id": "e-farsas-rss",
+    "nome": "E-farsas — RSS",
+    "orgao": "E-farsas",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "checagem",
+      "desinformacao"
+    ],
+    "base_url": "https://www.e-farsas.com",
+    "docs_url": "https://www.e-farsas.com/feed",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave.",
+    "formato": [
+      "rss"
+    ],
+    "cors": "nao",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/feed",
+        "descricao": "Feed geral"
+      }
+    ],
+    "utilidade_anticorrupcao": "Site de checagem mais antigo do BR (2002); histórico longo de boatos políticos.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "<title>E-farsas</title>",
+    "notas": ""
+  },
+  {
+    "id": "ranking-dos-politicos-api",
+    "nome": "Ranking dos Políticos — API pública",
+    "orgao": "Ranking dos Políticos (OSC)",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "parlamentares",
+      "votacoes",
+      "notas",
+      "partidos"
+    ],
+    "base_url": "https://api.ranking.org.br/api/v1",
+    "docs_url": "https://ranking.org.br/criterios-e-metodologia",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave (API não documentada publicamente; consumida pelo front Next.js).",
+    "formato": [
+      "json"
+    ],
+    "cors": "desconhecido",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/parlamentares?nome=lira&per_page=20&page=1",
+        "descricao": "Lista paginada (Laravel) — filtro ?nome= funciona (?search= não); campos: id, nome, nome_eleitoral, nome_civil, url_foto, cargo, partido, situacao, uf, slug, pontuavel"
+      },
+      {
+        "metodo": "GET",
+        "path": "/partidos",
+        "descricao": "Lista de partidos (id, nome, sigla)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/votacoes",
+        "descricao": "Votações avaliadas pela OSC (sync_at + lista paginada com descrição)"
+      }
+    ],
+    "utilidade_anticorrupcao": "Nota/ranking de deputados e senadores por critérios (presença, economia, gastos, processos) + votações-chave; útil como sinal agregado na Ficha (com ressalva de viés).",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "{\"current_page\":1,\"data\":[{\"id\":47,\"nome\":\"Arthur Lira\",\"nome_civil\":\"ARTHUR CÉSAR PEREIRA DE LIRA\",\"cargo\":\"Deputado Federal\",\"uf\":\"ALAGOAS\",\"slug\":\"arthur-cesar-pereira-de-lira\",\"pontuavel\":true}],\"last_page\":1102}",
+    "notas": "Detalhe individual NÃO exposto em /parlamentares/{id} nem /{slug} (404) — página do político é renderizada no front (ranking.org.br/politicos/{slug}); ~1102 páginas x 1 = ~1100 parlamentares (inclui ex-mandatos). Filtros ?uf= e ?cargo= NÃO filtram (ignorados). A OSC tem viés liberal-conservador declarado (critérios 'economia de mercado') — exibir como opinião de terceiro, não como fato. politicos.org.br redireciona (302) para ranking.org.br."
+  },
+  {
+    "id": "google-ads-transparency",
+    "nome": "Google Ads Transparency Center + Political Ads (BigQuery)",
+    "orgao": "Google",
+    "esfera": "civil",
+    "uf": "BR",
+    "categorias": [
+      "propaganda",
+      "anuncios",
+      "eleicoes"
+    ],
+    "base_url": "https://adstransparency.google.com",
+    "docs_url": "https://console.cloud.google.com/marketplace/product/transparency-report/google-political-ads",
+    "auth": "bulk-download",
+    "auth_como": "UI pública sem API; dataset público no BigQuery (bigquery-public-data.google_political_ads) exige conta GCP; bundle CSV em storage.googleapis.com/transparencyreport/google-political-ads-transparency-bundle.zip",
+    "formato": [
+      "html",
+      "csv",
+      "bigquery"
+    ],
+    "cors": "nao",
+    "rate_limit": "N/A",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/?region=BR&political&hl=pt-BR",
+        "descricao": "Busca visual de anúncios políticos por anunciante (JS pesado; scraping frágil)"
+      },
+      {
+        "metodo": "GET",
+        "path": "https://storage.googleapis.com/transparencyreport/google-political-ads-transparency-bundle.zip",
+        "descricao": "Bundle CSV completo (advertiser_stats, creative_stats, geo spend) — atualizado semanalmente"
+      }
+    ],
+    "utilidade_anticorrupcao": "Gastos com anúncios eleitorais no Google/YouTube por anunciante verificado, incl. Brasil (regiões com verificação eleitoral). Cruzar com TSE.",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "HTTP 200 (HTML SPA) / ZIP 200",
+    "notas": "Verificar se BR consta na cobertura de 'election ads' do bundle no ano corrente (Google exige verificação de anunciantes eleitorais no BR desde 2022)."
+  },
+  {
+    "id": "tse-dados-abertos-ckan-contas",
+    "nome": "TSE Dados Abertos (CKAN) — Prestação de contas / gastos com impulsionamento",
+    "orgao": "Tribunal Superior Eleitoral",
+    "esfera": "eleitoral",
+    "uf": "BR",
+    "categorias": [
+      "financiamento",
+      "propaganda",
+      "impulsionamento",
+      "eleicoes"
+    ],
+    "base_url": "https://dadosabertos.tse.jus.br/api/3/action",
+    "docs_url": "https://dadosabertos.tse.jus.br/dataset/",
+    "auth": "nenhuma",
+    "auth_como": "Sem chave (CKAN API); arquivos ZIP/CSV grandes.",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "sim",
+    "rate_limit": "Não documentado",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/package_search?q=prestacao%20contas%20eleitorais&rows=10",
+        "descricao": "Datasets de prestação de contas (ex.: prestacao-de-contas-eleitorais-2024; 2026 sai durante a campanha)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/package_show?id=prestacao-de-contas-eleitorais-2024",
+        "descricao": "Recursos (CSV despesas_contratadas_candidatos_2024_BRASIL.zip) — filtrar DS_ORIGEM_DESPESA contendo 'impulsionamento'"
+      }
+    ],
+    "utilidade_anticorrupcao": "Gasto declarado com impulsionamento (Meta/Google) por candidato — comparar com o que aparece nas bibliotecas de anúncios (subdeclaração = indício).",
+    "status_verificado": "2026-08-18 ok",
+    "exemplo_resposta": "{\"success\":true,\"result\":{\"count\":2,\"results\":[{\"name\":\"prestacao-de-contas-eleitorais-2024\",\"title\":\"Prestação de Contas Eleitorais - 2024\"}]}}",
+    "notas": "Busca por 'impulsionamento' no CKAN retorna 0 — o dado está DENTRO das despesas de campanha, não como dataset próprio. DivulgaCandContas (divulgacandcontas.tse.jus.br) é a UI; entrada detalhada do TSE fica no arquivo de APIs eleitorais."
+  }
+]

@@ -132,7 +132,7 @@ Sem login, sem PII, sem chave no cliente. Branch protection, revisão dupla em `
 
 ## 🙏 Ombros de gigantes
 
-Operação Serenata de Amor / Rosie / Jarbas (OKBR), Querido Diário (OKBR), OPS — Operação Política Supervisionada, Brasil.io, Base dos Dados, Ranking dos Políticos, Transparência Brasil, Open Contracting Partnership (red flags), TCU/CGU (Alice e trilhas de risco), Perfil Político. Ver [research/projetos-semelhantes-br.md](research/projetos-semelhantes-br.md).
+Operação Serenata de Amor / Rosie / Jarbas (OKBR), Querido Diário (OKBR), OPS — Operação Política Supervisionada, Brasil.io, Base dos Dados, Ranking dos Políticos, Transparência Brasil, Open Contracting Partnership (red flags), TCU/CGU (Alice e trilhas de risco), Perfil Político. Ver [docs/pesquisa/](docs/pesquisa/) (projetos semelhantes, dossiê jurídico, threat model, spec da Ficha 360, as 79 bases mapeadas).
 
 ## 📄 Licenças
 
