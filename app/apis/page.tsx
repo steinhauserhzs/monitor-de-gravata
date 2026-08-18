@@ -84,8 +84,8 @@ export default async function Apis({ searchParams }: PageProps<"/apis">) {
                 </summary>
                 <div className="px-4 pb-4 grid gap-4 md:grid-cols-[1fr_1fr]">
                   <div className="text-sm space-y-2">
-                    <div><span className="font-mono text-[0.6rem] uppercase text-ink-3">Base</span><div className="font-mono text-xs break-all">{a.base_url}</div></div>
-                    {a.docs_url && <div><span className="font-mono text-[0.6rem] uppercase text-ink-3">Docs</span><div><a href={a.docs_url} className="underline text-xs break-all" target="_blank" rel="noopener noreferrer">{a.docs_url}</a></div></div>}
+                    <div><span className="font-mono text-[0.6rem] uppercase text-ink-3">Base</span><div className="url">{a.base_url}</div></div>
+                    {a.docs_url && <div><span className="font-mono text-[0.6rem] uppercase text-ink-3">Docs</span><div><a href={a.docs_url} className="underline url" target="_blank" rel="noopener noreferrer">{a.docs_url}</a></div></div>}
                     <div><span className="font-mono text-[0.6rem] uppercase text-ink-3">Para que serve (anticorrupção)</span><p className="text-ink-2">{a.utilidade_anticorrupcao}</p></div>
                     {a.auth_como && <div><span className="font-mono text-[0.6rem] uppercase text-ink-3">Como autenticar</span><p className="text-ink-2 text-xs">{a.auth_como}</p></div>}
                     <div className="flex flex-wrap gap-1">{a.categorias?.map((c) => <span key={c} className="tab">{c}</span>)}</div>
@@ -94,7 +94,7 @@ export default async function Apis({ searchParams }: PageProps<"/apis">) {
                   </div>
                   <div>
                     <div className="font-mono text-[0.6rem] uppercase text-ink-3 mb-1">Endpoints-chave</div>
-                    <ul className="text-xs space-y-1.5">{a.endpoints_chave?.map((ep, i) => <li key={i}><span className="font-mono">{ep.metodo ?? "GET"} {ep.path}</span><div className="text-ink-2">{ep.descricao}</div></li>)}</ul>
+                    <ul className="text-xs space-y-1.5">{a.endpoints_chave?.map((ep, i) => <li key={i}><span className="font-mono quebra">{ep.metodo ?? "GET"} {ep.path}</span><div className="text-ink-2">{ep.descricao}</div></li>)}</ul>
                     <div className="mt-3 font-mono text-[0.58rem] uppercase text-ink-3">arquivo: data/apis/{a._arquivo} · id {a.id}</div>
                   </div>
                 </div>

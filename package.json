@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/validar-dados.mjs && next build",
+    "build": "node scripts/validar-dados.mjs && node scripts/verificar-design.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "validar": "node scripts/validar-dados.mjs",
@@ -15,7 +15,8 @@
     "db:cota": "node scripts/ingerir-cota.mjs",
     "db:fornecedores": "node scripts/ingerir-fornecedores.mjs",
     "eleitos": "node scripts/gerar-eleitos.mjs",
-    "municipios": "node scripts/gerar-municipios.mjs"
+    "municipios": "node scripts/gerar-municipios.mjs",
+    "design": "node scripts/verificar-design.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

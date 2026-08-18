@@ -12,6 +12,7 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm run validar
+      - run: npm run design
       - run: npx tsc --noEmit || true
       - run: npm run build
         env:

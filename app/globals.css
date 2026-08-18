@@ -558,3 +558,33 @@ a:focus-visible, button:focus-visible, summary:focus-visible, .input:focus-visib
   }
   .card--hover:hover { transform: none; }
 }
+
+/* ═══════════════════════════════════════════════
+   REGRAS ANTI-QUEBRA — o que impede o layout de estourar.
+   Se você criar um componente novo, use estas classes.
+   ═══════════════════════════════════════════════ */
+
+/* Texto que pode ser gigante (URL, CNPJ, id, objeto de contrato) nunca empurra o layout */
+.quebra { overflow-wrap: anywhere; word-break: break-word; }
+.url {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  font-family: var(--font-plex-mono), monospace;
+  font-size: 0.72em;
+}
+/* Trunca em N linhas (título de card, ementa) */
+.linhas-1, .linhas-2, .linhas-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.linhas-1 { -webkit-line-clamp: 1; }
+.linhas-2 { -webkit-line-clamp: 2; }
+.linhas-3 { -webkit-line-clamp: 3; }
+
+/* Todo conteúdo largo rola dentro do próprio contêiner, nunca na página */
+.rolagem { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+.card, .prose-mg { min-width: 0; }           /* permite encolher dentro de grid/flex */
+.card pre, .prose-mg pre { overflow-x: auto; max-width: 100%; }
+.card table { max-width: 100%; }
+/* grid/flex items encolhem em vez de empurrar */
+.grid > *, .flex > * { min-width: 0; }
+
+/* o corpo nunca rola na horizontal */
+html, body { max-width: 100%; overflow-x: hidden; }

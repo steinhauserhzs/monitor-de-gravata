@@ -20,7 +20,10 @@ Adicione ao JSON: `id`, `nome`, `categoria` (contratacao|parlamentar|eleitoral|e
 ### 3. Caso (`data/casos/NNNN-slug.md`)
 Copie `data/casos/0000-modelo-de-caso.md`. Frontmatter: `titulo`, `status: rascunho`, `tipo`, `esfera`, `uf`, `entidades`, `regras`, `fontes` (título, url, coletado_em), `autores`, `criado_em`, `resumo`. Corpo com as 5 seções: **Fato observado · Cruzamento · Red flags acionadas · O que NÃO sabemos · Próximo passo verificável**. Publicação exige 2 revisores (`revisores:`), que checam cada fonte. Nada de CPF completo, endereço, dado vazado, familiares não-públicos, adjetivos.
 
-### 4. Código
+### 4. Interface (UI)
+Antes de mexer em tela, leia [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md): tokens de cor, tipografia, componentes prontos, regras anti-quebra (`.quebra`, `.url`, `.linhas-N`, tabela sempre em `overflow-x-auto`), movimento e voz. Rode `npm run design` — ele barra hex fora dos tokens, tabela sem rolagem, `min-w` fixo, `<img>` sem alt e linguagem não factual. O checklist final está no fim do documento.
+
+### 4b. Código
 Next.js 16 (App Router, server components), TypeScript estrito, Tailwind v4. Padrões:
 - Toda chamada externa passa por `lib/fetcher.ts` (`getJSON` com timeout/cache/UA; `safe()` para nunca derrubar a página).
 - Cada bloco de dado na UI mostra **fonte + link** (`<Source>`).

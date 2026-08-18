@@ -16,6 +16,7 @@
   <a href="#-módulos">🧭 Módulos</a> ·
   <a href="docs/TESE.md">📜 Tese</a> ·
   <a href="docs/ARQUITETURA.md">🏗️ Arquitetura</a> ·
+  <a href="docs/DESIGN-SYSTEM.md">🎨 Design system</a> ·
   <a href="docs/POLITICA-EDITORIAL.md">⚖️ Política editorial</a>
 </p>
 

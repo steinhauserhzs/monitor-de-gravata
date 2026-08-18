@@ -49,7 +49,7 @@ export default function Radar() {
         <Section key={cat} kicker={CATS[cat] ?? cat} title={`${list.length} regra(s)`}>
           <div className="grid gap-3 md:grid-cols-2">
             {list.map((f) => (
-              <article key={f.id} id={f.id} className={`card p-4 border-l-4 ${f.severidade === "alta" ? "border-stamp" : f.severidade === "media" ? "border-marker" : "border-ink-3"} scroll-mt-24`}>
+              <article key={f.id} id={f.id} data-regra className={`card card--hover p-4 border-l-4 min-w-0 ${f.severidade === "alta" ? "border-stamp" : f.severidade === "media" ? "border-marker" : "border-ink-3"} scroll-mt-24`}>
                 <div className="flex flex-wrap items-center gap-2">
                   <Sev level={f.severidade} />
                   {impl.has(f.id) ? <span className="stamp stamp--flat stamp--verde">automatizada</span> : <span className="stamp stamp--flat stamp--ink">backlog</span>}
@@ -58,10 +58,10 @@ export default function Radar() {
                 <h3 className="font-display text-xl mt-2 leading-tight">{f.nome}</h3>
                 <p className="mt-1 text-sm text-ink-2">{f.descricao}</p>
                 <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
-                  <dt className="font-mono uppercase tracking-[0.12em] text-ink-3">Lógica</dt><dd className="font-mono">{f.logica ?? "—"}</dd>
-                  <dt className="font-mono uppercase tracking-[0.12em] text-ink-3">Dados</dt><dd>{(f.dados_necessarios ?? []).join(", ") || "—"}</dd>
-                  <dt className="font-mono uppercase tracking-[0.12em] text-ink-3">APIs</dt><dd>{(f.apis ?? []).map((a) => <Link key={a} href={`/apis#${a}`} className="underline mr-2">{a}</Link>)}</dd>
-                  <dt className="font-mono uppercase tracking-[0.12em] text-ink-3">Fonte</dt><dd>{f.fonte}</dd>
+                  <dt className="font-mono uppercase tracking-[0.12em] text-ink-3">Lógica</dt><dd className="font-mono quebra">{f.logica ?? "—"}</dd>
+                  <dt className="font-mono uppercase tracking-[0.12em] text-ink-3">Dados</dt><dd className="quebra">{(f.dados_necessarios ?? []).join(", ") || "—"}</dd>
+                  <dt className="font-mono uppercase tracking-[0.12em] text-ink-3">APIs</dt><dd className="flex flex-wrap gap-x-2 gap-y-1">{(f.apis ?? []).map((a) => <Link key={a} href={/^https?:/.test(a) ? a : `/apis#${a}`} className="underline url">{/^https?:/.test(a) ? a.replace(/^https?:\/\//, "").slice(0, 44) : a}</Link>)}</dd>
+                  <dt className="font-mono uppercase tracking-[0.12em] text-ink-3">Fonte</dt><dd className="quebra">{f.fonte}</dd>
                 </dl>
               </article>
             ))}
