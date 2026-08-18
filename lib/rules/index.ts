@@ -344,12 +344,12 @@ const contratacaoPrazoCurto = r<"contratacao">({
 
 /* ───────────────────────── DEPUTADOS (CEAP) ───────────────────────── */
 
-const ceapConcentrada = r<"deputado">({
+const ceapConcentrada = r<"cota">({
   id: "ceap-fornecedor-dominante",
   nome: "Um único fornecedor concentra grande parte da cota parlamentar",
   categoria: "parlamentar",
   severidade: "media",
-  aplicaA: "deputado",
+  aplicaA: "cota",
   descricao: "Concentração > 40% da CEAP em 1 CNPJ é atípica (exceto locação de veículo/escritório). Sinal para olhar quem é o fornecedor.",
   fonte: "OPS / Rosie",
   check: ({ analise }) => {
@@ -363,18 +363,18 @@ const ceapConcentrada = r<"deputado">({
           severidade: top.share > 0.6 ? "alta" : "media",
           evidencia: `${top.fornecedor} (${top.cnpj}) recebeu ${pct(top.share)} da cota do ano (${brl(top.total)} em ${top.qtd} notas).`,
           valor: top.share,
-          fonte: "Câmara dos Deputados (CEAP)",
+          fonte: "Cota parlamentar (Câmara CEAP / Senado CEAPS)",
         }
       : null;
   },
 });
 
-const ceapDivulgacaoAlta = r<"deputado">({
+const ceapDivulgacaoAlta = r<"cota">({
   id: "ceap-divulgacao-acima-de-50",
   nome: "Divulgação da atividade parlamentar consome mais da metade da cota",
   categoria: "parlamentar",
   severidade: "baixa",
-  aplicaA: "deputado",
+  aplicaA: "cota",
   descricao: "'Divulgação' é a rubrica mais elástica da CEAP e a mais associada a irregularidades históricas.",
   fonte: "OPS",
   check: ({ analise }) => {
@@ -389,18 +389,18 @@ const ceapDivulgacaoAlta = r<"deputado">({
           severidade: "baixa",
           evidencia: `${pct(share)} da CEAP do ano em "${div.tipo}" (${brl(div.total)}).`,
           valor: share,
-          fonte: "Câmara dos Deputados (CEAP)",
+          fonte: "Cota parlamentar (Câmara CEAP / Senado CEAPS)",
         }
       : null;
   },
 });
 
-const ceapNotaAlta = r<"deputado">({
+const ceapNotaAlta = r<"cota">({
   id: "ceap-nota-unica-elevada",
   nome: "Nota fiscal única de valor elevado",
   categoria: "parlamentar",
   severidade: "baixa",
-  aplicaA: "deputado",
+  aplicaA: "cota",
   descricao: "Documento acima de R$ 20 mil na CEAP merece leitura (o que foi comprado, de quem).",
   fonte: "Rosie",
   check: ({ analise }) => {
@@ -413,18 +413,18 @@ const ceapNotaAlta = r<"deputado">({
           severidade: m.valorLiquido > 50_000 ? "media" : "baixa",
           evidencia: `Nota de ${brl(m.valorLiquido)} para ${m.nomeFornecedor} (${m.tipoDespesa}, ${m.dataDocumento?.slice(0, 10)}).`,
           valor: m.valorLiquido,
-          fonte: "Câmara dos Deputados (CEAP)",
+          fonte: "Cota parlamentar (Câmara CEAP / Senado CEAPS)",
         }
       : null;
   },
 });
 
-const ceapCombustivel = r<"deputado">({
+const ceapCombustivel = r<"cota">({
   id: "ceap-combustivel-elevado",
   nome: "Gasto com combustível acima de R$ 6 mil/mês em média",
   categoria: "parlamentar",
   severidade: "media",
-  aplicaA: "deputado",
+  aplicaA: "cota",
   descricao: "Média mensal alta de combustível é o clássico da OPS/Rosie (equivale a rodar milhares de km/mês).",
   fonte: "OPS / Rosie",
   check: ({ analise }) => {
@@ -440,18 +440,18 @@ const ceapCombustivel = r<"deputado">({
           severidade: media > 10_000 ? "alta" : "media",
           evidencia: `${brl(c.total)} em combustível em ${meses} mês(es) — média ${brl(media)}/mês.`,
           valor: media,
-          fonte: "Câmara dos Deputados (CEAP)",
+          fonte: "Cota parlamentar (Câmara CEAP / Senado CEAPS)",
         }
       : null;
   },
 });
 
-const ceapAcimaMedia = r<"deputado">({
+const ceapAcimaMedia = r<"cota">({
   id: "ceap-acima-da-media-da-bancada",
   nome: "Gasto anual acima da média da bancada",
   categoria: "parlamentar",
   severidade: "baixa",
-  aplicaA: "deputado",
+  aplicaA: "cota",
   descricao: "Comparação objetiva com pares do mesmo estado (a cota varia por UF).",
   fonte: "Monitor de Gravata",
   check: ({ analise, mediaBancada }) => {
@@ -465,7 +465,7 @@ const ceapAcimaMedia = r<"deputado">({
           severidade: ratio > 1.6 ? "media" : "baixa",
           evidencia: `Gastou ${brl(analise.total)}, ${((ratio - 1) * 100).toFixed(0)}% acima da média (${brl(mediaBancada)}).`,
           valor: ratio,
-          fonte: "Câmara dos Deputados (CEAP)",
+          fonte: "Cota parlamentar (Câmara CEAP / Senado CEAPS)",
         }
       : null;
   },

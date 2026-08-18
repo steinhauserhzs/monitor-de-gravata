@@ -79,3 +79,42 @@ export async function getFiliacoes(codigo: string) {
   );
   return arr(r.FiliacaoParlamentar?.Parlamentar?.Filiacoes?.Filiacao) as Record<string, unknown>[];
 }
+
+/* ───────── CEAPS — Senado Administrativo, dados abertos (JSON, sem chave) ─────────
+   Swagger: https://adm.senado.gov.br/adm-dadosabertos/swagger-ui/index.html */
+export const SENADO_ADM = "https://adm.senado.gov.br/adm-dadosabertos/api/v1";
+
+export type RecursosUtilizados = {
+  parlamentar: { nome: string; partido: string; estado: string };
+  ano: number;
+  cotas: { despesas: { recurso: string; valor: number }[]; totalValor: number };
+  gastosNaoInclusos?: { despesas: { recurso: string; valor: number }[]; totalValor: number };
+  beneficios?: unknown[];
+};
+
+export async function getRecursosUtilizados(codigo: string) {
+  const r = await getJSON<{ data: RecursosUtilizados[] }>(`${SENADO_ADM}/senadores/${codigo}/recursos-utilizados`, { revalidate: 21600 });
+  return r.data?.[0] ?? null;
+}
+
+export type DespesaCEAPS = {
+  id: number;
+  tipoDocumento: string;
+  ano: number;
+  mes: number;
+  codSenador: number;
+  nomeSenador: string;
+  tipoDespesa: string;
+  cpfCnpj: string;
+  fornecedor: string;
+  documento: string;
+  data: string;
+  detalhamento: string | null;
+  valorReembolsado: number;
+};
+
+/** Todas as notas CEAPS do ano (arquivo único ~5 MB) filtradas pelo senador. Não cabe no cache de dados do Next (>2 MB) — 0,5 s por chamada. */
+export async function getCEAPS(codigo: string, ano: number) {
+  const all = await getJSON<DespesaCEAPS[]>(`${SENADO_ADM}/senadores/despesas_ceaps/${ano}`, { revalidate: 21600, timeoutMs: 45000 });
+  return all.filter((d) => String(d.codSenador) === String(codigo));
+}

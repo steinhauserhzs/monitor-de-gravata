@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Crumbs, Notice, Source } from "@/components/ui";
-import { KPI, Bars, Timeline, NoticiasList, Panel, type TLItem } from "@/components/ficha";
-import { getSenador, getMandatos, getComissoes, getAutorias, getVotacoes, getFiliacoes, SENADO } from "@/lib/senado";
+import { KPI, Bars, Flags, Timeline, NoticiasList, Panel, type TLItem } from "@/components/ficha";
+import { getSenador, getMandatos, getComissoes, getAutorias, getVotacoes, getFiliacoes, getRecursosUtilizados, getCEAPS, SENADO, SENADO_ADM } from "@/lib/senado";
+import { analisarCEAP, type Despesa } from "@/lib/camara";
+import { runRules } from "@/lib/rules";
+import { onlyDigits } from "@/lib/format";
 import { safe } from "@/lib/fetcher";
-import { dateBR, nowBR, pct } from "@/lib/format";
+import { brl, dateBR, nowBR, pct } from "@/lib/format";
 import { noticiasGoogle } from "@/lib/noticias";
 import { wdBuscar, wdTimeline } from "@/lib/wikidata";
 
@@ -28,7 +31,8 @@ export default async function FichaSenador({ params }: PageProps<"/politicos/sen
   const idp = sen.data.IdentificacaoParlamentar;
   const basicos = sen.data.DadosBasicosParlamentar;
 
-  const [mandatos, comissoes, autorias, votacoes, filiacoes, noticias, wd] = await Promise.all([
+  const anoAtual = new Date().getFullYear();
+  const [mandatos, comissoes, autorias, votacoes, filiacoes, noticias, wd, recursos, ceaps] = await Promise.all([
     safe(getMandatos(codigo)),
     safe(getComissoes(codigo)),
     safe(getAutorias(codigo)),
@@ -36,7 +40,18 @@ export default async function FichaSenador({ params }: PageProps<"/politicos/sen
     safe(getFiliacoes(codigo)),
     noticiasGoogle(`"${idp.NomeParlamentar}" senador`),
     safe(wdBuscar(idp.NomeCompletoParlamentar)),
+    safe(getRecursosUtilizados(codigo)),
+    safe(getCEAPS(codigo, anoAtual)),
   ]);
+
+  /* CEAPS → mesma análise da CEAP */
+  const despesasCEAPS: Despesa[] = (ceaps.data ?? []).map((d) => ({
+    ano: d.ano, mes: d.mes, tipoDespesa: d.tipoDespesa.split(",")[0].split(".")[0].trim(), codDocumento: d.id, tipoDocumento: d.tipoDocumento,
+    dataDocumento: d.data, numDocumento: d.documento, valorDocumento: d.valorReembolsado, urlDocumento: null, nomeFornecedor: d.fornecedor,
+    cnpjCpfFornecedor: onlyDigits(d.cpfCnpj), valorLiquido: d.valorReembolsado, valorGlosa: 0, numRessarcimento: "", codLote: 0, parcela: 0,
+  }));
+  const analise = analisarCEAP(despesasCEAPS);
+  const findings = runRules("cota", { analise, ano: anoAtual, casa: "senado", mediaBancada: null });
 
   /* votações: distribuição */
   const votos = votacoes.data ?? [];
@@ -48,7 +63,6 @@ export default async function FichaSenador({ params }: PageProps<"/politicos/sen
   const registrou = votos.filter((v) => /^(Sim|Não|Votou|Abst)/i.test(String(g(v, "SiglaDescricaoVoto") ?? ""))).length;
   const missao = dist.get("Missão da Casa no País/exterior") ?? 0;
   const presenteSemVoto = [...dist.entries()].filter(([k]) => /Presente/i.test(k)).reduce((a, [, v]) => a + v, 0);
-  const anoAtual = new Date().getFullYear();
   const votosAno = votos.filter((v) => String(g(v, "SessaoPlenaria.DataSessao") ?? "").startsWith(String(anoAtual)));
 
   /* autorias por tipo */
@@ -101,7 +115,8 @@ export default async function FichaSenador({ params }: PageProps<"/politicos/sen
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 space-y-6">
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-6">
+          <KPI label={`Cota (CEAPS) ${anoAtual}`} value={recursos.data?.cotas?.totalValor ? brl(recursos.data.cotas.totalValor) : analise.total ? brl(analise.total) : "—"} hint={`${analise.qtd} notas · ${analise.porFornecedor.length} fornecedores${recursos.data?.gastosNaoInclusos ? ` · +${brl(recursos.data.gastosNaoInclusos.totalValor)} fora da cota` : ""}`} tone={findings.some((f) => f.severidade === "alta") ? "stamp" : undefined} />
           <KPI label="Votações registradas" value={votos.length} hint={`${votosAno.length} em ${anoAtual} · desde o início do mandato`} />
           <KPI label="Registrou voto" value={votos.length ? pct(registrou / votos.length) : "—"} hint={`${registrou} de ${votos.length} (Sim/Não/secreta)`} />
           <KPI label="Presente sem votar" value={presenteSemVoto} hint="conta como presença, não como voto" />
@@ -169,12 +184,30 @@ export default async function FichaSenador({ params }: PageProps<"/politicos/sen
                 {!comAtuais.length && <li className="text-ink-3">Sem registro.</li>}
               </ul>
             </Panel>
-            <Panel kicker="§5" title="Gastos e gabinete">
-              <p className="text-sm text-ink-2">A CEAPS (cota) e a folha do gabinete são publicadas pelo Senado como CSV/planilha anual, não como API JSON. Enquanto o job de ingestão não entra:</p>
-              <ul className="mt-2 text-sm space-y-1">
-                <li>→ <a className="underline" href={`https://www6g.senado.leg.br/transparencia/sen/${codigo}/?ano=${anoAtual}`} target="_blank" rel="noopener noreferrer">Transparência do senador (cota, passagens, gabinete) ↗</a></li>
-                <li>→ <a className="underline" href="https://www12.senado.leg.br/transparencia/dados-abertos-transparencia/dados-abertos-ceaps" target="_blank" rel="noopener noreferrer">Dados abertos CEAPS (CSV por ano) ↗</a></li>
-              </ul>
+            <Panel kicker="§5" title={`Cota parlamentar (CEAPS) ${anoAtual}`} right={<Source url={`${SENADO_ADM}/senadores/${codigo}/recursos-utilizados`} label="Senado (dados abertos adm.)" />}>
+              {recursos.error && ceaps.error && <Notice tone="warn">Dados da cota indisponíveis: {recursos.error}</Notice>}
+              {recursos.data?.cotas && (
+                <div className="mb-4">
+                  <div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-2">Por rubrica (total {brl(recursos.data.cotas.totalValor)})</div>
+                  <Bars rows={recursos.data.cotas.despesas.filter((d) => d.valor > 0).sort((a, b) => b.valor - a.valor).map((d) => ({ label: d.recurso, value: d.valor }))} />
+                  {recursos.data.gastosNaoInclusos && recursos.data.gastosNaoInclusos.totalValor > 0 && (
+                    <details className="mt-3"><summary className="cursor-pointer font-mono text-[0.65rem] uppercase tracking-[0.16em]">Gastos fora da cota: {brl(recursos.data.gastosNaoInclusos.totalValor)}</summary>
+                      <div className="mt-2"><Bars rows={recursos.data.gastosNaoInclusos.despesas.filter((d) => d.valor > 0).sort((a, b) => b.valor - a.valor).map((d) => ({ label: d.recurso, value: d.valor }))} /></div></details>
+                  )}
+                </div>
+              )}
+              {analise.qtd > 0 && (
+                <>
+                  <div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-2">Top fornecedores (notas reembolsadas)</div>
+                  <Bars rows={analise.porFornecedor.slice(0, 8).map((f) => ({ label: f.fornecedor, sub: `${pct(f.share)} · ${f.qtd}`, value: f.total, href: f.cnpj?.length === 14 ? `/empresas/${f.cnpj}` : undefined }))} />
+                  <details className="mt-3"><summary className="cursor-pointer font-mono text-[0.65rem] uppercase tracking-[0.16em]">Ver as {Math.min(40, analise.qtd)} maiores notas</summary>
+                    <div className="overflow-x-auto mt-2"><table className="table"><thead><tr><th>Data</th><th>Tipo</th><th>Fornecedor</th><th>CNPJ/CPF</th><th className="text-right">Valor</th></tr></thead><tbody>
+                      {[...despesasCEAPS].sort((a, b) => b.valorLiquido - a.valorLiquido).slice(0, 40).map((x) => <tr key={x.codDocumento}><td className="font-mono text-xs whitespace-nowrap">{dateBR(x.dataDocumento)}</td><td className="text-xs">{x.tipoDespesa}</td><td className="text-xs">{x.nomeFornecedor}</td><td className="font-mono text-xs">{x.cnpjCpfFornecedor?.length === 14 ? <Link href={`/empresas/${x.cnpjCpfFornecedor}`} className="underline">{x.cnpjCpfFornecedor}</Link> : x.cnpjCpfFornecedor}</td><td className="text-right font-mono text-xs">{brl(x.valorLiquido)}</td></tr>)}
+                    </tbody></table></div></details>
+                </>
+              )}
+              <div className="mt-4"><div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-2">Red flags automáticas (cota)</div><Flags findings={findings} /></div>
+              <p className="mt-3 text-[0.68rem] text-ink-3">Fonte: Senado Federal — dados abertos administrativos (JSON, sem chave), notas de {anoAtual}. Gabinete/servidores: <a className="underline" href={`https://www6g.senado.leg.br/transparencia/sen/${codigo}/?ano=${anoAtual}`} target="_blank" rel="noopener noreferrer">transparência do senador ↗</a>.</p>
             </Panel>
             <Panel kicker="§6" title="Na mídia (manchetes recentes)">
               <NoticiasList noticias={noticias} query={idp.NomeParlamentar} />

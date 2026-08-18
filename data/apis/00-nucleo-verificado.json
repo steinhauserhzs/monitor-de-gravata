@@ -5,25 +5,81 @@
     "orgao": "Câmara dos Deputados",
     "esfera": "legislativo",
     "uf": "BR",
-    "categorias": ["parlamentares", "despesas", "votacoes", "proposicoes", "presenca", "discursos", "frentes", "orgaos"],
+    "categorias": [
+      "parlamentares",
+      "despesas",
+      "votacoes",
+      "proposicoes",
+      "presenca",
+      "discursos",
+      "frentes",
+      "orgaos"
+    ],
     "base_url": "https://dadosabertos.camara.leg.br/api/v2",
     "docs_url": "https://dadosabertos.camara.leg.br/swagger/api.html",
     "auth": "nenhuma",
-    "formato": ["json", "xml"],
+    "formato": [
+      "json",
+      "xml"
+    ],
     "cors": "sim",
     "rate_limit": "não documentado (uso razoável)",
     "endpoints_chave": [
-      { "metodo": "GET", "path": "/deputados?siglaUf=SP&ordem=ASC&ordenarPor=nome", "descricao": "Lista deputados em exercício (filtros: uf, partido, nome, legislatura)" },
-      { "metodo": "GET", "path": "/deputados/{id}", "descricao": "Ficha: nome civil, nascimento, escolaridade, gabinete, redes sociais" },
-      { "metodo": "GET", "path": "/deputados/{id}/despesas?ano=2026", "descricao": "Cota parlamentar (CEAP) nota a nota, com CNPJ do fornecedor" },
-      { "metodo": "GET", "path": "/deputados/{id}/eventos", "descricao": "Eventos/sessões em que participou (base para presença)" },
-      { "metodo": "GET", "path": "/deputados/{id}/orgaos", "descricao": "Comissões e cargos (titular/suplente, presidente)" },
-      { "metodo": "GET", "path": "/deputados/{id}/frentes", "descricao": "Frentes parlamentares" },
-      { "metodo": "GET", "path": "/deputados/{id}/discursos", "descricao": "Discursos em plenário" },
-      { "metodo": "GET", "path": "/proposicoes?idDeputadoAutor={id}", "descricao": "Proposições de autoria (produtividade)" },
-      { "metodo": "GET", "path": "/proposicoes/{id}/tramitacoes", "descricao": "Tramitação (aprovada? transformada em norma?)" },
-      { "metodo": "GET", "path": "/votacoes/{id}/votos", "descricao": "Voto nominal de cada deputado numa votação" },
-      { "metodo": "GET", "path": "/votacoes/{id}/orientacoes", "descricao": "Orientação de bancada (coerência partidária)" }
+      {
+        "metodo": "GET",
+        "path": "/deputados?siglaUf=SP&ordem=ASC&ordenarPor=nome",
+        "descricao": "Lista deputados em exercício (filtros: uf, partido, nome, legislatura)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/deputados/{id}",
+        "descricao": "Ficha: nome civil, nascimento, escolaridade, gabinete, redes sociais"
+      },
+      {
+        "metodo": "GET",
+        "path": "/deputados/{id}/despesas?ano=2026",
+        "descricao": "Cota parlamentar (CEAP) nota a nota, com CNPJ do fornecedor"
+      },
+      {
+        "metodo": "GET",
+        "path": "/deputados/{id}/eventos",
+        "descricao": "Eventos/sessões em que participou (base para presença)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/deputados/{id}/orgaos",
+        "descricao": "Comissões e cargos (titular/suplente, presidente)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/deputados/{id}/frentes",
+        "descricao": "Frentes parlamentares"
+      },
+      {
+        "metodo": "GET",
+        "path": "/deputados/{id}/discursos",
+        "descricao": "Discursos em plenário"
+      },
+      {
+        "metodo": "GET",
+        "path": "/proposicoes?idDeputadoAutor={id}",
+        "descricao": "Proposições de autoria (produtividade)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/proposicoes/{id}/tramitacoes",
+        "descricao": "Tramitação (aprovada? transformada em norma?)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/votacoes/{id}/votos",
+        "descricao": "Voto nominal de cada deputado numa votação"
+      },
+      {
+        "metodo": "GET",
+        "path": "/votacoes/{id}/orientacoes",
+        "descricao": "Orientação de bancada (coerência partidária)"
+      }
     ],
     "utilidade_anticorrupcao": "Base da Ficha 360 do deputado: gastos com CNPJ (cruzar com Receita/CEIS/doadores), produtividade, votações, presença, comissões.",
     "status_verificado": "2026-08-17 ok (/deputados); atenção: /despesas retornou vazio para todos os ids testados hoje — instabilidade; fallback bulk em dadosabertos.camara.leg.br/arquivos/",
@@ -35,23 +91,69 @@
     "orgao": "Senado Federal",
     "esfera": "legislativo",
     "uf": "BR",
-    "categorias": ["parlamentares", "votacoes", "materias", "comissoes", "mandatos", "filiacoes"],
+    "categorias": [
+      "parlamentares",
+      "votacoes",
+      "materias",
+      "comissoes",
+      "mandatos",
+      "filiacoes"
+    ],
     "base_url": "https://legis.senado.leg.br/dadosabertos",
     "docs_url": "https://legis.senado.leg.br/dadosabertos/docs/",
     "auth": "nenhuma",
-    "formato": ["json", "xml"],
+    "formato": [
+      "json",
+      "xml"
+    ],
     "cors": "desconhecido",
     "rate_limit": "não documentado",
     "endpoints_chave": [
-      { "metodo": "GET", "path": "/senador/lista/atual", "descricao": "Senadores em exercício" },
-      { "metodo": "GET", "path": "/senador/{codigo}", "descricao": "Detalhe do senador" },
-      { "metodo": "GET", "path": "/senador/{codigo}/mandatos", "descricao": "Mandatos, suplentes, afastamentos (linha do tempo)" },
-      { "metodo": "GET", "path": "/senador/{codigo}/filiacoes", "descricao": "Histórico de partidos" },
-      { "metodo": "GET", "path": "/senador/{codigo}/comissoes", "descricao": "Comissões (titular/suplente, cargo)" },
-      { "metodo": "GET", "path": "/senador/{codigo}/autorias", "descricao": "Matérias de autoria (produtividade)" },
-      { "metodo": "GET", "path": "/senador/{codigo}/relatorias", "descricao": "Relatorias" },
-      { "metodo": "GET", "path": "/senador/{codigo}/votacoes", "descricao": "Como votou em cada votação nominal" },
-      { "metodo": "GET", "path": "/senador/{codigo}/discursos", "descricao": "Discursos" }
+      {
+        "metodo": "GET",
+        "path": "/senador/lista/atual",
+        "descricao": "Senadores em exercício"
+      },
+      {
+        "metodo": "GET",
+        "path": "/senador/{codigo}",
+        "descricao": "Detalhe do senador"
+      },
+      {
+        "metodo": "GET",
+        "path": "/senador/{codigo}/mandatos",
+        "descricao": "Mandatos, suplentes, afastamentos (linha do tempo)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/senador/{codigo}/filiacoes",
+        "descricao": "Histórico de partidos"
+      },
+      {
+        "metodo": "GET",
+        "path": "/senador/{codigo}/comissoes",
+        "descricao": "Comissões (titular/suplente, cargo)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/senador/{codigo}/autorias",
+        "descricao": "Matérias de autoria (produtividade)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/senador/{codigo}/relatorias",
+        "descricao": "Relatorias"
+      },
+      {
+        "metodo": "GET",
+        "path": "/senador/{codigo}/votacoes",
+        "descricao": "Como votou em cada votação nominal"
+      },
+      {
+        "metodo": "GET",
+        "path": "/senador/{codigo}/discursos",
+        "descricao": "Discursos"
+      }
     ],
     "utilidade_anticorrupcao": "Ficha 360 do senador: mandatos, votos, produtividade. Gastos (CEAPS) ficam no Portal da Transparência do Senado (CSV anual).",
     "status_verificado": "2026-08-17 ok (lista/atual, /senador/5672, /votacoes, /autorias)",
@@ -63,18 +165,43 @@
     "orgao": "Ministério da Gestão e Inovação (MGI)",
     "esfera": "federal",
     "uf": "BR",
-    "categorias": ["contratos", "licitacoes", "dispensas", "atas", "itens", "fornecedores"],
+    "categorias": [
+      "contratos",
+      "licitacoes",
+      "dispensas",
+      "atas",
+      "itens",
+      "fornecedores"
+    ],
     "base_url": "https://pncp.gov.br/api/consulta/v1",
     "docs_url": "https://pncp.gov.br/api/consulta/swagger-ui/index.html",
     "auth": "nenhuma",
-    "formato": ["json"],
+    "formato": [
+      "json"
+    ],
     "cors": "nao",
     "rate_limit": "tamanhoPagina mínimo 10 / máximo 500; janela de datas até 365 dias",
     "endpoints_chave": [
-      { "metodo": "GET", "path": "/contratos?dataInicial=20260801&dataFinal=20260817&pagina=1&tamanhoPagina=50", "descricao": "Contratos publicados no período (todas as esferas: União, estados, municípios)" },
-      { "metodo": "GET", "path": "/contratacoes/publicacao?dataInicial=...&dataFinal=...&codigoModalidadeContratacao=8", "descricao": "Licitações/dispensas publicadas (8 = dispensa, 9 = inexigibilidade, 6 = pregão eletrônico), filtros uf, cnpj, codigoMunicipioIbge" },
-      { "metodo": "GET", "path": "/contratacoes/proposta?dataFinal=...", "descricao": "Licitações com propostas abertas" },
-      { "metodo": "GET", "path": "/atas?dataInicial=...&dataFinal=...", "descricao": "Atas de registro de preços" }
+      {
+        "metodo": "GET",
+        "path": "/contratos?dataInicial=20260801&dataFinal=20260817&pagina=1&tamanhoPagina=50",
+        "descricao": "Contratos publicados no período (todas as esferas: União, estados, municípios)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/contratacoes/publicacao?dataInicial=...&dataFinal=...&codigoModalidadeContratacao=8",
+        "descricao": "Licitações/dispensas publicadas (8 = dispensa, 9 = inexigibilidade, 6 = pregão eletrônico), filtros uf, cnpj, codigoMunicipioIbge"
+      },
+      {
+        "metodo": "GET",
+        "path": "/contratacoes/proposta?dataFinal=...",
+        "descricao": "Licitações com propostas abertas"
+      },
+      {
+        "metodo": "GET",
+        "path": "/atas?dataInicial=...&dataFinal=...",
+        "descricao": "Atas de registro de preços"
+      }
     ],
     "utilidade_anticorrupcao": "Fonte universal de contratos de 5.570 municípios + estados + União desde 2024. Base do Radar de Contratos e das red flags de contratação.",
     "status_verificado": "2026-08-17 ok",
@@ -87,19 +214,46 @@
     "orgao": "MGI",
     "esfera": "federal",
     "uf": "BR",
-    "categorias": ["contratos", "itens", "precos", "resultados"],
+    "categorias": [
+      "contratos",
+      "itens",
+      "precos",
+      "resultados"
+    ],
     "base_url": "https://pncp.gov.br/api/pncp/v1",
     "docs_url": "https://pncp.gov.br/api/pncp/swagger-ui/index.html",
     "auth": "nenhuma",
-    "formato": ["json"],
+    "formato": [
+      "json"
+    ],
     "cors": "nao",
     "rate_limit": "não documentado",
     "endpoints_chave": [
-      { "metodo": "GET", "path": "/orgaos/{cnpj}/contratos/{ano}/{sequencial}", "descricao": "Detalhe do contrato" },
-      { "metodo": "GET", "path": "/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens", "descricao": "Itens da compra com valor unitário estimado (base para sobrepreço)" },
-      { "metodo": "GET", "path": "/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens/{n}/resultados", "descricao": "Vencedor e valor homologado por item" },
-      { "metodo": "GET", "path": "/orgaos/{cnpj}/compras/{ano}/{sequencial}/arquivos", "descricao": "Edital, termo de referência (PDF)" },
-      { "metodo": "GET", "path": "/modalidades", "descricao": "Tabela de modalidades" }
+      {
+        "metodo": "GET",
+        "path": "/orgaos/{cnpj}/contratos/{ano}/{sequencial}",
+        "descricao": "Detalhe do contrato"
+      },
+      {
+        "metodo": "GET",
+        "path": "/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens",
+        "descricao": "Itens da compra com valor unitário estimado (base para sobrepreço)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens/{n}/resultados",
+        "descricao": "Vencedor e valor homologado por item"
+      },
+      {
+        "metodo": "GET",
+        "path": "/orgaos/{cnpj}/compras/{ano}/{sequencial}/arquivos",
+        "descricao": "Edital, termo de referência (PDF)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/modalidades",
+        "descricao": "Tabela de modalidades"
+      }
     ],
     "utilidade_anticorrupcao": "Preço unitário item a item — comparar entre órgãos e com Painel de Preços para achar sobrepreço.",
     "status_verificado": "2026-08-17 ok",
@@ -111,16 +265,31 @@
     "orgao": "MGI",
     "esfera": "federal",
     "uf": "BR",
-    "categorias": ["contratos", "editais", "atas", "busca"],
+    "categorias": [
+      "contratos",
+      "editais",
+      "atas",
+      "busca"
+    ],
     "base_url": "https://pncp.gov.br/api/search",
     "docs_url": "https://pncp.gov.br/app/contratos (não documentada; usada pelo front do PNCP)",
     "auth": "nenhuma",
-    "formato": ["json"],
+    "formato": [
+      "json"
+    ],
     "cors": "nao",
     "rate_limit": "rejeita User-Agent não-navegador (enviar UA de browser + Referer)",
     "endpoints_chave": [
-      { "metodo": "GET", "path": "/?q=<texto ou CNPJ>&tipos_documento=contrato&ordenacao=-data&pagina=1&tam_pagina=20&status=todos", "descricao": "Busca contratos por objeto, CNPJ/nome de fornecedor ou órgão; filtros ufs, municipios, modalidades, esferas" },
-      { "metodo": "GET", "path": "/?q=...&tipos_documento=edital", "descricao": "Busca editais" }
+      {
+        "metodo": "GET",
+        "path": "/?q=<texto ou CNPJ>&tipos_documento=contrato&ordenacao=-data&pagina=1&tam_pagina=20&status=todos",
+        "descricao": "Busca contratos por objeto, CNPJ/nome de fornecedor ou órgão; filtros ufs, municipios, modalidades, esferas"
+      },
+      {
+        "metodo": "GET",
+        "path": "/?q=...&tipos_documento=edital",
+        "descricao": "Busca editais"
+      }
     ],
     "utilidade_anticorrupcao": "Único jeito público de listar contratos POR FORNECEDOR no PNCP sem chave.",
     "status_verificado": "2026-08-17 ok (com UA de navegador)",
@@ -132,18 +301,43 @@
     "orgao": "Tribunal Superior Eleitoral",
     "esfera": "eleitoral",
     "uf": "BR",
-    "categorias": ["candidatos", "bens", "prestacao-de-contas", "doacoes", "despesas-campanha", "processos"],
+    "categorias": [
+      "candidatos",
+      "bens",
+      "prestacao-de-contas",
+      "doacoes",
+      "despesas-campanha",
+      "processos"
+    ],
     "base_url": "https://divulgacandcontas.tse.jus.br/divulga/rest/v1",
     "docs_url": "https://divulgacandcontas.tse.jus.br (sem doc oficial; endpoints usados pelo front)",
     "auth": "nenhuma",
-    "formato": ["json"],
+    "formato": [
+      "json"
+    ],
     "cors": "nao",
     "rate_limit": "não documentado; respostas grandes (lista de candidatos por UF/cargo)",
     "endpoints_chave": [
-      { "metodo": "GET", "path": "/eleicao/ordinarias", "descricao": "Lista eleições (2026 id=20322002026, 2024=2045202024, 2022=2040602022, 2020=2030402020, 2018=2022802018)" },
-      { "metodo": "GET", "path": "/candidatura/listar/{ano}/{UF}/{idEleicao}/{codCargo}/candidatos", "descricao": "Candidatos por UF e cargo (1 pres, 3 gov, 5 sen, 6 dep fed, 7 dep est, 8 dep dist, 11 pref, 13 ver)" },
-      { "metodo": "GET", "path": "/candidatura/buscar/{ano}/{UF}/{idEleicao}/candidato/{idCandidato}", "descricao": "Detalhe: CPF, bens[], totalDeBens, situação, processos, certidões (arquivos), foto" },
-      { "metodo": "GET", "path": "/prestador/consulta/{idEleicao}/{ano}/{UF}/{cargo}/{nrPartido}/{nrCandidato}/{idCandidato}", "descricao": "Prestação de contas consolidada (receitas por origem, despesas)" }
+      {
+        "metodo": "GET",
+        "path": "/eleicao/ordinarias",
+        "descricao": "Lista eleições (2026 id=20322002026, 2024=2045202024, 2022=2040602022, 2020=2030402020, 2018=2022802018)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/candidatura/listar/{ano}/{UF}/{idEleicao}/{codCargo}/candidatos",
+        "descricao": "Candidatos por UF e cargo (1 pres, 3 gov, 5 sen, 6 dep fed, 7 dep est, 8 dep dist, 11 pref, 13 ver)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/candidatura/buscar/{ano}/{UF}/{idEleicao}/candidato/{idCandidato}",
+        "descricao": "Detalhe: CPF, bens[], totalDeBens, situação, processos, certidões (arquivos), foto"
+      },
+      {
+        "metodo": "GET",
+        "path": "/prestador/consulta/{idEleicao}/{ano}/{UF}/{cargo}/{nrPartido}/{nrCandidato}/{idCandidato}",
+        "descricao": "Prestação de contas consolidada (receitas por origem, despesas)"
+      }
     ],
     "utilidade_anticorrupcao": "Coração do Manual do Candidato 2026: bens (evolução patrimonial), doadores, fornecedores de campanha, processos, situação da candidatura.",
     "status_verificado": "2026-08-17 ok (2026 já lista candidatos com situação 'Aguardando julgamento')",
@@ -155,16 +349,35 @@
     "orgao": "Tribunal Superior Eleitoral",
     "esfera": "eleitoral",
     "uf": "BR",
-    "categorias": ["candidatos", "bens", "prestacao-de-contas", "resultados", "eleitorado", "filiados", "pesquisas"],
+    "categorias": [
+      "candidatos",
+      "bens",
+      "prestacao-de-contas",
+      "resultados",
+      "eleitorado",
+      "filiados",
+      "pesquisas"
+    ],
     "base_url": "https://dadosabertos.tse.jus.br/api/3/action",
     "docs_url": "https://dadosabertos.tse.jus.br",
     "auth": "nenhuma",
-    "formato": ["json (metadados)", "csv zip (dados)"],
+    "formato": [
+      "json (metadados)",
+      "csv zip (dados)"
+    ],
     "cors": "desconhecido",
     "rate_limit": "não documentado",
     "endpoints_chave": [
-      { "metodo": "GET", "path": "/package_search?q=candidatos&rows=50", "descricao": "Busca datasets (43 resultados p/ 'candidatos')" },
-      { "metodo": "GET", "path": "/package_show?id=<dataset>", "descricao": "Recursos (CSV/ZIP) de um dataset" }
+      {
+        "metodo": "GET",
+        "path": "/package_search?q=candidatos&rows=50",
+        "descricao": "Busca datasets (43 resultados p/ 'candidatos')"
+      },
+      {
+        "metodo": "GET",
+        "path": "/package_show?id=<dataset>",
+        "descricao": "Recursos (CSV/ZIP) de um dataset"
+      }
     ],
     "utilidade_anticorrupcao": "Bulk histórico completo (1945→2026): bens, receitas/despesas de campanha, resultados por seção, filiados. Base para séries e cruzamentos offline.",
     "status_verificado": "2026-08-17 ok",
@@ -176,16 +389,30 @@
     "orgao": "BrasilAPI (comunidade) — fonte Receita Federal",
     "esfera": "civil",
     "uf": "BR",
-    "categorias": ["empresas", "socios", "cnae"],
+    "categorias": [
+      "empresas",
+      "socios",
+      "cnae"
+    ],
     "base_url": "https://brasilapi.com.br/api",
     "docs_url": "https://brasilapi.com.br/docs",
     "auth": "nenhuma",
-    "formato": ["json"],
+    "formato": [
+      "json"
+    ],
     "cors": "sim",
     "rate_limit": "uso razoável (open source, gratuita)",
     "endpoints_chave": [
-      { "metodo": "GET", "path": "/cnpj/v1/{cnpj}", "descricao": "Razão social, situação cadastral, data de abertura, capital, CNAE, QSA (sócios com CPF mascarado)" },
-      { "metodo": "GET", "path": "/ibge/municipios/v1/{UF}", "descricao": "Municípios por UF" }
+      {
+        "metodo": "GET",
+        "path": "/cnpj/v1/{cnpj}",
+        "descricao": "Razão social, situação cadastral, data de abertura, capital, CNAE, QSA (sócios com CPF mascarado)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/ibge/municipios/v1/{UF}",
+        "descricao": "Municípios por UF"
+      }
     ],
     "utilidade_anticorrupcao": "Ficha da empresa fornecedora/doadora: idade do CNPJ, capital social, sócios, situação. Alternativa: minhareceita.org/{cnpj}.",
     "status_verificado": "2026-08-17 ok",
@@ -197,17 +424,35 @@
     "orgao": "Open Knowledge Brasil",
     "esfera": "civil",
     "uf": "BR",
-    "categorias": ["diarios-oficiais", "municipios", "busca-textual"],
+    "categorias": [
+      "diarios-oficiais",
+      "municipios",
+      "busca-textual"
+    ],
     "base_url": "https://api.queridodiario.ok.org.br",
     "docs_url": "https://api.queridodiario.ok.org.br/docs",
     "auth": "nenhuma",
-    "formato": ["json"],
+    "formato": [
+      "json"
+    ],
     "cors": "sim",
     "rate_limit": "não documentado",
     "endpoints_chave": [
-      { "metodo": "GET", "path": "/gazettes?querystring=dispensa%20de%20licita%C3%A7%C3%A3o&size=10", "descricao": "Busca textual em diários oficiais (trechos + PDF)" },
-      { "metodo": "GET", "path": "/gazettes?territory_ids=3550308&published_since=2026-01-01", "descricao": "Diários de um município (código IBGE)" },
-      { "metodo": "GET", "path": "/cities?city_name=...", "descricao": "Municípios cobertos" }
+      {
+        "metodo": "GET",
+        "path": "/gazettes?querystring=dispensa%20de%20licita%C3%A7%C3%A3o&size=10",
+        "descricao": "Busca textual em diários oficiais (trechos + PDF)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/gazettes?territory_ids=3550308&published_since=2026-01-01",
+        "descricao": "Diários de um município (código IBGE)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/cities?city_name=...",
+        "descricao": "Municípios cobertos"
+      }
     ],
     "utilidade_anticorrupcao": "Achar nomeações, dispensas, aditivos e decretos que não estão em API estruturada — busca por nome de político/CNPJ em diários.",
     "status_verificado": "2026-08-17 ok",
@@ -219,26 +464,117 @@
     "orgao": "CGU (Controladoria-Geral da União)",
     "esfera": "federal",
     "uf": "BR",
-    "categorias": ["contratos", "servidores", "sancoes", "despesas", "emendas", "beneficios", "viagens", "convenios"],
+    "categorias": [
+      "contratos",
+      "servidores",
+      "sancoes",
+      "despesas",
+      "emendas",
+      "beneficios",
+      "viagens",
+      "convenios"
+    ],
     "base_url": "https://api.portaldatransparencia.gov.br/api-de-dados",
     "docs_url": "https://api.portaldatransparencia.gov.br/swagger-ui/index.html",
     "auth": "chave-gratuita",
     "auth_como": "Cadastrar e-mail em portaldatransparencia.gov.br/api-de-dados/cadastrar-email; usar header chave-api-dados. No app: env PORTAL_TRANSPARENCIA_KEY.",
-    "formato": ["json"],
+    "formato": [
+      "json"
+    ],
     "cors": "nao",
     "rate_limit": "90 req/min (6h–24h) / 300 req/min (0h–6h)",
     "endpoints_chave": [
-      { "metodo": "GET", "path": "/ceis?codigoSancionado={cnpj}", "descricao": "Empresas inidôneas e suspensas" },
-      { "metodo": "GET", "path": "/cnep?codigoSancionado={cnpj}", "descricao": "Empresas punidas (Lei Anticorrupção)" },
-      { "metodo": "GET", "path": "/cepim?cnpjSancionado={cnpj}", "descricao": "Entidades sem fins lucrativos impedidas" },
-      { "metodo": "GET", "path": "/contratos/cpf-cnpj?cpfCnpj={cnpj}", "descricao": "Contratos federais de um fornecedor" },
-      { "metodo": "GET", "path": "/emendas?nomeAutor=...&ano=2026", "descricao": "Emendas parlamentares por autor (valor empenhado/pago, localidade)" },
-      { "metodo": "GET", "path": "/servidores?nome=...", "descricao": "Servidores federais (cruzar sócio de fornecedor × servidor)" },
-      { "metodo": "GET", "path": "/despesas/documentos-por-favorecido?codigoPessoa={cnpj}&ano=2026", "descricao": "Pagamentos federais a um favorecido" },
-      { "metodo": "GET", "path": "/viagens?...", "descricao": "Diárias e passagens" }
+      {
+        "metodo": "GET",
+        "path": "/ceis?codigoSancionado={cnpj}",
+        "descricao": "Empresas inidôneas e suspensas"
+      },
+      {
+        "metodo": "GET",
+        "path": "/cnep?codigoSancionado={cnpj}",
+        "descricao": "Empresas punidas (Lei Anticorrupção)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/cepim?cnpjSancionado={cnpj}",
+        "descricao": "Entidades sem fins lucrativos impedidas"
+      },
+      {
+        "metodo": "GET",
+        "path": "/contratos/cpf-cnpj?cpfCnpj={cnpj}",
+        "descricao": "Contratos federais de um fornecedor"
+      },
+      {
+        "metodo": "GET",
+        "path": "/emendas?nomeAutor=...&ano=2026",
+        "descricao": "Emendas parlamentares por autor (valor empenhado/pago, localidade)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/servidores?nome=...",
+        "descricao": "Servidores federais (cruzar sócio de fornecedor × servidor)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/despesas/documentos-por-favorecido?codigoPessoa={cnpj}&ano=2026",
+        "descricao": "Pagamentos federais a um favorecido"
+      },
+      {
+        "metodo": "GET",
+        "path": "/viagens?...",
+        "descricao": "Diárias e passagens"
+      }
     ],
     "utilidade_anticorrupcao": "Sanções (CEIS/CNEP), contratos por fornecedor, emendas por parlamentar, servidores. É a chave que liga fornecedor ↔ político ↔ punição.",
     "status_verificado": "nao-testado (exige chave gratuita)",
     "notas": "Rate limit rígido: cachear. Sem CORS: sempre server-side."
+  },
+  {
+    "id": "senado-adm-dados-abertos-ceaps",
+    "nome": "Senado Federal — Dados Abertos Administrativos (CEAPS, servidores, remunerações)",
+    "orgao": "Senado Federal (Secretaria de Transparência)",
+    "esfera": "legislativo",
+    "uf": "BR",
+    "categorias": [
+      "cota-parlamentar",
+      "despesas",
+      "servidores",
+      "gabinete",
+      "remuneracoes"
+    ],
+    "base_url": "https://adm.senado.gov.br/adm-dadosabertos/api/v1",
+    "docs_url": "https://adm.senado.gov.br/adm-dadosabertos/swagger-ui/index.html",
+    "auth": "nenhuma",
+    "formato": [
+      "json",
+      "csv"
+    ],
+    "cors": "desconhecido",
+    "rate_limit": "não documentado; /despesas_ceaps/{ano} é um arquivo único (~5 MB)",
+    "endpoints_chave": [
+      {
+        "metodo": "GET",
+        "path": "/senadores/despesas_ceaps/{ano}",
+        "descricao": "Todas as notas CEAPS do ano (senador, mês, tipo, CNPJ/CPF, fornecedor, valor reembolsado)"
+      },
+      {
+        "metodo": "GET",
+        "path": "/senadores/{codigo}/recursos-utilizados",
+        "descricao": "Totais do ano por rubrica da cota + gastos fora da cota + benefícios"
+      },
+      {
+        "metodo": "GET",
+        "path": "/servidores/lotacoes",
+        "descricao": "Servidores e lotação (inclui gabinetes) — base para hipótese de nepotismo"
+      },
+      {
+        "metodo": "GET",
+        "path": "/servidores/remuneracoes/{ano}/{mes}",
+        "descricao": "Remunerações"
+      }
+    ],
+    "utilidade_anticorrupcao": "Fecha a lacuna da cota dos senadores em JSON: permite as mesmas red flags da CEAP (fornecedor dominante, combustível, divulgação, nota elevada) e cruzamento com Receita/PNCP.",
+    "status_verificado": "2026-08-18 ok (recursos-utilizados e despesas_ceaps/2026 200)",
+    "notas": "Descoberta na pesquisa de 18/08/2026; resposta grande não cabe no cache de dados do Next (>2 MB)."
   }
 ]

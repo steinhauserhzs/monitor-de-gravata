@@ -69,7 +69,7 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
 
   /* ── CEAP ── */
   const analise = analisarCEAP(despesas.data ?? []);
-  const findings = runRules("deputado", { deputado: d, ano, despesas: despesas.data ?? [], analise, mediaBancada: null });
+  const findings = runRules("cota", { analise, ano, casa: "camara", mediaBancada: null });
 
   /* ── Presença ── */
   const sessoesIds = new Set((sessoes.data ?? []).map((e) => e.id));
