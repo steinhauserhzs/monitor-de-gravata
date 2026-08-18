@@ -30,6 +30,7 @@ export function Footer() {
             ["/contratos", "Radar de contratos"],
             ["/empresas", "Ficha da empresa"],
             ["/precos", "Comparador de preços"],
+            ["/cruzamentos", "Cruzamentos (cota × contratos)"],
             ["/radar", "Motor de red flags"],
             ["/casos", "Casos da comunidade"],
           ]}

@@ -426,3 +426,135 @@ select.input {
 .mapa-br a:focus {
   outline: none;
 }
+
+/* ═══════════════════════════════════════════════
+   VIDA — movimento com propósito, nunca decoração vazia.
+   Tudo em CSS puro: a CSP do site proíbe script externo.
+   ═══════════════════════════════════════════════ */
+
+/* Fundo vivo: grade de papel milimetrado que respira + varredura de "scanner" */
+.vivo {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.vivo::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -2;
+  background-image:
+    linear-gradient(rgba(243, 237, 224, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(243, 237, 224, 0.06) 1px, transparent 1px);
+  background-size: 44px 44px;
+  animation: gradeDeriva 32s linear infinite;
+}
+.vivo::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 38%;
+  top: -40%;
+  z-index: -1;
+  background: linear-gradient(180deg, transparent, rgba(200, 16, 46, 0.12), transparent);
+  animation: varredura 9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+@keyframes gradeDeriva {
+  to { background-position: 44px 44px, 44px 44px; }
+}
+@keyframes varredura {
+  0% { top: -40%; opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { top: 105%; opacity: 0; }
+}
+
+/* Contador que "bate" ao entrar (sensação de dado chegando agora) */
+@keyframes pulso {
+  0% { transform: scale(0.96); opacity: 0; }
+  60% { transform: scale(1.03); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.pulso { animation: pulso 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+/* Barras que crescem da esquerda */
+@keyframes crescer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.barra-anim { transform-origin: left; animation: crescer 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+/* Linha que se desenha (usada em gráficos e divisórias) */
+@keyframes traco { from { stroke-dashoffset: var(--dash, 1000); } to { stroke-dashoffset: 0; } }
+.traco-anim { stroke-dasharray: var(--dash, 1000); animation: traco 1.4s ease-out both; }
+
+/* Botões: brilho que atravessa no hover */
+.btn { position: relative; overflow: hidden; }
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  transition: transform 620ms ease;
+}
+.btn:hover::after { transform: translateX(120%); }
+
+/* Cards: elevação + risco vermelho que corre na borda superior */
+.card { position: relative; transition: transform 160ms ease, box-shadow 160ms ease; }
+.card--hover:hover { transform: translateY(-3px); box-shadow: 0 18px 40px -26px rgba(20, 18, 16, 0.65); }
+.card--hover::before {
+  content: "";
+  position: absolute;
+  top: -1px; left: 0;
+  height: 2px; width: 0;
+  background: var(--stamp);
+  transition: width 320ms ease;
+}
+.card--hover:hover::before { width: 100%; }
+
+/* Marca-texto que "pinta" ao aparecer */
+@keyframes pintar { from { background-size: 0 100%; } to { background-size: 100% 100%; } }
+.marker-anim {
+  background-image: linear-gradient(transparent 40%, var(--marker) 40%, var(--marker) 92%, transparent 92%);
+  background-repeat: no-repeat;
+  animation: pintar 900ms ease-out 300ms both;
+  padding: 0 0.15em;
+}
+
+/* Carimbo batendo (usado nos vereditos) */
+@keyframes bater {
+  0% { transform: rotate(-8deg) scale(2.2); opacity: 0; filter: blur(2px); }
+  55% { transform: rotate(-3deg) scale(0.94); opacity: 1; filter: blur(0); }
+  75% { transform: rotate(-3deg) scale(1.04); }
+  100% { transform: rotate(-3deg) scale(1); }
+}
+.bater { animation: bater 620ms cubic-bezier(0.2, 0.9, 0.2, 1) both; }
+
+/* Ticker horizontal (fatos correndo) */
+@keyframes correr { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.ticker { display: flex; width: max-content; animation: correr 42s linear infinite; }
+.ticker:hover { animation-play-state: paused; }
+
+/* Revelar em cascata sem JS */
+.cascata > * { animation: rise 620ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.cascata > *:nth-child(1) { animation-delay: 40ms; }
+.cascata > *:nth-child(2) { animation-delay: 110ms; }
+.cascata > *:nth-child(3) { animation-delay: 180ms; }
+.cascata > *:nth-child(4) { animation-delay: 250ms; }
+.cascata > *:nth-child(5) { animation-delay: 320ms; }
+.cascata > *:nth-child(6) { animation-delay: 390ms; }
+.cascata > *:nth-child(7) { animation-delay: 460ms; }
+.cascata > *:nth-child(8) { animation-delay: 530ms; }
+
+/* Foco visível de verdade (acessibilidade) */
+a:focus-visible, button:focus-visible, summary:focus-visible, .input:focus-visible {
+  outline: 3px solid var(--stamp);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vivo::before, .vivo::after, .pulso, .barra-anim, .traco-anim, .marker-anim, .bater, .ticker, .cascata > * {
+    animation: none !important;
+  }
+  .card--hover:hover { transform: none; }
+}

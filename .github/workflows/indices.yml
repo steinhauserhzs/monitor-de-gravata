@@ -1,0 +1,36 @@
+name: índices derivados
+# Atualiza os índices que alimentam os cruzamentos (cota parlamentar, fornecedores do PNCP)
+# e os catálogos usados pelo comparador de preços. Roda semanalmente e sob demanda.
+on:
+  schedule:
+    - cron: "17 6 * * 1"   # segundas, 06:17 UTC (03:17 BRT)
+  workflow_dispatch:
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: catálogos e eleitos (viram commit)
+        run: |
+          npm run catmat
+          npm run catser
+          npm run ceap || true
+          npm run eleitos || true
+      - name: banco (índices derivados)
+        if: env.DATABASE_URL != ''
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          npm run db:migrar
+          npm run db:cota
+          npm run db:fornecedores 365
+      - name: commitar índices atualizados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/derivados
+          git diff --staged --quiet || git commit -m "chore(dados): índices derivados atualizados automaticamente"
+          git push

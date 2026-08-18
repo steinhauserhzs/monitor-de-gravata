@@ -7,6 +7,7 @@ const NAV = [
   { href: "/contratos", label: "Contratos" },
   { href: "/empresas", label: "Empresas" },
   { href: "/precos", label: "Preços" },
+  { href: "/cruzamentos", label: "Cruzamentos" },
   { href: "/radar", label: "Red flags" },
   { href: "/casos", label: "Casos" },
   { href: "/apis", label: "APIs" },

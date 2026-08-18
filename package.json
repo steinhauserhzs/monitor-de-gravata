@@ -11,7 +11,11 @@
     "catmat": "node scripts/gerar-catmat.mjs",
     "db:migrar": "node scripts/migrar-db.mjs",
     "ceap": "node scripts/gerar-ceap.mjs",
-    "catser": "node scripts/gerar-catser.mjs"
+    "catser": "node scripts/gerar-catser.mjs",
+    "db:cota": "node scripts/ingerir-cota.mjs",
+    "db:fornecedores": "node scripts/ingerir-fornecedores.mjs",
+    "eleitos": "node scripts/gerar-eleitos.mjs",
+    "municipios": "node scripts/gerar-municipios.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

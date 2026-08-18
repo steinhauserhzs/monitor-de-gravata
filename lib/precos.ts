@@ -153,6 +153,31 @@ export async function precosAmostra(codigo: number, opts: { uf?: string; desde?:
 
 export type Estatisticas = { n: number; min: number; q1: number; mediana: number; q3: number; max: number; media: number };
 
+/**
+ * Faixas de quantidade — comparar 1 unidade com 1.000 unidades é injusto: compra grande
+ * tem preço de atacado. A comparação honesta é dentro da MESMA faixa.
+ */
+export type Faixa = { id: string; rotulo: string; min: number; max: number };
+export const FAIXAS: Faixa[] = [
+  { id: "1-9", rotulo: "até 9 unidades (varejo)", min: 1, max: 9 },
+  { id: "10-99", rotulo: "10 a 99 (pequeno lote)", min: 10, max: 99 },
+  { id: "100-999", rotulo: "100 a 999 (lote médio)", min: 100, max: 999 },
+  { id: "1000+", rotulo: "1.000 ou mais (atacado)", min: 1000, max: Number.MAX_SAFE_INTEGER },
+];
+export const faixaDe = (qtd: number): Faixa => FAIXAS.find((f) => qtd >= f.min && qtd <= f.max) ?? FAIXAS[0];
+
+export type EstatisticaFaixa = { faixa: Faixa; est: Estatisticas | null; itens: number };
+
+export function estatisticasPorFaixa(precos: PrecoPraticado[]): EstatisticaFaixa[] {
+  return FAIXAS.map((faixa) => {
+    const doGrupo = precos.filter((p) => {
+      const q = Number(p.quantidade) || 1;
+      return q >= faixa.min && q <= faixa.max;
+    });
+    return { faixa, est: estatisticas(doGrupo.map((p) => p.precoUnitario)), itens: doGrupo.length };
+  });
+}
+
 export function estatisticas(valores: number[]): Estatisticas | null {
   const v = valores.filter((x) => Number.isFinite(x) && x > 0).sort((a, b) => a - b);
   if (!v.length) return null;

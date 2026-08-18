@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { PageHead, Section, Notice, Empty, Sev } from "@/components/ui";
 import { KPI } from "@/components/ficha";
-import { buscarCatalogo, precosAmostra, estatisticas, classificar, loadPDMs, loadServicos, COMPRAS, linkCompraGov, termoObjeto, idCompraDe } from "@/lib/precos";
+import { buscarCatalogo, precosAmostra, estatisticas, estatisticasPorFaixa, faixaDe, classificar, loadPDMs, loadServicos, COMPRAS, linkCompraGov, termoObjeto, idCompraDe } from "@/lib/precos";
+import { Veredito, FaixasQuantidade, ComoLer } from "@/components/Veredito";
 import { precoDeMercado, termoVarejo, temProvedorMercado } from "@/lib/mercado";
 import { safe } from "@/lib/fetcher";
 import { brl, dateBR, nowBR } from "@/lib/format";
@@ -34,6 +35,10 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
   const precos = selecionado ? await safe(precosAmostra(selecionado.codigo, { uf: uf || undefined, desde, paginas: 3, tipo: selecionado.tipo })) : { data: null, error: null };
   const lista = precos.data?.resultado ?? [];
   const est = estatisticas(lista.map((p) => p.precoUnitario));
+  const qtd = Number(String(Array.isArray(sp.qtd) ? sp.qtd[0] : sp.qtd ?? "").replace(/\D/g, "")) || 0;
+  const faixas = estatisticasPorFaixa(lista);
+  const faixaAtual = faixaDe(qtd || 1);
+  const estDaFaixa = faixas.find((f) => f.faixa.id === faixaAtual.id && f.itens >= 3)?.est ?? null;
   const cls = preco && est ? classificar(preco, est) : null;
   const descricaoRef = lista[0]?.descricaoItem ?? selecionado?.nome ?? q;
   const mercado = selecionado && preco ? await precoDeMercado(termoVarejo(descricaoRef)) : null;
@@ -49,7 +54,8 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
         right={
           <form className="card p-4 grid gap-2 sm:grid-cols-2 w-full sm:min-w-[22rem]">
             <label className="block sm:col-span-2"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Item (ex.: notebook, ar condicionado, merenda, asfalto)</span><input name="q" defaultValue={q} className="input" placeholder="notebook" /></label>
-            <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Preço unitário visto (R$)</span><input name="preco" defaultValue={preco || ""} className="input" placeholder="10000" /></label>
+            <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Preço unitário visto (R$)</span><input name="preco" defaultValue={preco || ""} className="input" placeholder="ex.: 3500" /></label>
+            <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Quantidade comprada</span><input name="qtd" defaultValue={qtd || ""} className="input" placeholder="ex.: 50" inputMode="numeric" /></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">UF (opcional)</span><select name="uf" defaultValue={uf} className="input"><option value="">Todas</option>{UFS.map((u) => <option key={u}>{u}</option>)}</select></label>
             <label className="block"><span className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3">Compras desde</span><input name="desde" type="date" defaultValue={desde} className="input" /></label>
             {selecionado && <><input type="hidden" name="pdm" value={selecionado.codigo} /><input type="hidden" name="tipo" value={selecionado.tipo} /></>}
@@ -82,65 +88,32 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
             {precos.data && !lista.length && <Empty>Nenhuma compra homologada registrada para este padrão no período/UF. Amplie a data ou tire o filtro de UF.</Empty>}
             {est && (
               <>
-                <div className="grid gap-3 grid-cols-2 md:grid-cols-6">
-                  <KPI label="Compras analisadas" value={est.n} hint={`amostra de ${precos.data?.totalRegistros?.toLocaleString("pt-BR") ?? est.n} registradas (${precos.data?.paginasLidas ?? 1} pág.)`} />
-                  <KPI label="Mediana" value={brl(est.mediana)} hint="metade pagou menos que isso" />
-                  <KPI label="Faixa típica (Q1–Q3)" value={<span className="text-xl">{brl(est.q1)} – {brl(est.q3)}</span>} />
-                  <KPI label="Mínimo" value={brl(est.min)} />
-                  <KPI label="Máximo" value={brl(est.max)} />
-                  <KPI label="Média" value={brl(est.media)} />
+                <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+                  <KPI label="Preço típico (mediana)" value={brl(est.mediana)} hint="metade das compras custou menos que isso" />
+                  <KPI label="Mais barato já pago" value={brl(est.min)} tone="verde" />
+                  <KPI label="Mais caro já pago" value={brl(est.max)} tone="stamp" />
+                  <KPI label="Compras analisadas" value={est.n} hint={`de ${precos.data?.totalRegistros?.toLocaleString("pt-BR") ?? est.n} publicadas`} />
                 </div>
-                {cls && (
-                  <div className={`card mt-4 p-5 border-l-4 ${cls.nivel === "muito-alto" || cls.nivel === "alto" ? "border-stamp" : cls.nivel === "atencao" ? "border-marker" : "border-verde"}`}>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <Sev level={cls.nivel === "muito-alto" || cls.nivel === "alto" ? "alta" : cls.nivel === "atencao" ? "media" : "ok"}>{cls.nivel.replace("-", " ")}</Sev>
-                      <div className="font-display text-2xl">{brl(preco)} é {cls.razao.toFixed(2)}× a mediana</div>
-                    </div>
-                    <p className="mt-2 text-sm text-ink-2">
-                      {cls.nivel === "normal" && "Dentro da faixa do que outros órgãos pagam por este padrão. Ainda assim, compare a especificação — o mesmo PDM abriga configurações diferentes."}
-                      {cls.nivel === "abaixo" && "Abaixo do que a maioria paga. Bom sinal de economia — ou item de especificação inferior/quantidade grande."}
-                      {cls.nivel === "atencao" && "Acima da faixa típica. Vale ler a especificação, a marca e a quantidade antes de concluir."}
-                      {(cls.nivel === "alto" || cls.nivel === "muito-alto") && "Muito acima do praticado. Sinal objetivo de possível sobrepreço — confirme especificação, marca e se houve disputa (nº de propostas). Isso é uma pergunta, não uma sentença."}
-                    </p>
-                    <p className="mt-2 text-[0.68rem] text-ink-3">Regra: <Link href="/radar#sobrepreco-vs-painel-de-precos" className="underline">sobrepreco-vs-painel-de-precos</Link> — razão vs mediana dos preços homologados no período (Compras.gov.br). Limiares: ≤1,3 normal · ≤1,7 atenção · ≤2,5 alto · &gt;2,5 muito alto.</p>
-                  </div>
-                )}
                 {preco > 0 && est && (
-                  <div className="card mt-4 p-5">
-                    <div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-3">Preço pago × referências</div>
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <div>
-                        <div className="font-mono text-[0.6rem] uppercase text-ink-3">vs. menor preço público</div>
-                        <div className="font-display text-2xl">{est.min > 0 ? `${((preco / est.min - 1) * 100).toFixed(0)}%` : "—"}</div>
-                        <div className="text-[0.7rem] text-ink-2">acima do menor já pago ({brl(est.min)})</div>
+                  <div className="space-y-4 mt-4">
+                    <Veredito preco={preco} quantidade={qtd} faixa={faixaAtual} estFaixa={estDaFaixa} estGeral={est} nomeItem={selecionado.nome} />
+                    <FaixasQuantidade faixas={faixas} faixaAtual={faixaAtual.id} />
+                    {mercado?.media3 && (
+                      <div className="card p-5">
+                        <div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-2">Referência de varejo (fora do governo)</div>
+                        <div className="flex flex-wrap items-baseline gap-4">
+                          <div className="font-display text-3xl">{brl(mercado.media3)}</div>
+                          <div className="text-sm text-ink-2">média dos 3 menores anúncios · {preco > mercado.media3 ? `o órgão pagou ${(((preco / mercado.media3) - 1) * 100).toFixed(0)}% a mais` : "abaixo do varejo"}</div>
+                        </div>
+                        <ul className="mt-2 text-xs space-y-1">
+                          {mercado.ofertas.slice(0, 3).map((o, i) => (
+                            <li key={i}>{o.url ? <a href={o.url} target="_blank" rel="noopener noreferrer nofollow" className="underline">{o.titulo}</a> : o.titulo} <span className="font-mono">— {brl(o.preco)}</span>{o.loja && <span className="text-ink-3"> · {o.loja}</span>}</li>
+                          ))}
+                        </ul>
+                        <p className="mt-2 text-[0.7rem] text-ink-3">Varejo não é contrato: compra pública pode incluir garantia, instalação, entrega em vários endereços e tributos. Use como pista.</p>
                       </div>
-                      <div>
-                        <div className="font-mono text-[0.6rem] uppercase text-ink-3">vs. mediana pública</div>
-                        <div className="font-display text-2xl">{((preco / est.mediana - 1) * 100).toFixed(0)}%</div>
-                        <div className="text-[0.7rem] text-ink-2">{preco >= est.mediana ? "acima" : "abaixo"} da mediana ({brl(est.mediana)})</div>
-                      </div>
-                      <div>
-                        <div className="font-mono text-[0.6rem] uppercase text-ink-3">vs. varejo (3 menores)</div>
-                        <div className="font-display text-2xl">{mercado?.media3 ? `${((preco / mercado.media3 - 1) * 100).toFixed(0)}%` : "—"}</div>
-                        <div className="text-[0.7rem] text-ink-2">{mercado?.media3 ? `média de varejo ${brl(mercado.media3)}` : "sem provedor de varejo"}</div>
-                      </div>
-                    </div>
-                    {mercado?.ofertas.length ? (
-                      <ul className="mt-3 text-xs space-y-1">
-                        {mercado.ofertas.slice(0, 3).map((o, i) => (
-                          <li key={i}>
-                            {o.url ? <a href={o.url} target="_blank" rel="noopener noreferrer nofollow" className="underline">{o.titulo}</a> : o.titulo}
-                            <span className="font-mono"> — {brl(o.preco)}</span>
-                            {o.loja && <span className="text-ink-3"> · {o.loja}</span>}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                    <p className="mt-3 text-[0.68rem] text-ink-3">
-                      {mercado?.nota}{" "}
-                      <strong>Preço de varejo não é preço de contrato:</strong> a compra pública costuma incluir garantia estendida, instalação, entrega em vários endereços, tributos e escala.
-                      A referência mais forte é o que <em>outros órgãos</em> pagaram pelo mesmo item — a primeira coluna.
-                    </p>
+                    )}
+                    <ComoLer />
                   </div>
                 )}
                 <div className="overflow-x-auto card mt-4">

@@ -9,6 +9,7 @@ import { safe } from "@/lib/fetcher";
 import { runRules } from "@/lib/rules";
 import { brl, dateBR, fmtCNPJ, onlyDigits, validCNPJ, nowBR } from "@/lib/format";
 import { noticiasGoogle } from "@/lib/noticias";
+import { cotaRecebidaPorEmpresa } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -27,12 +28,13 @@ export default async function FichaEmpresa({ params }: PageProps<"/empresas/[cnp
   if (!emp.data) notFound();
   const e = emp.data;
 
-  const [pncp, editais, sanc, fed, noticias] = await Promise.all([
+  const [pncp, editais, sanc, fed, noticias, cota] = await Promise.all([
     safe(searchPNCP({ q: cnpj, tipo: "contrato", tam: 30 })),
     safe(searchPNCP({ q: cnpj, tipo: "edital", tam: 10 })),
     sancoesPorCNPJ(cnpj).catch(() => null),
     temChavePortal() ? contratosFederaisPorCNPJ(cnpj).catch(() => null) : Promise.resolve(null),
     noticiasGoogle(`"${e.razao_social}"`, 8),
+    cotaRecebidaPorEmpresa(cnpj),
   ]);
   const contratos = (pncp.data?.items ?? []).map((it) => ({ valor: it.valor_global ?? 0, orgao: it.orgao_nome, data: it.data_assinatura ?? it.data_publicacao_pncp, it }));
   const somaPNCP = contratos.reduce((a, c) => a + c.valor, 0);
@@ -65,6 +67,7 @@ export default async function FichaEmpresa({ params }: PageProps<"/empresas/[cnp
           <KPI label="Capital social" value={brl(e.capital_social)} />
           <KPI label="Contratos no PNCP" value={pncp.data?.total ?? "—"} hint={contratos.length ? `${brl(somaPNCP)} nos ${contratos.length} mais recentes` : pncp.error ? "índice PNCP indisponível" : "nenhum localizado"} />
           <KPI label="Sanções" value={sanc ? sanc.ceis + sanc.cnep : "—"} hint={sanc ? `CEIS ${sanc.ceis} · CNEP ${sanc.cnep}` : "requer chave do Portal da Transparência"} tone={sanc && sanc.ceis + sanc.cnep > 0 ? "stamp" : undefined} />
+          <KPI label="Cota parlamentar recebida" value={cota ? brl(Number(cota.valor_total)) : "—"} hint={cota ? `${cota.n_deputados} deputado(s) · ${cota.n_notas} nota(s)` : "nenhuma nota localizada"} tone={cota ? "stamp" : undefined} />
           <KPI label="Red flags" value={findings.length} tone={findings.some((f) => f.severidade === "alta") ? "stamp" : "verde"} />
         </div>
 
@@ -89,6 +92,30 @@ export default async function FichaEmpresa({ params }: PageProps<"/empresas/[cnp
                 </div>
               )}
             </Panel>
+            {cota && (
+              <Panel kicker="§1b" title="Dinheiro de cota parlamentar recebido por esta empresa">
+                <p className="text-sm text-ink-2 mb-3">
+                  Esta empresa aparece {cota.n_notas} vez(es) nas notas da cota parlamentar (CEAP), somando <strong>{brl(Number(cota.valor_total))}</strong> de {cota.n_deputados} deputado(s).
+                  Receber de vários gabinetes é legal — e é exatamente o tipo de padrão que vale conferir.
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="table">
+                    <thead><tr><th>Deputado(a)</th><th>Partido/UF</th><th className="text-right">Valor</th><th>Ficha</th></tr></thead>
+                    <tbody>
+                      {cota.deputados.slice(0, 20).map((d) => (
+                        <tr key={d.id}>
+                          <td className="text-xs">{d.nome}</td>
+                          <td className="font-mono text-xs">{d.partido}-{d.uf}</td>
+                          <td className="text-right font-mono text-xs">{brl(Number(d.valor))}</td>
+                          <td className="text-xs"><Link href={`/politicos/deputado/${d.id}`} className="underline">abrir →</Link></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-2 text-[0.68rem] text-ink-3">Fonte: arquivo anual oficial da cota parlamentar (Câmara), processado em lote. Ver <Link href="/cruzamentos" className="underline">todos os cruzamentos</Link>.</p>
+              </Panel>
+            )}
             <Panel kicker="§2" title="Red flags automáticas">
               <Flags findings={findings} />
             </Panel>
