@@ -32,8 +32,8 @@ export function Mandato360Painel({ m }: { m: M }) {
       )}
 
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4 mb-5">
-        <KPI label="Votou a favor" value={m.totalFavor} hint={totalVotos ? `de ${totalVotos} votações nominais localizadas (90 dias)` : "nenhuma votação nominal nas mais recentes — a maioria é simbólica"} tone="verde" />
-        <KPI label="Votou contra" value={m.totalContra} hint={totalVotos ? pct(m.totalContra / totalVotos) + " das recentes" : "—"} tone="stamp" />
+        <KPI label="Votou a favor" value={m.totalFavor} hint={totalVotos ? `de ${totalVotos} votações nominais localizadas (varredura de ~9 meses)` : "nenhuma votação nominal nas mais recentes — a maioria é simbólica"} tone="verde" />
+        <KPI label="Votou contra" value={m.totalContra} hint={totalVotos ? pct(m.totalContra / totalVotos) + " das localizadas" : "—"} tone="stamp" />
         <KPI label="Verba pública usada" value={verbaTotal ? brl(verbaTotal) : "—"} hint={verbaTotal ? `cota ${m.cota?.ano ?? ""}: ${brl(m.cota?.total ?? 0)}${emendasPago ? ` · emendas pagas: ${brl(emendasPago)}` : ""}` : "cota do ano ainda não publicada e/ou sem emendas localizadas"} />
         <KPI label="Presença no plenário" value={m.presenca ? pct(m.presenca.presentes / Math.max(1, m.presenca.total)) : "—"} hint={m.presenca ? `${m.presenca.presentes}/${m.presenca.total} sessões deliberativas` : "indisponível nesta casa"} />
       </div>
@@ -52,7 +52,7 @@ export function Mandato360Painel({ m }: { m: M }) {
 
       {m.votos.length > 0 && (
         <div className="mb-5">
-          <div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-2">Como votou (mais recentes)</div>
+          <div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-2">Como votou (votações nominais mais recentes)</div>
           <div className="overflow-x-auto">
             <table className="table">
               <thead><tr><th>Data</th><th>Matéria / objeto</th><th>Voto</th><th>Orientação do partido</th><th>Resultado</th></tr></thead>
@@ -104,7 +104,11 @@ export function Mandato360Painel({ m }: { m: M }) {
         </details>
       )}
 
-      <div className="mt-3 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-ink-3">fontes: {m.fontes.join(" · ")}</div>
+      <p className="mt-4 text-[0.68rem] text-ink-3">
+        Amostra: as votações <strong>nominais</strong> mais recentes do Plenário (a maioria das votações é simbólica e não registra voto individual).
+        Não é o histórico completo do mandato — para isso, veja a <Link href={m.urlFicha} className="underline">ficha completa</Link> e o portal oficial.
+      </p>
+      <div className="mt-2 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-ink-3">fontes: {m.fontes.join(" · ")}</div>
     </Panel>
   );
 }
