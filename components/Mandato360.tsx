@@ -34,7 +34,7 @@ export function Mandato360Painel({ m }: { m: M }) {
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4 mb-5">
         <KPI label="Votou a favor" value={m.totalFavor} hint={totalVotos ? `de ${totalVotos} votações nominais localizadas (varredura de ~9 meses)` : "nenhuma votação nominal nas mais recentes — a maioria é simbólica"} tone="verde" />
         <KPI label="Votou contra" value={m.totalContra} hint={totalVotos ? pct(m.totalContra / totalVotos) + " das localizadas" : "—"} tone="stamp" />
-        <KPI label="Verba pública usada" value={verbaTotal ? brl(verbaTotal) : "—"} hint={verbaTotal ? `cota ${m.cota?.ano ?? ""}: ${brl(m.cota?.total ?? 0)}${emendasPago ? ` · emendas pagas: ${brl(emendasPago)}` : ""}` : "cota do ano ainda não publicada e/ou sem emendas localizadas"} />
+        <KPI label="Verba pública movimentada" value={verbaTotal ? brl(verbaTotal) : "—"} hint={verbaTotal ? `cota ${m.cota?.ano ?? ""}: ${brl(m.cota?.total ?? 0)}${emendasPago ? ` + emendas efetivamente pagas: ${brl(emendasPago)}` : ""} — dinheiro que passou pelo gabinete ou foi direcionado por ele, não dinheiro embolsado` : "cota do ano ainda não publicada e/ou sem emendas localizadas"} />
         <KPI label="Presença no plenário" value={m.presenca ? pct(m.presenca.presentes / Math.max(1, m.presenca.total)) : "—"} hint={m.presenca ? `${m.presenca.presentes}/${m.presenca.total} sessões deliberativas` : "indisponível nesta casa"} />
       </div>
 

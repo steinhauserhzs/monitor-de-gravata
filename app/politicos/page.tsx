@@ -53,8 +53,8 @@ export default async function Politicos({ searchParams }: PageProps<"/politicos"
     }));
 
   const secoes: { id: string; titulo: string; subtitulo: string; pessoas: Pessoa[] }[] = [
-    { id: "presidente", titulo: "Presidência da República", subtitulo: "eleito em 2022 · fonte TSE", pessoas: doTSE(1, "Presidente") },
-    { id: "governador", titulo: "Governadores", subtitulo: "27 eleitos em 2022 · fonte TSE", pessoas: doTSE(3, "Governador(a)") },
+    { id: "presidente", titulo: "Presidência da República", subtitulo: "eleito na votação de 2022 · fonte TSE", pessoas: doTSE(1, "Presidente") },
+    { id: "governador", titulo: "Governadores", subtitulo: "27 eleitos na votação de 2022 · fonte TSE", pessoas: doTSE(3, "Governador(a)") },
     { id: "senador", titulo: "Senadores", subtitulo: "81 em exercício · fonte Senado (ficha completa)", pessoas: senadores },
     { id: "federal", titulo: "Deputados federais", subtitulo: "513 em exercício · fonte Câmara (ficha completa)", pessoas: federais },
     { id: "estadual", titulo: "Deputados estaduais e distritais", subtitulo: `${eleitosPorCargo(7).length + eleitosPorCargo(8).length} eleitos em 2022 · fonte TSE`, pessoas: [...doTSE(7, "Deputado(a) estadual"), ...doTSE(8, "Deputado(a) distrital")] },
@@ -216,6 +216,12 @@ export default async function Politicos({ searchParams }: PageProps<"/politicos"
       </Section>
 
       <Section>
+        <Notice tone="warn" title="Eleito em 2022 ≠ quem ocupa o cargo hoje">
+          As listas de presidente, governadores e deputados estaduais mostram <strong>quem foi eleito na votação de 2022</strong>, como registrado pelo TSE.
+          Quem renunciou, morreu, foi cassado, assumiu outro cargo ou foi substituído por suplente <strong>continua aparecendo aqui</strong> — o TSE registra a eleição, não a ocupação atual.
+          Deputados federais e senadores, esses sim, vêm das APIs da Câmara e do Senado e refletem quem está em exercício agora.
+        </Notice>
+        <div className="h-4" />
         <Notice tone="info" title="De onde vem cada nome">
           Deputados federais e senadores vêm das APIs da Câmara e do Senado, ao vivo — por isso têm ficha completa (gastos, votações, presença).
           Presidente, governadores e deputados estaduais vêm dos <strong>eleitos de 2022</strong> no TSE{base ? ` (índice gerado em ${base.gerado_em})` : ""};
