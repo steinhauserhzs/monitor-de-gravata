@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { PageHead, Section, Notice, Empty, Sev } from "@/components/ui";
 import { KPI } from "@/components/ficha";
-import { buscarPDM, precosPorPDM, estatisticas, classificar, loadPDMs, COMPRAS } from "@/lib/precos";
+import { buscarPDM, precosAmostra, estatisticas, classificar, loadPDMs, COMPRAS } from "@/lib/precos";
 import { safe } from "@/lib/fetcher";
 import { brl, dateBR, nowBR } from "@/lib/format";
 import { UFS } from "@/lib/tse";
@@ -21,7 +21,7 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
   const total = loadPDMs().length;
   const candidatos = q && !pdm ? buscarPDM(q) : [];
   const pdmSel = pdm ? loadPDMs().find((p) => p.c === pdm) : candidatos.length === 1 ? candidatos[0] : null;
-  const precos = pdmSel ? await safe(precosPorPDM(pdmSel.c, { uf: uf || undefined, desde })) : { data: null, error: null };
+  const precos = pdmSel ? await safe(precosAmostra(pdmSel.c, { uf: uf || undefined, desde, paginas: 3 })) : { data: null, error: null };
   const lista = precos.data?.resultado ?? [];
   const est = estatisticas(lista.map((p) => p.precoUnitario));
   const cls = preco && est ? classificar(preco, est) : null;
@@ -68,7 +68,7 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
             {est && (
               <>
                 <div className="grid gap-3 grid-cols-2 md:grid-cols-6">
-                  <KPI label="Compras analisadas" value={est.n} hint={`de ${precos.data?.totalRegistros ?? est.n} registradas`} />
+                  <KPI label="Compras analisadas" value={est.n} hint={`amostra de ${precos.data?.totalRegistros?.toLocaleString("pt-BR") ?? est.n} registradas (${precos.data?.paginasLidas ?? 1} pág.)`} />
                   <KPI label="Mediana" value={brl(est.mediana)} hint="metade pagou menos que isso" />
                   <KPI label="Faixa típica (Q1–Q3)" value={<span className="text-xl">{brl(est.q1)} – {brl(est.q3)}</span>} />
                   <KPI label="Mínimo" value={brl(est.min)} />

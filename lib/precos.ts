@@ -77,6 +77,15 @@ export async function precosPorPDM(codigoPdm: number, opts: { uf?: string; desde
   });
 }
 
+/** Até `paginas` páginas (200 cada) em paralelo — amostra maior para mediana mais estável. */
+export async function precosAmostra(codigoPdm: number, opts: { uf?: string; desde?: string; ate?: string; paginas?: number } = {}) {
+  const first = await precosPorPDM(codigoPdm, { ...opts, pagina: 1, tamanho: 200 });
+  const totalPag = Math.min(opts.paginas ?? 3, first.totalPaginas || 1);
+  const rest = totalPag > 1 ? await Promise.all(Array.from({ length: totalPag - 1 }, (_, i) => precosPorPDM(codigoPdm, { ...opts, pagina: i + 2, tamanho: 200 }).catch(() => null))) : [];
+  const resultado = [...first.resultado, ...rest.flatMap((r) => r?.resultado ?? [])];
+  return { resultado, totalRegistros: first.totalRegistros, paginasLidas: 1 + rest.filter(Boolean).length };
+}
+
 export type Estatisticas = { n: number; min: number; q1: number; mediana: number; q3: number; max: number; media: number };
 
 export function estatisticas(valores: number[]): Estatisticas | null {
