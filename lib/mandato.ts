@@ -54,25 +54,46 @@ const NEGATIVOS = /^n[ãa]o$|contra/i;
 const posicaoDoVoto = (v: string): VotoResumo["posicao"] => (POSITIVOS.test(v) ? "a favor" : NEGATIVOS.test(v) ? "contra" : "outro");
 
 /** Procura mandato atual (Câmara ou Senado) por nome de urna / nome completo. */
-export async function acharMandato(nomeUrna: string, nomeCompleto: string, uf?: string): Promise<{ casa: "camara" | "senado"; id: string; nome: string; partido: string; uf: string; confianca: "exata" | "provavel" } | null> {
-  const alvos = [nomeUrna, nomeCompleto].filter(Boolean);
-  // 1ª passada com UF (mais preciso), 2ª sem UF (o candidato pode disputar em outra UF)
-  for (const alvo of [...alvos.map((a) => ({ a, uf })), ...alvos.map((a) => ({ a, uf: undefined }))]) {
-    const { a: alvoNome, uf: ufBusca } = alvo;
-    const r = await safe(listDeputados({ nome: alvoNome, uf: ufBusca }));
-    const exato = (r.data ?? []).find((d) => norm(d.nome) === norm(alvoNome));
-    const hit = exato ?? (r.data ?? []).length === 1 ? exato ?? (r.data ?? [])[0] : undefined;
-    if (hit) {
-      return { casa: "camara", id: String(hit.id), nome: hit.nome, partido: hit.siglaPartido, uf: hit.siglaUf, confianca: norm(hit.nome) === norm(alvoNome) ? "exata" : "provavel" };
+/**
+ * Procura mandato atual (Câmara ou Senado) por nome.
+ *
+ * REGRA DE SEGURANÇA (incidente de 18/08/2026): a busca da Câmara casa por SUBSTRING —
+ * `nome=LULA` devolve "Lula da Fonte (PP-PE)". Aceitar "resultado único" fazia a ficha de um
+ * candidato exibir votos, presença e milhões em emendas de OUTRA PESSOA.
+ * Agora só aceitamos correspondência EXATA de nome (de urna ou civil). Sem isso, nenhum número
+ * é exibido — no máximo um aviso de possível homônimo, que o leitor confere na fonte.
+ */
+export async function acharMandato(
+  nomeUrna: string,
+  nomeCompleto: string,
+  uf?: string,
+): Promise<{ casa: "camara" | "senado"; id: string; nome: string; partido: string; uf: string; confianca: "exata" | "provavel" } | null> {
+  const alvos = [nomeUrna, nomeCompleto].filter(Boolean).map(norm);
+  const buscas = [nomeUrna, nomeCompleto].filter(Boolean);
+
+  for (const termo of buscas) {
+    const r = await safe(listDeputados({ nome: termo, uf }));
+    const exato = (r.data ?? []).find((d) => alvos.includes(norm(d.nome)));
+    if (exato) {
+      // com UF do candidato, exigimos também coincidência de UF (evita xará de outro estado)
+      if (uf && exato.siglaUf !== uf) continue;
+      return { casa: "camara", id: String(exato.id), nome: exato.nome, partido: exato.siglaPartido, uf: exato.siglaUf, confianca: "exata" };
     }
   }
-  const sens = await safe(listSenadores());
-  for (const alvo of alvos) {
-    const hit = (sens.data ?? []).find((s) => norm(s.NomeParlamentar) === norm(alvo) || norm(s.NomeCompletoParlamentar) === norm(alvo));
-    if (hit) return { casa: "senado", id: hit.CodigoParlamentar, nome: hit.NomeParlamentar, partido: hit.SiglaPartidoParlamentar ?? "", uf: hit.UfParlamentar ?? "", confianca: "exata" };
+  // sem UF (ex.: candidato a presidente), tentamos sem o filtro de estado
+  if (uf) {
+    for (const termo of buscas) {
+      const r = await safe(listDeputados({ nome: termo }));
+      const exato = (r.data ?? []).find((d) => alvos.includes(norm(d.nome)));
+      if (exato) return { casa: "camara", id: String(exato.id), nome: exato.nome, partido: exato.siglaPartido, uf: exato.siglaUf, confianca: "exata" };
+    }
   }
-  const parcial = (sens.data ?? []).find((s) => alvos.some((a) => norm(s.NomeCompletoParlamentar).includes(norm(a)) || norm(a).includes(norm(s.NomeParlamentar))));
-  if (parcial) return { casa: "senado", id: parcial.CodigoParlamentar, nome: parcial.NomeParlamentar, partido: parcial.SiglaPartidoParlamentar ?? "", uf: parcial.UfParlamentar ?? "", confianca: "provavel" };
+
+  const sens = await safe(listSenadores());
+  const senExato = (sens.data ?? []).find((s) => alvos.includes(norm(s.NomeParlamentar)) || alvos.includes(norm(s.NomeCompletoParlamentar)));
+  if (senExato && (!uf || senExato.UfParlamentar === uf)) {
+    return { casa: "senado", id: senExato.CodigoParlamentar, nome: senExato.NomeParlamentar, partido: senExato.SiglaPartidoParlamentar ?? "", uf: senExato.UfParlamentar ?? "", confianca: "exata" };
+  }
   return null;
 }
 

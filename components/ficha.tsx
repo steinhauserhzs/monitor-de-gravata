@@ -103,7 +103,11 @@ export function Timeline({ items }: { items: TLItem[] }) {
 export function NoticiasList({ noticias, query }: { noticias: Noticia[]; query: string }) {
   return (
     <div>
-      {!noticias.length && <p className="text-sm text-ink-3">Nenhuma manchete recente encontrada para “{query}”.</p>}
+      <p className="mb-3 text-xs text-ink-2 border-l-4 border-marker pl-3">
+        Resultados de uma busca automática pelo nome, sem curadoria. <strong>Pode incluir outra pessoa com o mesmo nome</strong> e não significa
+        que a matéria seja sobre quem você está lendo. Confira no veículo antes de tirar qualquer conclusão.
+      </p>
+      {!noticias.length && <p className="text-sm text-ink-3">Nenhuma manchete recente com o nome “{query}” no título.</p>}
       <ul className="divide-y divide-linha">
         {noticias.map((n, i) => (
           <li key={i} className="py-2.5">
@@ -117,7 +121,7 @@ export function NoticiasList({ noticias, query }: { noticias: Noticia[]; query: 
         ))}
       </ul>
       <p className="mt-3 text-[0.68rem] text-ink-3">
-        Manchetes agregadas automaticamente por busca de nome (podem incluir homônimos). Só título e link — o conteúdo é do veículo. Fonte: Google Notícias RSS.
+        Só título, veículo e link — o conteúdo é do veículo. Exibimos apenas manchetes que trazem o nome como expressão contígua no título, para reduzir homônimos. Fonte: Google Notícias RSS.
       </p>
     </div>
   );

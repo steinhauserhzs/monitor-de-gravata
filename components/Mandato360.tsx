@@ -34,19 +34,19 @@ export function Mandato360Painel({ m }: { m: M }) {
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4 mb-5">
         <KPI label="Votou a favor" value={m.totalFavor} hint={totalVotos ? `de ${totalVotos} votações nominais localizadas (varredura de ~9 meses)` : "nenhuma votação nominal nas mais recentes — a maioria é simbólica"} tone="verde" />
         <KPI label="Votou contra" value={m.totalContra} hint={totalVotos ? pct(m.totalContra / totalVotos) + " das localizadas" : "—"} tone="stamp" />
-        <KPI label="Verba pública movimentada" value={verbaTotal ? brl(verbaTotal) : "—"} hint={verbaTotal ? `cota ${m.cota?.ano ?? ""}: ${brl(m.cota?.total ?? 0)}${emendasPago ? ` + emendas efetivamente pagas: ${brl(emendasPago)}` : ""} — dinheiro que passou pelo gabinete ou foi direcionado por ele, não dinheiro embolsado` : "cota do ano ainda não publicada e/ou sem emendas localizadas"} />
+        <KPI label="Verba pública movimentada" value={verbaTotal ? brl(verbaTotal) : "—"} hint={verbaTotal ? `cota de ${m.cota?.ano ?? ""}: ${brl(m.cota?.total ?? 0)}${emendasPago ? ` + amostra de emendas pagas (vários anos): ${brl(emendasPago)}` : ""} — períodos diferentes; é dinheiro que passou pelo gabinete ou foi direcionado por ele, não dinheiro embolsado` : "cota do ano ainda não publicada e/ou sem emendas localizadas"} />
         <KPI label="Presença no plenário" value={m.presenca ? pct(m.presenca.presentes / Math.max(1, m.presenca.total)) : "—"} hint={m.presenca ? `${m.presenca.presentes}/${m.presenca.total} sessões deliberativas` : "indisponível nesta casa"} />
       </div>
 
       {m.temas.length > 0 && (
         <div className="mb-5">
-          <div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-2">Pautas que apresenta (temas das proposições de autoria)</div>
+          <div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-2">{m.casa === "camara" ? "Pautas que apresenta (temas das proposições de autoria)" : "Tipos de matéria que assina (o Senado não classifica por tema)"}</div>
           <div className="flex flex-wrap gap-2">
             {m.temas.map((t) => (
               <span key={t.tema} className="tab">{t.tema} · {t.n}</span>
             ))}
           </div>
-          <p className="mt-1 text-[0.68rem] text-ink-3">Temas classificados pela própria Câmara/Senado nas proposições que o parlamentar assinou — mede o que ele(a) propõe, não o que promete.</p>
+          <p className="mt-1 text-[0.68rem] text-ink-3">{m.casa === "camara" ? "Temas classificados pela própria Câmara nas proposições que o parlamentar assinou — mede o que proponha, não o que promete." : "RQS, PEC, PL etc. são TIPOS de proposição, não temas: o Senado não publica classificação temática nesta consulta."}</p>
         </div>
       )}
 
@@ -79,14 +79,14 @@ export function Mandato360Painel({ m }: { m: M }) {
 
       {(m.emendas?.length ?? 0) > 0 && (
         <div className="mb-5">
-          <div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-2">Emendas parlamentares (dinheiro público que direcionou)</div>
+          <div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-2">Emendas parlamentares (amostra — dinheiro público direcionado)</div>
           <div className="flex flex-wrap gap-2 mb-2">
             {m.emendas!.map((e) => (
               <span key={e.ano} className="tab">{e.ano} · {e.n} emenda(s) · empenhado {brl(e.empenhado)} · pago {brl(e.pago)}</span>
             ))}
           </div>
           {(m.emendasDestinos?.length ?? 0) > 0 && <Bars rows={m.emendasDestinos!.map((d) => ({ label: `${d.destino} · ${d.funcao}`, sub: String(d.ano), value: d.empenhado }))} />}
-          <p className="mt-1 text-[0.68rem] text-ink-3">Total empenhado localizado: {brl(emendasTotal)}. Emenda empenhada ≠ paga ≠ obra entregue — o Portal permite seguir cada pagamento.</p>
+          <p className="mt-1 text-[0.68rem] text-ink-3"><strong>Lista parcial:</strong> mostramos as primeiras emendas retornadas pelo Portal da Transparência (até 15), somando {brl(emendasTotal)} de empenho — o total do mandato pode ser maior. Emenda empenhada ≠ paga ≠ obra entregue.</p>
         </div>
       )}
 

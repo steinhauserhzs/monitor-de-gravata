@@ -63,7 +63,7 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
     safe(getMandatosExternos(id)),
     safe(getHistorico(id)),
     safe(getOcupacoes(id)),
-    noticiasGoogle(`"${s.nome}" deputado`),
+    noticiasGoogle(`"${s.nome}" deputado`, 12, s.nome),
     checagensSobre(s.nome),
     safe(wdBuscar(d.nomeCivil)),
     temChavePortal() ? safe(emendasPorAutor(s.nome)) : Promise.resolve({ data: null, error: null }),
@@ -367,7 +367,7 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
                 <div className="mt-2 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-ink-3">fonte: Câmara dos Deputados (campo redeSocial)</div>
               </Panel>
             )}
-            <Panel kicker="§9" title="Na mídia (manchetes recentes)">
+            <Panel kicker="§9" title="Busca por este nome na imprensa">
               <NoticiasList noticias={noticias} query={s.nome} />
             </Panel>
 

@@ -14,7 +14,29 @@ const decode = (s: string) =>
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'");
 
-export async function noticiasGoogle(query: string, max = 12): Promise<Noticia[]> {
+const semAcento = (s: string) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+/**
+ * Filtra manchetes que provavelmente NÃO são da pessoa buscada.
+ * Incidente de 18/08/2026: a ficha de um candidato "Eduardo Silva" exibia notícia policial
+ * sobre outro Eduardo Silva. Agora exigimos o nome como expressão contígua no título.
+ */
+export function pareceSobre(nome: string, titulo: string) {
+  const n = semAcento(nome).replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
+  const t = semAcento(titulo);
+  if (!n) return false;
+  if (t.includes(n)) return true;
+  // nome com 3+ partes: aceita primeira + última (ex.: "Erika Hilton" em "Erika ... Hilton" não vale; contíguo é o critério)
+  const partes = n.split(" ");
+  if (partes.length >= 2) {
+    const doisPrimeiros = partes.slice(0, 2).join(" ");
+    const doisUltimos = partes.slice(-2).join(" ");
+    return t.includes(doisPrimeiros) || t.includes(doisUltimos);
+  }
+  return false;
+}
+
+export async function noticiasGoogle(query: string, max = 12, nomeExato?: string): Promise<Noticia[]> {
   const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=pt-BR&gl=BR&ceid=BR:pt-419`;
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), 12000);
@@ -39,7 +61,8 @@ export async function noticiasGoogle(query: string, max = 12): Promise<Noticia[]
         const titulo = veiculo && tituloRaw.endsWith(` - ${veiculo}`) ? tituloRaw.slice(0, -(veiculo.length + 3)) : tituloRaw;
         return { titulo, url: g("link"), veiculo, data: g("pubDate") };
       })
-      .filter((n) => n.titulo && n.url);
+      .filter((n) => n.titulo && n.url)
+      .filter((n) => !nomeExato || pareceSobre(nomeExato, n.titulo));
   } catch {
     return [];
   } finally {

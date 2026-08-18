@@ -18,7 +18,7 @@ export function Checagens({ dados, nome }: { dados: { itens: Checagem[]; via: st
           </li>
         ))}
       </ul>
-      {dados.itens.length > 0 && <p className="mt-2 text-[0.68rem] text-ink-3">{dados.nota} O veredito é do checador, não do Monitor. Busca por “{nome}” — pode incluir homônimos.</p>}
+      {dados.itens.length > 0 && <p className="mt-2 text-[0.68rem] text-ink-3">{dados.nota} Quando há veredito, ele é do checador — nunca do Monitor. Busca por “{nome}”: pode incluir homônimos e pessoas apenas citadas.</p>}
     </div>
   );
 }

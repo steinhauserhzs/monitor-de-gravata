@@ -40,7 +40,7 @@ export default async function FichaSenador({ params }: PageProps<"/politicos/sen
     safe(getAutorias(codigo)),
     safe(getVotacoes(codigo)),
     safe(getFiliacoes(codigo)),
-    noticiasGoogle(`"${idp.NomeParlamentar}" senador`),
+    noticiasGoogle(`"${idp.NomeParlamentar}" senador`, 12, idp.NomeParlamentar),
     checagensSobre(idp.NomeParlamentar),
     safe(wdBuscar(idp.NomeCompletoParlamentar)),
     safe(getRecursosUtilizados(codigo)),
@@ -212,7 +212,7 @@ export default async function FichaSenador({ params }: PageProps<"/politicos/sen
               <div className="mt-4"><div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-2">Red flags automáticas (cota)</div><Flags findings={findings} /></div>
               <p className="mt-3 text-[0.68rem] text-ink-3">Fonte: Senado Federal — dados abertos administrativos (JSON, sem chave), notas de {anoAtual}. Gabinete/servidores: <a className="underline" href={`https://www6g.senado.leg.br/transparencia/sen/${codigo}/?ano=${anoAtual}`} target="_blank" rel="noopener noreferrer">transparência do senador ↗</a>.</p>
             </Panel>
-            <Panel kicker="§6" title="Na mídia (manchetes recentes)">
+            <Panel kicker="§6" title="Busca por este nome na imprensa">
               <NoticiasList noticias={noticias} query={idp.NomeParlamentar} />
             </Panel>
 

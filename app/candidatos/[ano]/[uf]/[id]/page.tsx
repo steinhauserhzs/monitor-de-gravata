@@ -37,7 +37,7 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
 
   const [prest, noticias, checagens, wd, mandato] = await Promise.all([
     cargo && cand.partido?.numero && cand.numero ? safe(getPrestacao(ano, uf, cargo, cand.partido.numero, cand.numero, cand.id)) : Promise.resolve({ data: null, error: "sem dados de partido/número" }),
-    noticiasGoogle(`"${cand.nomeUrna}" candidato ${uf}`),
+    noticiasGoogle(`"${cand.nomeUrna}" candidato ${uf}`, 12, cand.nomeUrna),
     checagensSobre(cand.nomeUrna),
     safe(wdBuscar(cand.nomeCompleto)),
     safe(montarMandato360(cand.nomeUrna, cand.nomeCompleto, uf)),
@@ -130,7 +130,7 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
           <KPI label={`Bens declarados ${ano}`} value={brl(cand.totalDeBens)} hint={`${bens.length} item(ns)`} />
           <KPI label="Eleição anterior" value={anteriores.length ? brl(anteriores[anteriores.length - 1].totalDeBens) : "—"} hint={anteriores.length ? `${anteriores[anteriores.length - 1].ano} · ${anteriores[anteriores.length - 1].cargo}` : "sem candidatura anterior localizada (mesmo nome/UF)"} />
           <KPI label="Variação patrimonial" value={anteriores.length && anteriores[anteriores.length - 1].totalDeBens ? `${(((cand.totalDeBens ?? 0) / anteriores[anteriores.length - 1].totalDeBens - 1) * 100).toFixed(0)}%` : "—"} tone={anteriores.length && cand.totalDeBens > 2 * anteriores[anteriores.length - 1].totalDeBens ? "stamp" : undefined} />
-          <KPI label="Receitas de campanha" value={dc?.totalRecebido ? brl(dc.totalRecebido) : "—"} hint={dc ? `${pct((dc.totalPartidos ?? 0) / (dc.totalRecebido || 1))} de partido/fundo · ${pct((dc.totalReceitaPF ?? 0) / (dc.totalRecebido || 1))} de PF` : ano >= 2026 ? "contas a partir de set/2026" : "sem prestação localizada"} />
+          <KPI label="Receitas de campanha" value={dc?.totalRecebido ? brl(dc.totalRecebido) : "—"} hint={dc ? `de ${brl(dc.totalRecebido)}: ${pct(((Number(dc.totalPartidos ?? 0) + Number(dc.totalDoacaoFcc ?? 0)) / (Number(dc.totalRecebido) || 1)))} de partido/fundos públicos · ${pct(Number(dc.totalReceitaPF ?? 0) / (Number(dc.totalRecebido) || 1))} de pessoas físicas` : ano >= 2026 ? "contas a partir de set/2026" : "sem prestação localizada"} />
           <KPI label="Red flags" value={findings.length} tone={findings.some((f) => f.severidade === "alta") ? "stamp" : "verde"} hint={findings.length ? findings.map((f) => f.nome).slice(0, 2).join(" · ") : "nenhum sinal automático"} />
         </div>
 
@@ -142,8 +142,17 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
           <div className="space-y-6">
             {mandato.data && <Mandato360Painel m={mandato.data} />}
             {!mandato.data && (
-              <Notice tone="info" title="Sem mandato federal em exercício">
-                Não localizamos {cand.nomeUrna} entre os deputados federais e senadores em exercício. Se ele(a) é vereador(a), prefeito(a), deputado(a) estadual ou já deixou o mandato, esses dados ainda não são cobertos automaticamente — <Link href="/contribuir" className="underline">ajude a conectar a casa legislativa dele(a)</Link>.
+              <Notice tone={mandato.error ? "warn" : "info"} title={mandato.error ? "Não foi possível verificar agora" : "Nenhum mandato federal localizado por este nome"}>
+                {mandato.error ? (
+                  <>As bases da Câmara e do Senado não responderam ({mandato.error}). <strong>Isso não significa que esta pessoa não tenha mandato</strong> — recarregue em alguns segundos.</>
+                ) : (
+                  <>
+                    Não encontramos <strong>correspondência exata de nome</strong> para {cand.nomeUrna} entre os deputados federais e senadores em exercício.
+                    Isso pode significar que a pessoa não tem mandato federal, que exerce cargo estadual/municipal (ainda não cobertos aqui), ou apenas que o nome
+                    registrado nas duas bases é diferente. <strong>Só exibimos números com correspondência exata</strong> — dado de xará não entra.{" "}
+                    <Link href="/politicos" className="underline">conferir na lista oficial</Link>
+                  </>
+                )}
               </Notice>
             )}
             <Panel kicker="§1" title="Patrimônio declarado" right={<Source url={`${DIVULGA}/candidatura/buscar/${ano}/${uf}/${el.id}/candidato/${cand.id}`} label="TSE" />}>
@@ -178,18 +187,40 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
               {!dc && <p className="text-sm text-ink-3">{ano >= 2026 ? "A prestação de contas parcial de 2026 começa a ser publicada em setembro; a final, após a eleição." : `Sem prestação de contas localizada (${prest.error ?? "vazio"}).`}</p>}
               {dc && (
                 <div className="grid gap-6 md:grid-cols-2">
-                  <Bars rows={[
-                    { label: "Partido / fundo partidário / FEFC", value: dc.totalPartidos ?? 0 },
-                    { label: "Pessoas físicas", value: dc.totalReceitaPF ?? 0 },
-                    { label: "Recursos próprios", value: dc.totalProprios ?? 0 },
-                    { label: "Financiamento coletivo (internet)", value: dc.totalInternet ?? 0 },
-                    { label: "Outros candidatos", value: dc.totalReceitaOutCand ?? 0 },
-                    { label: "Origem não identificada", value: dc.totalRoni ?? 0 },
-                    { label: "Estimáveis (bens/serviços)", value: dc.totalEstimados ?? 0 },
-                  ].filter((r) => r.value > 0)} />
+                  {(() => {
+                    const cat = [
+                      { label: "Partido / fundo partidário / FEFC", value: Number(dc.totalPartidos ?? 0) },
+                      { label: "Fundo especial de campanha (FCC)", value: Number(dc.totalDoacaoFcc ?? 0) },
+                      { label: "Pessoas físicas", value: Number(dc.totalReceitaPF ?? 0) },
+                      { label: "Pessoas jurídicas", value: Number(dc.totalReceitaPJ ?? 0) },
+                      { label: "Recursos próprios", value: Number(dc.totalProprios ?? 0) },
+                      { label: "Financiamento coletivo (internet)", value: Number(dc.totalInternet ?? 0) },
+                      { label: "Comercialização e eventos", value: Number(dc.totalReceitaComercializacao ?? 0) },
+                      { label: "Aplicação financeira", value: Number((dc as Record<string, number | null | undefined>).totalDoacaoAplicacaoFinanceira ?? 0) },
+                      { label: "Outros candidatos", value: Number(dc.totalReceitaOutCand ?? 0) },
+                      { label: "Origem não identificada", value: Number(dc.totalRoni ?? 0) },
+                      { label: "Estimáveis (bens/serviços)", value: Number(dc.totalEstimados ?? 0) },
+                    ].filter((r) => r.value > 0);
+                    const somado = cat.reduce((a, r) => a + r.value, 0);
+                    const resto = Math.round((Number(dc.totalRecebido ?? 0) - somado) * 100) / 100;
+                    const linhas = resto > 1 ? [...cat, { label: "Outras origens (não detalhadas nesta consulta)", value: resto }] : cat;
+                    return (
+                      <div>
+                        <Bars rows={linhas} />
+                        <p className="mt-2 text-[0.68rem] text-ink-3">
+                          As barras somam {brl(somado + (resto > 1 ? resto : 0))} de {brl(dc.totalRecebido)} recebidos.
+                          {resto > 1 ? " A diferença aparece como “outras origens” — o TSE agrupa algumas receitas fora das categorias consolidadas." : ""}
+                        </p>
+                      </div>
+                    );
+                  })()}
                   <div className="text-sm space-y-1">
                     <div><span className="font-mono text-[0.6rem] uppercase text-ink-3">Total recebido</span><div className="font-display text-2xl">{brl(dc.totalRecebido)}</div></div>
-                    <div><span className="font-mono text-[0.6rem] uppercase text-ink-3">Gasto declarado (1º turno)</span><div className="font-display text-2xl">{brl(cand.gastoCampanha1T)}</div></div>
+                    <div>
+                      <span className="font-mono text-[0.6rem] uppercase text-ink-3">Limite legal de gastos (1º turno)</span>
+                      <div className="font-display text-2xl">{brl(cand.gastoCampanha1T)}</div>
+                      <div className="text-[0.68rem] text-ink-3">Teto fixado pelo TSE para este cargo — <strong>igual para todos os concorrentes</strong>. Não é o que este candidato gastou.</div>
+                    </div>
                     {prest.data?.cnpj && <div className="font-mono text-xs">CNPJ de campanha: <Link className="underline" href={`/empresas/${prest.data.cnpj}`}>{prest.data.cnpj}</Link></div>}
                     <div className="text-[0.68rem] text-ink-3">Doadores e fornecedores nominais: no DivulgaCand (link acima) — a listagem detalhada via API está sendo mapeada (issue aberta).</div>
                   </div>
@@ -263,7 +294,7 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
                 <p className="mt-2 text-[0.68rem] text-ink-3">Fonte: campo “sites” da candidatura no DivulgaCandContas (TSE), como declarado. Encontrou um link que não é do candidato? <a className="underline" href="https://github.com/steinhauserhzs/monitor-de-gravata/issues/new?template=api-quebrada.yml" target="_blank" rel="noopener noreferrer">avise aqui</a>.</p>
               </Panel>
             )}
-            <Panel kicker="§6" title="Na mídia (manchetes recentes)">
+            <Panel kicker="§6" title="Busca por este nome na imprensa">
               <NoticiasList noticias={noticias} query={cand.nomeUrna} />
             </Panel>
 

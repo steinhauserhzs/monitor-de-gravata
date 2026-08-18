@@ -61,7 +61,6 @@ const norm = (s: string) => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").t
 
 async function viaRSS(nome: string, max: number): Promise<Checagem[]> {
   const alvo = norm(nome);
-  const partes = alvo.split(/\s+/).filter((p) => p.length > 3);
   const out: Checagem[] = [];
   await Promise.all(
     FEEDS.map(async (f) => {
@@ -77,8 +76,9 @@ async function viaRSS(nome: string, max: number): Promise<Checagem[]> {
           };
           const titulo = g("title");
           const desc = g("description").replace(/<[^>]+>/g, " ");
+          // exige o nome como expressão contígua (evita exibir checagem sobre outra pessoa da família)
           const hay = norm(titulo + " " + desc);
-          if (partes.length && partes.every((p) => hay.includes(p))) {
+          if (alvo && hay.includes(alvo)) {
             out.push({ texto: titulo, veiculo: f.veiculo, url: g("link"), data: g("pubDate"), via: "rss" });
           }
         }
@@ -94,7 +94,7 @@ export async function checagensSobre(nome: string, max = 8): Promise<{ itens: Ch
   const g = await viaGoogle(`"${nome}"`, max);
   if (g.length) return { itens: g, via: "google", nota: "Agregado pela API do Google Fact Check Tools (ClaimReview publicado pelos próprios checadores)." };
   const r = await viaRSS(nome, max);
-  if (r.length) return { itens: r, via: "rss", nota: "Busca no RSS público de Aos Fatos e Comprova (cobertura menor que a API do Google)." };
+  if (r.length) return { itens: r, via: "rss", nota: "Matérias de agências de checagem que CITAM este nome (não necessariamente uma checagem sobre esta pessoa). Sem veredito estruturado — leia a matéria." };
   return {
     itens: [],
     via: "nenhuma",
