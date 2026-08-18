@@ -1,0 +1,279 @@
+{
+  "area": "Comparador de preços, página da compra e Radar de contratos",
+  "data_auditoria": "2026-08-18",
+  "site": "https://monitor-de-gravata.vercel.app",
+  "repo": "/Users/hari/Hari/monitor-de-gravata",
+  "metodo": "curl nas páginas ao vivo (/precos, /precos/compra/[id], /contratos, /contratos/[cnpj]/[ano]/[seq]) + leitura do código (app/precos, app/contratos, lib/precos.ts, lib/pncp.ts, lib/mercado.ts, lib/rules/index.ts, components/Veredito.tsx) + sondagem direta da API dadosabertos.compras.gov.br para verificar o que a fonte de fato garante",
+  "casos_de_teste": [
+    "/precos?q=notebook&pdm=8435&preco=8900000&qtd=1 (item de preço absurdo: NOTEBOOK a R$ 8.949.000,00 em Joinville/SC)",
+    "/precos?q=notebook&pdm=8435&preco=5000 (item comum, sem quantidade informada)",
+    "/precos?q=luva&pdm=30247&preco=25&qtd=500 (item comum com unidades de fornecimento misturadas: EMBALAGEM x UNIDADE)",
+    "/precos?q=luva&pdm=30247&desde=2026-08-01 vs &desde=2015-01-01 (mesmos números — filtro de data não aplicado)",
+    "/precos/compra/45323005904422025?pdm=8435&tipo=material&item=1",
+    "/contratos (radar, últimos 2 dias, Brasil)",
+    "/contratos/07954480000179/2026/30143 (contrato do Estado do Ceará)"
+  ],
+  "campos_auditados": 34,
+  "achados": [
+    {
+      "id": "precos-filtro-data-ignorado",
+      "onde": "https://monitor-de-gravata.vercel.app/precos?q=luva&pdm=30247&desde=2015-01-01 — título do Passo 2 e campo 'Compras desde' do formulário",
+      "texto_exibido": "LUVA P/ PROCEDIMENTO DE SAÚDE NÃO CIRÚRGICO C/ ANVISA — preços praticados no Brasil desde 01/01/2015",
+      "problema": "O filtro de data escolhido pelo usuário é impresso no título mas NUNCA é aplicado aos dados. O comparador só envia dataCompraInicio; a API do Compras.gov.br só filtra quando recebe dataCompraInicio E dataCompraFim. Consultei ao vivo: desde=01/08/2026 e desde=01/01/2015 devolvem exatamente os mesmos números (mediana R$ 19,00, min R$ 0,15, max R$ 72,80, 600 de 7.699). Na API, dataCompraInicio=2026-07-25 (posterior ao registro mais novo) ainda devolve 7.699 registros de 2026-07-24; com início E fim de janeiro/2026 devolve 271. O usuário acredita estar olhando um recorte temporal que não existe.",
+      "fonte_real": "Compras.gov.br /modulo-pesquisa-preco/1_consultarMaterial ignora dataCompraInicio isolada; a amostra devolvida é a mais recente disponível, sem recorte de período.",
+      "arquivo": "lib/precos.ts:127-141 (precosPorPDM só seta dataCompraFim se opts.ate) + app/precos/page.tsx:35 (chama precosAmostra sem 'ate') + app/precos/page.tsx:86 (imprime 'desde {dateBR(desde)}')",
+      "gravidade": "alta",
+      "correcao": "Enviar sempre dataCompraFim junto com dataCompraInicio (ou remover o campo do formulário) e, enquanto isso, trocar o título para 'preços praticados no Brasil (registros mais recentes publicados)' sem afirmar recorte de data."
+    },
+    {
+      "id": "precos-min-max-superlativo",
+      "onde": "/precos — KPIs 'Mais barato já pago' e 'Mais caro já pago'",
+      "texto_exibido": "Mais barato já pago R$ 3,37 · Mais caro já pago R$ 8.949.000,00",
+      "problema": "'já pago' é superlativo absoluto (o mais barato/caro de todos os tempos), mas os valores são o mínimo e o máximo de uma amostra de 600 registros de um universo de 6.096 (notebook) / 7.699 (luva). Nenhuma palavra na tela diz 'na amostra'. Pior: o mínimo (R$ 3,37 para um notebook; R$ 0,15 para luva) é quase certamente erro de digitação do órgão ou unidade divergente, e aparece em VERDE (tone verde), como se fosse a boa compra de referência.",
+      "fonte_real": "min/max da amostra de até 600 registros lida pelo app (3 páginas de 200), não do universo publicado.",
+      "arquivo": "app/precos/page.tsx:93-94 (KPI 'Mais barato já pago' tone verde / 'Mais caro já pago' tone stamp)",
+      "gravidade": "alta",
+      "correcao": "Renomear para 'Menor unitário na amostra' e 'Maior unitário na amostra', tirar o verde do mínimo e repetir ali o aviso de erro de digitação/unidade que já existe abaixo da tabela."
+    },
+    {
+      "id": "precos-mediana-mistura-unidade-fornecimento",
+      "onde": "/precos?q=luva&pdm=30247 — KPI 'Preço típico (mediana)', painel 'Preço muda com a quantidade' e Veredito",
+      "texto_exibido": "Preço típico (mediana) R$ 19,00 — metade das compras custou menos que isso / +32% acima do que outros órgãos pagaram comprando 100 a 999 (lote médio) — mediana R$ 19,00",
+      "problema": "A mediana e todas as faixas somam preços de unidades de fornecimento diferentes. Na página 1 da API para o PDM 30247 (luva de procedimento): 173 registros em EMBALAGEM (mediana R$ 19,40, caixa com ~100 luvas) e 27 em UNIDADE (mediana R$ 16,70, luva avulsa). A tela mostra um único 'preço típico' de R$ 19,00. Quem comprou CAIXA a R$ 25 é acusado de pagar +32% acima; quem comprou UNIDADE a R$ 19 é declarado normal. A unidade pode INVERTER a conclusão — e o app admite isso em texto, mas não trata no cálculo. Agravante: a tabela de /precos não tem coluna 'Unidade', embora o bloco 'Como ler' mande 'Confira na linha da compra'.",
+      "fonte_real": "Cada registro do Compras.gov.br traz siglaUnidadeFornecimento/nomeUnidadeFornecimento; o preço unitário só é comparável dentro da mesma unidade.",
+      "arquivo": "lib/precos.ts:171-190 (estatisticasPorFaixa e estatisticas não agrupam por unidade) + app/precos/page.tsx:121 (cabeçalho da tabela sem coluna Unidade) + components/Veredito.tsx:104 ('Confira na linha da compra')",
+      "gravidade": "alta",
+      "correcao": "Agrupar mediana/faixas por siglaUnidadeFornecimento (ou comparar só contra a unidade dominante e dizer qual é), e adicionar a coluna 'Unidade' na tabela do comparador."
+    },
+    {
+      "id": "precos-veredito-faixa-presumida",
+      "onde": "/precos?q=notebook&pdm=8435&preco=5000 — card Veredito",
+      "texto_exibido": "por unidade · quantidade não informada … +3% acima do que outros órgãos pagaram comprando até 9 unidades (varejo) — mediana R$ 4.853,57 … Está dentro do que outros órgãos pagam por esta quantidade.",
+      "problema": "Quando o usuário não informa a quantidade, o app assume silenciosamente a faixa 1–9 (faixaDe(qtd || 1)) e afirma no mesmo card, ao mesmo tempo, que a quantidade não foi informada E que a comparação é 'por esta quantidade'. O percentual do veredito tem base inventada. No teste do notebook de R$ 8,9 mi a base assumida mudou o número (+183.270% contra a faixa 1–9). Bug correlato: quem informa qtd=1 (quantidade legítima) também vê 'quantidade não informada', porque a condição de exibição é quantidade > 1.",
+      "fonte_real": "A fonte não diz nada sobre a quantidade do usuário; ela é entrada, não dado. Sem quantidade, não existe faixa comparável.",
+      "arquivo": "app/precos/page.tsx:40 (faixaDe(qtd || 1)) + components/Veredito.tsx:48 e 57",
+      "gravidade": "alta",
+      "correcao": "Sem quantidade informada, comparar contra a distribuição geral e escrever 'sem a quantidade não dá para escolher a faixa — comparamos com todas as quantidades'; e tratar qtd=1 como quantidade informada."
+    },
+    {
+      "id": "compra-contratos-do-fornecedor-por-nome",
+      "onde": "/precos/compra/45323005904422025 — painel §3 'Contratos do fornecedor no PNCP'",
+      "texto_exibido": "Contratos do fornecedor no PNCP — FUNDO MUNICIPAL DE SAUDE DE RANCHO QUEIMADO · MONITORES - LEI 14.133/2021 · R$ 8.300,00 · Rancho Queimado/SC",
+      "problema": "Atribuição a uma empresa por coincidência de texto. A lista vem de uma busca textual livre pelo NOME do fornecedor (searchPNCP({ q: ref.nomeFornecedor })), não pelo CNPJ, e ainda é filtrada pela UF da compra. O título afirma que são 'contratos do fornecedor', mas nenhuma linha exibe o fornecedor nem o CNPJ do contrato listado — o leitor não tem como conferir a atribuição. Além disso, por causa do filtro de UF, é uma lista parcial apresentada como se fosse a lista da empresa. É exatamente o padrão do incidente do campo 'sites' do TSE: dado verdadeiro, apresentação que cria um vínculo que a fonte não garante.",
+      "fonte_real": "O índice de busca do PNCP casa o texto em vários campos; o CNPJ do fornecedor (cnpj_fornecedor) está disponível no retorno e não é usado nem exibido.",
+      "arquivo": "app/precos/compra/[id]/page.tsx:58 (busca por nome) e 134-145 (painel sem fornecedor/CNPJ)",
+      "gravidade": "alta",
+      "correcao": "Filtrar por cnpj_fornecedor igual ao niFornecedor, exibir fornecedor+CNPJ em cada linha, tirar o filtro de UF (ou dizer 'em {UF}') e renomear para 'Contratos no PNCP com este CNPJ'."
+    },
+    {
+      "id": "radar-zero-quando-fonte-falha",
+      "onde": "/contratos — linha de contagem acima da tabela",
+      "texto_exibido": "{total} registro(s) no período no Brasil · exibindo os {n} maiores das 3 primeiras páginas / {total} resultado(s) no índice do PNCP",
+      "problema": "Estado vazio que mente. Se a chamada ao PNCP falha, total fica 0 e busca fica null, e a linha imprime '0 registro(s) no período' / '0 resultado(s) no índice do PNCP' — afirmando que não há contratos, quando o que houve foi falha de fonte. O aviso de erro aparece em outro bloco, mas o número zero é o que o leitor cita.",
+      "fonte_real": "Falha de rede/API não é ausência de contratos.",
+      "arquivo": "app/contratos/page.tsx:88 (`busca?.total ?? 0` e `total.toLocaleString`)",
+      "gravidade": "alta",
+      "correcao": "Quando erro !== null, substituir o contador por 'não foi possível consultar o PNCP agora' em vez de imprimir 0."
+    },
+    {
+      "id": "compra-mediana-nacional",
+      "onde": "/precos/compra/45323005904422025 — KPI 'Maior unitário vs. mediana nacional'",
+      "texto_exibido": "Maior unitário vs. mediana nacional — 1984.7× — mediana R$ 4.509,00",
+      "problema": "'mediana nacional' afirma universo. É a mediana de uma amostra de até 600 registros do mesmo PDM lida naquele momento, sem recorte de período, sem controle de unidade de fornecimento e sem controle de especificação. O número (1984,7×) vem inteiro de um registro que o próprio site reconhece poder ser erro de digitação do órgão, e o KPI é pintado de vermelho (tone stamp) sem ressalva ao lado.",
+      "fonte_real": "Mediana da amostra do PDM consultada na hora; a API não fornece 'mediana nacional'.",
+      "arquivo": "app/precos/compra/[id]/page.tsx:83-88",
+      "gravidade": "media",
+      "correcao": "Renomear para 'Maior unitário vs. mediana da amostra (n=X)' e repetir no hint o aviso de possível erro de publicação."
+    },
+    {
+      "id": "precos-amostra-nao-nomeada",
+      "onde": "/precos — KPI 'Compras analisadas'",
+      "texto_exibido": "Compras analisadas 600 — de 6.096 publicadas",
+      "problema": "A palavra 'amostra' não aparece em nenhum lugar do comparador. O denominador está lá, o que é bom, mas o leitor não sabe que os 600 são as 3 primeiras páginas da API (registros mais recentes), nem que toda a mediana, todas as faixas e o veredito saem desses 600. Pior: se a página 2 ou 3 falhar, a amostra encolhe em silêncio — precosAmostra devolve `paginasLidas`, e esse campo nunca é exibido em lugar nenhum do app.",
+      "fonte_real": "600 = 3 páginas × 200 registros, ordenados do mais recente para o mais antigo pela API.",
+      "arquivo": "app/precos/page.tsx:95 + lib/precos.ts:143-152 (paginasLidas nunca consumido)",
+      "gravidade": "media",
+      "correcao": "Trocar por 'Amostra analisada: 600 compras mais recentes de 6.096 publicadas' e avisar quando paginasLidas < 3."
+    },
+    {
+      "id": "radar-sinais-traco-enganoso",
+      "onde": "/contratos — coluna 'Sinais' da tabela de contratos",
+      "texto_exibido": "—",
+      "problema": "Na listagem, as regras rodam só com o contrato (runRules('contrato', { contrato: c })): sem empresa da Receita e sem sanções. Isso desliga na prática 6 das 10 regras de contrato — fornecedor recém-aberto, situação cadastral, CEIS/CNEP, capital social incompatível, MEI acima do limite, fornecedor de outra UF. Um contrato de empresa sancionada e aberta há 2 meses aparece com '—' na coluna Sinais, e '—' lê-se como 'nada a ver aqui'. O lead da página reforça: 'com red flags calculadas na hora'.",
+      "fonte_real": "Só as regras que dependem exclusivamente do registro do PNCP são avaliadas na listagem.",
+      "arquivo": "app/contratos/page.tsx:60 (contexto sem empresa/sancoes), 70 (lead) e 130 ('—')",
+      "gravidade": "media",
+      "correcao": "Trocar '—' por 'não avaliado nesta lista' com tooltip/legenda: 'regras de empresa e sanções só rodam ao abrir o contrato'."
+    },
+    {
+      "id": "radar-150-maiores",
+      "onde": "/contratos — lead da página e linha de contagem",
+      "texto_exibido": "Tudo que União, estados e municípios publicam no Portal Nacional de Contratações Públicas … 13.409 registro(s) no período no Brasil · exibindo os 150 maiores das 3 primeiras páginas (o PNCP entrega 50 por página)",
+      "problema": "Amostra apresentada como universo em duas camadas. (1) 'Tudo que … publicam' promete cobertura total; a tela mostra 150 de 13.409 (1,1%). (2) 'os 150 maiores' — são os 150 registros das 3 primeiras páginas ordenados por valor, não os 150 maiores contratos do período. O contrato de R$ 500 milhões que estiver na página 4 nunca aparece, e a tabela lida como ranking dos maiores do Brasil.",
+      "fonte_real": "PNCP /contratos paginado; a ordenação da API não é por valor, e o app lê apenas 3 páginas.",
+      "arquivo": "app/contratos/page.tsx:36-44 (3 páginas), 70 (lead) e 88 (texto do contador)",
+      "gravidade": "media",
+      "correcao": "Escrever 'os maiores DENTRO das 3 primeiras páginas lidas (150 de 13.409) — não é o ranking do período' e suavizar 'Tudo que … publicam' para 'o que o PNCP publica'."
+    },
+    {
+      "id": "veredito-pagaram-para-valor-estimado",
+      "onde": "Ficha do contrato → link 'preço praticado →' → /precos com preco preenchido; card Veredito",
+      "texto_exibido": "pagaram R$ 300,00 por unidade",
+      "problema": "O link 'preço praticado →' na tabela de itens da compra de origem injeta `it.valorUnitarioEstimado` no campo preco do comparador. A coluna de origem está corretamente rotulada 'Unit. estimado', mas o Veredito no destino escreve 'pagaram' — estimativa de orçamento vira fato de pagamento, e todo o percentual do veredito é calculado em cima disso. O mesmo rótulo 'pagaram' vale para qualquer número que o usuário digite no formulário ('Preço unitário visto').",
+      "fonte_real": "valorUnitarioEstimado do PNCP é orçamento estimado do item, não valor homologado nem pago.",
+      "arquivo": "app/contratos/[cnpj]/[ano]/[seq]/page.tsx:77 (monta o link com valorUnitarioEstimado) + components/Veredito.tsx:45 ('pagaram')",
+      "gravidade": "media",
+      "correcao": "Trocar 'pagaram' por 'preço informado' e, no link, passar um parâmetro origem=estimado que faça o card dizer 'valor ESTIMADO do edital'."
+    },
+    {
+      "id": "compra-editais-objeto-parecido",
+      "onde": "/precos/compra/45323005904422025 — painel §2 'Editais no PNCP com objeto parecido'",
+      "texto_exibido": "Editais no PNCP com objeto parecido — MUNICIPIO DE SAO DOMINGOS · Contratação de empresa para fornecimento de equipamentos de sonorização profissional …",
+      "problema": "O título afirma semelhança de objeto. O que existe é uma busca textual com as 6 primeiras palavras do objeto ('Aquisição de (i) notebooks básicos e'). No teste ao vivo, para uma compra de notebooks, o primeiro resultado é um edital de equipamentos de sonorização — nada parecido. Quando há resultados, o termo usado na busca não é exibido em lugar nenhum (só aparece na mensagem de lista vazia), então o leitor não tem como julgar a relevância.",
+      "fonte_real": "Busca textual do PNCP por 6 palavras + UF; não há garantia de similaridade de objeto.",
+      "arquivo": "app/precos/compra/[id]/page.tsx:56-57 (termoObjeto) e 121-132 (painel) + lib/precos.ts:200-208",
+      "gravidade": "media",
+      "correcao": "Renomear para 'Editais que o PNCP retorna para o termo \"X\"' e mostrar o termo acima da lista, sempre."
+    },
+    {
+      "id": "compra-erro-pncp-contratos-silencioso",
+      "onde": "/precos/compra/[id] — painel §3",
+      "texto_exibido": "(painel vazio, sem mensagem)",
+      "problema": "Só o §2 renderiza pncp.error. Se a busca de contratos do fornecedor falhar, pncpContratos.data é null, a mensagem 'Nenhum contrato indexado no PNCP para X' não é renderizada (a condição exige data) e a lista fica vazia — o painel aparece em branco, sem dizer que a fonte falhou.",
+      "fonte_real": "Falha da busca do PNCP não é ausência de contratos.",
+      "arquivo": "app/precos/compra/[id]/page.tsx:134-136 (falta `{pncpContratos.error && <Notice…>}`)",
+      "gravidade": "media",
+      "correcao": "Renderizar pncpContratos.error como Notice, igual ao §2."
+    },
+    {
+      "id": "compra-valor-destes-itens",
+      "onde": "/precos/compra/45323005904422025 — KPI 'Valor destes itens'",
+      "texto_exibido": "Valor destes itens R$ 8.949.000,00 — preço unitário × quantidade homologada",
+      "problema": "É a soma apenas dos itens do padrão selecionado (aqui, 1 item), calculada em cima de um preço unitário que o próprio site marca como possível erro de digitação. Posicionado ao lado de 'Data da compra' e 'Fornecedor', lê-se como o valor da compra/contrato. A ressalva ('Só aparecem aqui os itens do padrão de material selecionado') fica embaixo da tabela, longe do KPI, e não repete que o valor pode estar contaminado pelo registro extremo.",
+      "fonte_real": "Soma de precoUnitario × quantidade dos itens do PDM filtrado, dentro da amostra carregada.",
+      "arquivo": "app/precos/compra/[id]/page.tsx:81",
+      "gravidade": "media",
+      "correcao": "Renomear para 'Soma dos itens deste padrão (N itens)' e repetir o alerta de valor extremo no hint quando razão ≥ 10× a mediana."
+    },
+    {
+      "id": "contrato-itens-compra-origem-sem-recorte",
+      "onde": "/contratos/07954480000179/2026/30143 — painel §2 'Itens da compra de origem (preços unitários)'",
+      "texto_exibido": "Valor global R$ 1.417.447,92 … §2 … 4 ELTROMBOPAGUE OLAMINA 50MG · 83776 · R$ 300,00 · R$ 25.132.800,00 · Homologado",
+      "problema": "O contrato vale R$ 1,4 mi e o objeto diz explicitamente que cobre os ITENS 3 e 4. A tabela lista TODOS os itens da compra de origem (linhas de R$ 25 mi, R$ 8,7 mi, R$ 2 mi…) sem marcar quais pertencem a este contrato. Números de outros contratos aparecem dentro da ficha deste contrato, e nada avisa.",
+      "fonte_real": "PNCP /compras/{ano}/{seq}/itens devolve os itens da COMPRA inteira, que costuma originar vários contratos e fornecedores.",
+      "arquivo": "app/contratos/[cnpj]/[ano]/[seq]/page.tsx:70-82",
+      "gravidade": "media",
+      "correcao": "Marcar (ou filtrar) os itens cujo resultado é deste fornecedor via /itens/{n}/resultados, e escrever 'a compra de origem pode ter gerado outros contratos — estes itens não são todos deste contrato'."
+    },
+    {
+      "id": "precos-varejo-duplo-sentido",
+      "onde": "/precos — painel 'Preço muda com a quantidade' vs painel 'Referência de varejo (fora do governo)'",
+      "texto_exibido": "até 9 unidades (varejo) — R$ 4.853,57 … Referência de varejo (fora do governo)",
+      "problema": "'Varejo' aparece com dois sentidos incompatíveis na mesma tela: compra pública de até 9 unidades, e preço de loja fora do governo. Quem lê o veredito ('acima do que outros órgãos pagaram comprando até 9 unidades (varejo)') pode entender que a comparação já é contra o varejo comercial.",
+      "fonte_real": "A faixa 1–9 é só um recorte de quantidade em compras públicas.",
+      "arquivo": "lib/precos.ts:162 (rótulo da faixa) + app/precos/page.tsx:103",
+      "gravidade": "baixa",
+      "correcao": "Renomear a faixa para 'até 9 unidades (lote pequeno)' e reservar 'varejo' para o preço de loja."
+    },
+    {
+      "id": "precos-varejo-sem-fonte",
+      "onde": "/precos — painel 'Referência de varejo (fora do governo)' (não renderiza em produção hoje: sem SERPAPI_KEY/ML_ACCESS_TOKEN)",
+      "texto_exibido": "média dos 3 menores anúncios · o órgão pagou X% a mais",
+      "problema": "Bloco com dado externo sem fonte e sem data. lib/mercado.ts monta uma `nota` que identifica o provedor ('Google Shopping via SerpAPI' ou 'Mercado Livre') e essa nota nunca é renderizada. O texto também diz 'o órgão pagou X% a mais' — mas o preço da comparação foi digitado pelo usuário, podendo não ser de nenhum órgão. Achado latente: dispara assim que uma chave for configurada.",
+      "fonte_real": "SerpAPI/Google Shopping ou Mercado Livre, com cache de 24h; nada disso chega à tela.",
+      "arquivo": "app/precos/page.tsx:101-114 (nunca usa mercado.nota) + lib/mercado.ts:42 e 61",
+      "gravidade": "baixa",
+      "correcao": "Exibir mercado.nota (provedor) + data da coleta e trocar 'o órgão pagou' por 'o preço informado está'."
+    },
+    {
+      "id": "precos-varejo-termo-de-outro-item",
+      "onde": "/precos — painel de varejo (latente)",
+      "texto_exibido": "(lista de anúncios, sem indicar o termo buscado)",
+      "problema": "O termo de busca de varejo é derivado de `lista[0].descricaoItem` — a descrição da PRIMEIRA linha da amostra, que é uma compra qualquer de outro órgão, não o item do usuário. As ofertas exibidas podem ser de uma especificação diferente da comparada, e o termo usado nunca é mostrado.",
+      "fonte_real": "termoVarejo(descrição do primeiro registro da amostra), 8 palavras.",
+      "arquivo": "app/precos/page.tsx:43-44 + lib/mercado.ts:84-92",
+      "gravidade": "baixa",
+      "correcao": "Exibir o termo pesquisado e usar o nome do padrão selecionado como base, não a descrição de um registro arbitrário."
+    },
+    {
+      "id": "precos-varejo-desligado-sem-aviso",
+      "onde": "/precos — ausência do painel de varejo",
+      "texto_exibido": "(nada)",
+      "problema": "Sem provedor configurado, o bloco simplesmente não existe e o usuário nunca sabe que a comparação com varejo faz parte do produto e está desligada. lib/mercado.ts já escreve a mensagem correta ('Comparação com varejo desligada: nenhuma fonte aberta e confiável…') e temProvedorMercado é importado na página sem nunca ser usado.",
+      "fonte_real": "Mercado Livre exige token desde 18/08/2026; Painel de Preços bloqueia robôs.",
+      "arquivo": "app/precos/page.tsx:6 (import não usado) + lib/mercado.ts:72-80",
+      "gravidade": "baixa",
+      "correcao": "Renderizar a nota de indisponibilidade no lugar do painel."
+    },
+    {
+      "id": "precos-precos-zerados-descartados",
+      "onde": "/precos — KPI 'Compras analisadas'",
+      "texto_exibido": "Compras analisadas 600",
+      "problema": "estatisticas() descarta silenciosamente preços ≤ 0 ou não finitos, e o n exibido é o pós-descarte. Se a fonte trouxer registros zerados, a diferença entre 'registros lidos' e 'compras analisadas' não é explicada em lugar nenhum.",
+      "fonte_real": "Registros com precoUnitario 0 existem na base e são simplesmente sumidos.",
+      "arquivo": "lib/precos.ts:181-190",
+      "gravidade": "baixa",
+      "correcao": "Exibir 'X de Y registros lidos tinham preço válido' quando houver descarte."
+    },
+    {
+      "id": "precos-extremo-qual-mediana",
+      "onde": "/precos — tabela, linhas destacadas",
+      "texto_exibido": "1985× a mediana",
+      "problema": "O multiplicador usa a mediana GERAL da amostra, enquanto o veredito logo acima usa a mediana da FAIXA de quantidade. Duas medianas diferentes na mesma tela, ambas chamadas só de 'a mediana'.",
+      "fonte_real": "razão = precoUnitario / mediana geral da amostra.",
+      "arquivo": "app/precos/page.tsx:124-125 e 145",
+      "gravidade": "baixa",
+      "correcao": "Escrever '1985× a mediana geral da amostra'."
+    },
+    {
+      "id": "compra-chip-sinal-severidade",
+      "onde": "/precos/compra/[id] — coluna 'Sinal' da tabela §1",
+      "texto_exibido": "1984.7× mediana (chip vermelho, estilo sev--alta)",
+      "problema": "O chip usa o mesmo vocabulário visual das red flags (severidade alta/média/ok), o que empresta juízo a um número que pode ser puro erro de digitação do órgão. A legenda que explica isso está abaixo da tabela.",
+      "fonte_real": "Apenas a razão preço/mediana da amostra; não é classificação de risco.",
+      "arquivo": "app/precos/compra/[id]/page.tsx:107",
+      "gravidade": "baixa",
+      "correcao": "Usar estilo neutro para a razão ou colocar a ressalva no cabeçalho da coluna ('Sinal estatístico — não é irregularidade')."
+    },
+    {
+      "id": "contrato-stamp-red-flag-alta",
+      "onde": "/contratos/[cnpj]/[ano]/[seq] — carimbo no cabeçalho",
+      "texto_exibido": "red flag alta",
+      "problema": "Carimbo vermelho colado no título do contrato, sem nenhuma ressalva no mesmo bloco. A frase 'Sinais ≠ irregularidade' está no rodapé da coluna lateral, fora do enquadramento de um print. Como o print é o formato de circulação, o carimbo viaja sozinho.",
+      "fonte_real": "Severidade de regra automática; o próprio /radar define red flag como sinal, não irregularidade.",
+      "arquivo": "app/contratos/[cnpj]/[ano]/[seq]/page.tsx:45",
+      "gravidade": "baixa",
+      "correcao": "Trocar o texto do carimbo para 'sinal alto — não é acusação' ou colocar a ressalva imediatamente abaixo dele."
+    },
+    {
+      "id": "radar-busca-so-contratos",
+      "onde": "/contratos — modo busca",
+      "texto_exibido": "Buscar (objeto, órgão, CNPJ/nome do fornecedor) … N resultado(s) no índice do PNCP",
+      "problema": "A busca usa tipos_documento=contrato (padrão de searchPNCP), mas o rótulo diz 'no índice do PNCP', sem informar que editais e atas ficam de fora. Quem procura por um objeto e não acha conclui que não existe.",
+      "fonte_real": "searchPNCP com tipos_documento=contrato.",
+      "arquivo": "app/contratos/page.tsx:31 + lib/pncp.ts:155-170",
+      "gravidade": "baixa",
+      "correcao": "Escrever 'N contrato(s) no índice do PNCP (editais e atas não entram nesta busca)'."
+    }
+  ],
+  "ok": [
+    "/contratos/[cnpj]/[ano]/[seq] §2 — coluna 'Unit. estimado' e 'sigiloso' para orçamento sigiloso: estimativa rotulada como estimativa",
+    "/precos — Notice 'Valores extremos na tabela': explicita sobrepreço × unidade de fornecimento × erro de digitação do órgão antes de qualquer conclusão",
+    "/precos — bloco 'Como ler estes números (e o que eles não provam)': define mediana, alerta sobre faixa de quantidade, unidade de fornecimento e diz que preço acima da mediana não é crime",
+    "/precos — Notices 'Cuidados' (mesmo PDM cobre especificações diferentes) e 'Cobertura' (estados/municípios com sistema próprio podem não aparecer)",
+    "/precos — rodapé do Passo 2 com link para o JSON da fonte no Compras.gov.br e 'coletado {data/hora}'",
+    "/precos — KPI 'Compras analisadas' traz o denominador ('de 6.096 publicadas'), ainda que sem chamar de amostra",
+    "/precos — quando a API falha, Notice 'Compras.gov.br — API não respondeu' e os KPIs não são renderizados (não mostra 0)",
+    "/precos/compra/[id] — Notice 'Compra fora da amostra atual' quando o id não está na amostra, com link para a fonte oficial (não devolve 404 nem tela vazia)",
+    "/precos/compra/[id] — nota do §1: 'Só aparecem aqui os itens do padrão de material selecionado. A compra pode ter outros itens'",
+    "/precos/compra/[id] — Notice 'De onde vem cada número' com fonte por bloco, hora de coleta e 'Nada aqui é acusação'",
+    "/contratos — Notice 'O que não é': 'Uma red flag é um sinal calculado por regra pública. Não é irregularidade nem acusação'",
+    "/contratos — Notice 'O que o radar cobre': delimita PNCP desde 2024 e aponta Portal da Transparência/TCEs para o que falta",
+    "/contratos/[cnpj]/[ano]/[seq] — KPI 'Red flags' com hint 'sanções CEIS/CNEP: sem chave do Portal' quando não há chave, em vez de exibir 0 falso",
+    "/contratos/[cnpj]/[ano]/[seq] — estado vazio das flags: 'Nenhuma red flag automática acionada com os dados disponíveis' (hedge correto)",
+    "/contratos/[cnpj]/[ano]/[seq] — cada finding traz evidência numérica, fonte e link para a regra em /radar (fato, não juízo)",
+    "/radar — cada regra exibe lógica, dados necessários, APIs e fonte metodológica, com selo 'automatizada' × 'backlog'",
+    "lib/precos.ts — comentário e implementação de faixas de quantidade (varejo × atacado) e o veredito priorizando a mesma faixa: a intenção metodológica está correta",
+    "components/Veredito.tsx — ressalva explícita quando cai para a estatística geral: 'Não havia compras suficientes nessa faixa de quantidade; comparamos com todas as quantidades'"
+  ]
+}

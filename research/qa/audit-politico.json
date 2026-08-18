@@ -1,0 +1,315 @@
+{
+  "area": "Fichas de deputado e senador + lista /politicos",
+  "data_auditoria": "2026-08-18",
+  "site": "https://monitor-de-gravata.vercel.app",
+  "commit": "69be313",
+  "campos_auditados": 47,
+  "fichas_testadas": [
+    "/politicos/deputado/204379 (Acácio Favacho, MDB-AP) — renderizou completa",
+    "/politicos/deputado/74646 (Aécio Neves, PSDB-MG) — renderizou completa",
+    "/politicos/deputado/220714 (Adail Filho, MDB-AM) — renderizou completa, com emendas",
+    "/politicos/deputado/220715 (Amom Mandel, REPUBLICANOS-AM) — APIs falharam, ficha renderizou zeros",
+    "/politicos/deputado/236375 (Marcos Braz, PSDB-RJ, suplente desde 28/05/2026) — APIs falharam parcialmente",
+    "/politicos/senador/5672 (Alan Rick, REPUBLICANOS-AC)",
+    "/politicos/senador/6336 (Camilo Santana, PT-CE)",
+    "/politicos/deputado/204521, /74140, /122195, /154700 — página em branco (200 sem conteúdo)",
+    "/politicos e /politicos?uf=AP"
+  ],
+  "achados": [
+    {
+      "onde": "https://monitor-de-gravata.vercel.app/politicos/deputado/220715 e /236375 — KPI 'Presença no plenário'",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:81-83 e :168",
+      "texto_exibido": "Presença no plenário — 0% — 0/65 sessões deliberativas em 2026 (em vermelho)",
+      "problema": "Quando a chamada /deputados/{id}/eventos falha, `eventos.data` vira null, `presentes.length` vira 0 e a página publica 0% de presença como fato, com destaque vermelho (tone='stamp' para <50%). Não há checagem de `eventos.error` — o único erro tratado é o de despesas. Reproduzido ao vivo em duas fichas de deputados EM EXERCÍCIO (Amom Mandel e Marcos Braz), na mesma coleta em que outras três fichas trouxeram presença real de 82–98%. É a acusação implícita mais grave do site: 'este deputado não apareceu em nenhuma das 65 sessões'.",
+      "fonte_real": "A API não respondeu. A Câmara não afirma nada sobre a presença dessa pessoa nesse momento.",
+      "gravidade": "alta",
+      "correcao": "Se `eventos.error` (ou eventos.data == null), exibir '—' e o aviso 'API de eventos da Câmara indisponível', nunca 0%."
+    },
+    {
+      "onde": "Todas as fichas — painel §5 'Linha do tempo política'",
+      "arquivo": "components/ficha.tsx:84",
+      "texto_exibido": "2019-02-01 → atual · legislatura · Dep. federal · PROS-AP (leg. 56)  |  2023-01-01 → atual · cargo · ministra(o) da educação do Brasil",
+      "problema": "O componente escreve ' → atual' sempre que o item não tem data de fim (`it.fim ? ... : it.data ? ' → atual' : ''`). Ausência de data-fim na fonte não significa que o fato continua valendo. Resultado: a ficha do Acácio Favacho afirma que ele é hoje deputado pelo PROS na 56ª legislatura (é MDB na 57ª) e exibe três entradas '→ atual' contraditórias entre si; a do Camilo Santana afirma que ele é hoje ministro da Educação, com base num item de Wikidata sem P582.",
+      "fonte_real": "Câmara /historico e Wikidata registram só a data de início do registro; nenhuma das duas afirma vigência atual.",
+      "gravidade": "alta",
+      "correcao": "Sem data de fim, escrever 'sem data de fim na fonte' (ou '→ ?'), nunca '→ atual'."
+    },
+    {
+      "onde": "Ficha do deputado, bloco 'Como ler esta ficha'; ficha do senador, mesmo bloco",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:176 e app/politicos/senador/[codigo]/page.tsx:131",
+      "texto_exibido": "Tudo aqui é dado oficial coletado ao vivo (Câmara, Wikidata, Google Notícias) em 18/08/2026, 12:22.",
+      "problema": "Wikidata é um wiki editável por qualquer pessoa, sem revisão, e é apresentado ao leitor dentro do rótulo 'dado oficial'. Na mesma página o Wikidata contradiz o dado oficial: na ficha do Acácio Favacho a linha do tempo traz 'partido · Republicanos · Wikidata' enquanto o cabeçalho (Câmara) diz MDB. Google Notícias também não é 'dado oficial'. É exatamente o padrão do incidente das redes autodeclaradas: o dado existe na fonte, mas a apresentação promove a fonte a um grau de confiança que ela não tem.",
+      "fonte_real": "Wikidata = base colaborativa, editável por qualquer um, sem curadoria; Google Notícias = agregador de terceiros.",
+      "gravidade": "alta",
+      "correcao": "Reescrever: 'Câmara e Senado são fontes oficiais. Wikidata é enciclopédia aberta editável por qualquer pessoa e Google Notícias é agregador — os dois entram só como pista, marcados como tal.' E marcar cada item da timeline vindo do Wikidata com selo 'editável por qualquer pessoa'."
+    },
+    {
+      "onde": "Todas as fichas — linha do tempo (itens com fonte 'Wikidata') e link 'wikidata ↗' no cabeçalho",
+      "arquivo": "lib/wikidata.ts:12-20 e app/politicos/deputado/[id]/page.tsx:112-114 (senador: :91-93)",
+      "texto_exibido": "wikidata ↗ (cabeçalho) + entradas de cargo/partido na linha do tempo",
+      "problema": "A entidade é escolhida por `wd.data?.[0]` — o PRIMEIRO resultado de busca textual por nome, filtrado apenas por uma regex na descrição ('político', 'deputado'…). Não há conferência com o id da Câmara (P4029) nem com o id do Senado. Qualquer homônimo político (o Brasil tem muitos) passa a emprestar cargos, partidos e datas para a ficha de outra pessoa. Verificado: a busca por 'ACÁCIO DA SILVA FAVACHO NETO' devolve DUAS entidades para a mesma pessoa (Q64848858 e Q59010539) com conteúdos diferentes — o app pega a primeira sem critério.",
+      "fonte_real": "O Wikidata não garante que o resultado nº 1 de uma busca por nome seja a pessoa da ficha.",
+      "gravidade": "alta",
+      "correcao": "Só aceitar a entidade cujo P4029 (id Câmara) / id Senado bata com o parlamentar; sem casamento por id, não exibir nada do Wikidata."
+    },
+    {
+      "onde": "https://monitor-de-gravata.vercel.app/politicos/senador/5672 — KPIs 'Presente sem votar' e 'Missão oficial'",
+      "arquivo": "app/politicos/senador/[codigo]/page.tsx:67-68 e :125-126",
+      "texto_exibido": "Presente sem votar — 0 — conta como presença, não como voto  |  Missão oficial — 0 — ausências justificadas pela Casa",
+      "problema": "Os dois contadores casam texto que a API não devolve. A API do Senado devolve SIGLAS: 'P-NRV' (presente, não registrou voto) e 'MIS' (missão). O código procura /Presente/i e a string exata 'Missão da Casa no País/exterior'. Para Alan Rick o valor real é P-NRV=66 e MIS=32, e a ficha publica 0 e 0. Efeito prático: das 110 vezes em que ele não registrou voto, a ficha não explica nenhuma — sugere ausência não justificada onde a Casa registrou presença e missão oficial. Mesmo erro em Camilo Santana (P-NRV=7 → 0).",
+      "fonte_real": "Senado /senador/{cod}/votacoes, campo SiglaDescricaoVoto: 'P-NRV' 66, 'MIS' 32, 'AP' 12 (Alan Rick, 421 registros).",
+      "gravidade": "alta",
+      "correcao": "Mapear as siglas reais (P-NRV, MIS, AP, LS, NCom…) com legenda visível, e nunca imprimir 0 quando a chave procurada simplesmente não existe no conjunto."
+    },
+    {
+      "onde": "Todas as fichas de deputado — KPI 'Cota parlamentar 2026' e painel §1",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:167 e :184; data/derivados/ceap-2026.json",
+      "texto_exibido": "Cota parlamentar 2026 — R$ 275.127,41",
+      "problema": "O rótulo diz o ano inteiro; o número é parcial. O arquivo anual de 2026 só tem lançamentos até o mês 7 (verificado: porMes vai de 1 a 7 para o Acácio Favacho). Nada na ficha diz 'janeiro a julho' ou 'ano em curso, publicação parcial'. O leitor compara esse número com o teto anual da cota e conclui errado. O mesmo vale para as red flags, que dizem '% da CEAP do ano'.",
+      "fonte_real": "Arquivo Ano-2026.json.zip da Câmara, com lançamentos publicados até julho/2026.",
+      "gravidade": "alta",
+      "correcao": "Rótulo 'Cota parlamentar 2026 (jan–jul, parcial)' com o último mês publicado explícito, e mesma ressalva no texto das red flags."
+    },
+    {
+      "onde": "Todas as fichas de deputado com fallback de arquivo — hint do KPI 'Cota parlamentar'",
+      "arquivo": "scripts/gerar-ceap.mjs:66 + app/politicos/deputado/[id]/page.tsx:167",
+      "texto_exibido": "114 notas · 15 fornecedores  /  119 notas · 15 fornecedores  /  138 notas · 15 fornecedores",
+      "problema": "'15 fornecedores' não é a quantidade de fornecedores do parlamentar: é o teto do script gerador (`.slice(0, 15)`). Todos os 509 deputados do arquivo aparecem com exatamente 15 fornecedores. É um limite de amostra publicado como número factual.",
+      "fonte_real": "O arquivo derivado guarda apenas os 15 maiores fornecedores; a contagem real não é preservada.",
+      "gravidade": "alta",
+      "correcao": "Gravar `qtdFornecedores` real no script e exibir 'top 15 de N fornecedores'."
+    },
+    {
+      "onde": "Ficha do deputado — painel §8",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:330 (título), :335-338 (somas), :341 (rodapé)",
+      "texto_exibido": "Emendas parlamentares (todas as que constam no SIOP) … 2026 · 4 emenda(s) · empenhado R$ 39.479.578,99 · pago R$ 34.412.548,38 … Página 1 (até 15 emendas)",
+      "problema": "O título promete 'todas as que constam no SIOP', mas `emendasPorAutor` busca só `pagina=1` (máx. 15 registros) — o próprio rodapé admite. Os totais por ano são somas da amostra apresentadas como total do ano. Para qualquer parlamentar com mais de 15 emendas, o valor anual exibido é menor que o real e o leitor não tem como saber.",
+      "fonte_real": "Portal da Transparência /emendas?nomeAutor=…&pagina=1 — uma página, até 15 registros.",
+      "gravidade": "alta",
+      "correcao": "Paginar até o fim, ou trocar o título para 'Emendas — amostra (primeiras 15 do SIOP)' e rotular os totais como 'soma da amostra'."
+    },
+    {
+      "onde": "Fichas de deputado com fallback de arquivo — §1, coluna 'Por tipo de despesa'",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:76 (`porTipo.map(t => ({...t, qtd: 0}))`) e :196",
+      "texto_exibido": "DIVULGAÇÃO DA ATIVIDADE PARLAMENTAR — 0 notas — R$ 203.290,75",
+      "problema": "O arquivo derivado não guarda a quantidade por tipo; o código preenche `qtd: 0` e a UI imprime '0 notas' ao lado de R$ 203 mil. É um número falso, não um campo vazio — aparece em todas as fichas que usam o arquivo.",
+      "fonte_real": "A quantidade por tipo existe no arquivo bruto da Câmara; o script simplesmente não a agrega.",
+      "gravidade": "media",
+      "correcao": "Agregar qtd por tipo no script; enquanto isso, omitir o subtítulo em vez de escrever '0 notas'."
+    },
+    {
+      "onde": "https://monitor-de-gravata.vercel.app/politicos/senador/5672 — painel §1",
+      "arquivo": "app/politicos/senador/[codigo]/page.tsx:147",
+      "texto_exibido": "Como votou (últimas 25 votações do Plenário) — primeiras linhas: 20/05/2025, 20/05/2025, 15/07/2026, 15/07/2026, 08/04/2025…",
+      "problema": "`[...votos].reverse().slice(0, 25)` supõe que a API devolve em ordem cronológica. Não devolve: o array de Alan Rick começa em 2026-04-08 e termina em 2024-08-13, com máximo real 2026-08-12. O que a página chama de 'últimas 25 votações' é um recorte arbitrário do fim do array, que deixa de fora a votação mais recente e mistura 2025 com 2026.",
+      "fonte_real": "Senado /senador/5672/votacoes: 421 registros, não ordenados, de 2023-02-08 a 2026-08-12.",
+      "gravidade": "media",
+      "correcao": "Ordenar por SessaoPlenaria.DataSessao antes de cortar; se não ordenar, chamar de 'amostra de 25 votações'."
+    },
+    {
+      "onde": "Ficha do deputado — KPI 'Proposições (amostra)', painel §4 e bloco 'Como ler esta ficha'",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:170 e :178 vs lib/camara.ts:111 (`itens: \"50\"`)",
+      "texto_exibido": "Proposições (amostra) — 50  |  'Produtividade mostra uma amostra (100 últimas proposições)'  |  'Produtividade legislativa (amostra das 50 últimas)'",
+      "problema": "Dois problemas juntos. (1) O texto metodológico diz 100, o título do painel diz 50 e o código busca 50 — a explicação do próprio método está errada. (2) O valor '50' é o teto da consulta, não uma contagem: qualquer parlamentar minimamente ativo marca exatamente 50, e o número aparece num painel de KPIs onde tudo o mais é medida real.",
+      "fonte_real": "Câmara /proposicoes?idDeputadoAutor={id}&itens=50 — página única de 50.",
+      "gravidade": "media",
+      "correcao": "Corrigir o texto para 50 e trocar o valor do KPI por '50 (teto da consulta)' ou pela contagem real via `links rel=last`."
+    },
+    {
+      "onde": "Ficha do deputado — hint do KPI 'Proposições (amostra)'",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:170 (`[...porTipo.entries()].slice(0, 4)`)",
+      "texto_exibido": "PL 5 · EMC 9 · PEC 5 · PRL 4  (ficha do Acácio Favacho; a composição real é REQ 20 · EMC 9 · PL 5 · PEC 5 · PRL 4 …)",
+      "problema": "O hint corta os 4 PRIMEIROS tipos na ordem de inserção, não os 4 maiores (o painel §4 abaixo ordena corretamente). Efeito: some justamente o REQ, que é 40% da amostra, e o resumo passa a impressão de uma produção concentrada em PL/PEC.",
+      "fonte_real": "Mesma lista da API; a ordenação é escolha da UI.",
+      "gravidade": "media",
+      "correcao": "Ordenar por quantidade antes do slice(0,4), como já é feito no painel."
+    },
+    {
+      "onde": "Ficha do deputado — painel §3, coluna 'Orientação {PARTIDO}' e KPI 'Coerência c/ partido'",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:90",
+      "texto_exibido": "Orientação MDB / Coerência c/ partido",
+      "problema": "A orientação é casada por SUBSTRING: `siglaPartidoBloco.includes(siglaPartido)`. 'PSDB'.includes('PSD') é verdadeiro, 'PTB'.includes('PT') é verdadeiro, 'PODEMOS'.includes('PODE') é verdadeiro. Basta a orientação do partido/bloco errado vir antes no array (`.find` pega a primeira) para a ficha rotular como 'Orientação PSD' o voto orientado pelo PSDB — e calcular a coerência contra o partido errado. É atribuição indevida com nome do partido no cabeçalho da coluna.",
+      "fonte_real": "Câmara /votacoes/{id}/orientacoes traz siglas de partido E de bloco/pseudobloco ('Governo', 'Oposição', 'Maioria', 'Bl UniPpPsd…') — exige casamento exato ou parsing do bloco.",
+      "gravidade": "media",
+      "correcao": "Casar por igualdade exata da sigla ou por token dentro do nome do bloco (split por '-', '/', espaços), nunca por includes."
+    },
+    {
+      "onde": "Ficha do deputado — KPI 'Presença no plenário' e bloco 'Como ler esta ficha'",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:51-52 e :81-83",
+      "texto_exibido": "Presença = sessões deliberativas do Plenário em que consta participação ÷ total de sessões deliberativas do ano",
+      "problema": "O denominador é fixo: TODAS as sessões deliberativas de 1º de janeiro até hoje, independentemente de quando a pessoa assumiu a cadeira ou esteve licenciada. Há hoje 30 deputados em exercício que não são titulares desde o começo do ano — p. ex. José Carlos Araujo (id 74140, suplente desde 30/06/2026), Leonardo Gadelha (122195, desde 09/07/2026) e Marcos Braz (236375, desde 28/05/2026). Para eles, meses inteiros em que não podiam votar entram no denominador e derrubam a taxa.",
+      "fonte_real": "Câmara /deputados/{id} traz ultimoStatus.data (início do exercício) e /historico traz afastamentos — nenhum dos dois é usado.",
+      "gravidade": "media",
+      "correcao": "Recortar o período pelo início de exercício e descontar licenças; mostrar 'presença de dd/mm a dd/mm' no hint."
+    },
+    {
+      "onde": "https://monitor-de-gravata.vercel.app/politicos/deputado/236375 — KPI 'Cota parlamentar 2026'",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:167",
+      "texto_exibido": "Cota parlamentar 2026 — R$ 25.764,50 — API da Câmara indisponível",
+      "problema": "O valor exibido veio do arquivo anual (fallback), mas o hint só olha `despesas.error` e anuncia que a fonte está indisponível. O leitor vê um número preciso rotulado como vindo de uma fonte que não respondeu — não sabe se pode confiar. Na mesma página, o painel §1 dá um terceiro diagnóstico ('a API está devolvendo vazio'), que contradiz o erro real (fetch failed).",
+      "fonte_real": "data/derivados/ceap-2026.json, gerado em 2026-08-18 a partir de Ano-2026.json.zip.",
+      "gravidade": "media",
+      "correcao": "Quando `arquivo` for usado, o hint deve dizer 'arquivo anual oficial, gerado em {data}' — e o diagnóstico do §1 deve refletir o erro real, não uma causa presumida."
+    },
+    {
+      "onde": "Ficha do deputado — cabeçalho do painel §1 'Cota parlamentar (CEAP) {ano}'",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:184",
+      "texto_exibido": "Fonte: Câmara → link para dadosabertos.camara.leg.br/api/v2/deputados/{id}/despesas?ano=2026",
+      "problema": "O selo de fonte aponta para o endpoint ao vivo, que não foi a origem dos números mostrados (vieram do arquivo). Quem clicar para conferir vai encontrar resposta vazia e concluir que o site inventou os valores. O aviso interno existe, mas o selo — que é a promessa de rastreabilidade do projeto — está errado.",
+      "fonte_real": "Arquivo Ano-2026.json.zip (link já está no aviso interno).",
+      "gravidade": "media",
+      "correcao": "Trocar o `Source` para o arquivo anual quando `arquivo` estiver em uso."
+    },
+    {
+      "onde": "https://monitor-de-gravata.vercel.app/politicos/deputado/220715 — KPI 'Red flags' e painel §2",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:172 e components/ficha.tsx:46-53",
+      "texto_exibido": "Red flags — 0 — nenhum sinal automático (em verde) | 'sem sinais — Nenhuma red flag automática acionada com os dados disponíveis.'",
+      "problema": "Na ficha do Amom Mandel nenhuma fonte carregou (cota, presença, comissões, proposições, tudo zerado) e o site publica um atestado verde de 'nenhum sinal'. Ausência de dado vira ausência de problema. O texto do painel tem a ressalva 'com os dados disponíveis', mas o KPI verde não tem nenhuma.",
+      "fonte_real": "Nenhuma — as chamadas falharam.",
+      "gravidade": "media",
+      "correcao": "Quando não houver base para rodar as regras (analise.qtd === 0 e sem arquivo), exibir '—' cinza com 'sem dados para avaliar', não 0 verde."
+    },
+    {
+      "onde": "https://monitor-de-gravata.vercel.app/politicos/deputado/220715 — painel §1",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:190",
+      "texto_exibido": "A API de despesas não respondeu (fetch failed) e não há arquivo anual gerado para 2026 (rode npm run ceap 2026).",
+      "problema": "Duas coisas erradas. (1) A afirmação é falsa: o arquivo ceap-2026.json existe e tem 509 deputados — o que falta é o casamento por nome+UF desse deputado específico (4 casos hoje: Amom Mandel, Nivaldo Albuquerque, Priscila Costa, Roseana Sarney). O leitor conclui que o problema é da Câmara. (2) A mensagem entrega instrução interna de desenvolvimento ao público final.",
+      "fonte_real": "scripts/gerar-ceap.mjs:55-61 casa o arquivo com a API v2 por nome normalizado + UF; 4 dos 513 não casam.",
+      "gravidade": "media",
+      "correcao": "Distinguir 'arquivo inexistente' de 'parlamentar não localizado no arquivo (casamento por nome)' e tirar o comando npm da UI."
+    },
+    {
+      "onde": "Ficha do deputado — §1, gráfico 'Por mês'",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:204-215",
+      "texto_exibido": "12 barras (1 a 12); agosto a dezembro de 2026 aparecem com altura zero",
+      "problema": "O gráfico desenha os 12 meses do ano sempre. Nos meses que a Câmara ainda não publicou (ago–dez/2026) a barra fica em zero, o que é lido como 'não gastou nada'. Estado vazio que mente, na forma visual.",
+      "fonte_real": "O arquivo só tem os meses 1 a 7.",
+      "gravidade": "media",
+      "correcao": "Desenhar só até o último mês publicado, ou hachurar os meses sem publicação com legenda 'ainda não publicado'."
+    },
+    {
+      "onde": "Ficha do deputado — painel §2, evidência das red flags",
+      "arquivo": "lib/rules/index.ts:390 e :441",
+      "texto_exibido": "74% da CEAP do ano em \"DIVULGAÇÃO DA ATIVIDADE PARLAMENTAR.\" (R$ 203.290,75).",
+      "problema": "'do ano' num ano ainda em curso e com publicação parcial (jan–jul). O percentual é sobre a base parcial; a composição pode mudar bastante até dezembro. A regra ceap-combustivel-elevado tem o mesmo problema ao dividir por `porMes.length`.",
+      "fonte_real": "Base parcial de janeiro a julho de 2026.",
+      "gravidade": "media",
+      "correcao": "Trocar por 'da cota publicada até {mês}/{ano}'."
+    },
+    {
+      "onde": "https://monitor-de-gravata.vercel.app/politicos/deputado/74646 — painel §8",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:332",
+      "texto_exibido": "Emendas parlamentares (todas as que constam no SIOP) — Nenhuma emenda localizada pelo nome parlamentar \"AÉCIO NEVES\" no SIOP (o nome pode constar diferente — confira no Portal).",
+      "problema": "Com o título prometendo 'todas as que constam no SIOP', o painel vazio é lido como 'este deputado não tem emendas' — afirmação forte e provavelmente falsa. A ressalva sobre o nome está no corpo, mas o título a contradiz.",
+      "fonte_real": "A consulta é por string exata do nome do autor no SIOP; não achar a string não é o mesmo que não haver emendas.",
+      "gravidade": "media",
+      "correcao": "Título 'Emendas localizadas por nome no SIOP' e estado vazio 'a busca por este nome não retornou emendas — pode ser divergência de grafia'."
+    },
+    {
+      "onde": "https://monitor-de-gravata.vercel.app/politicos?uf=AP — kickers das seções",
+      "arquivo": "app/politicos/page.tsx:56-59 e :159",
+      "texto_exibido": "'27 eleitos na votação de 2022 · fonte TSE' acima de 'Governadores (1)'; '513 em exercício · fonte Câmara' acima de 'Deputados federais (8)'; '81 em exercício' acima de 'Senadores (3)'",
+      "problema": "27, 81 e 513 são constantes escritas à mão no código, coladas ao lado da contagem filtrada. Além da leitura confusa, se a API devolver menos que o universo (falha parcial, deputado empossado/afastado), o kicker segue afirmando 513/81 enquanto a lista mostra outra coisa.",
+      "fonte_real": "As APIs devolveram hoje exatamente 513 e 81 — mas o número exibido não vem delas.",
+      "gravidade": "media",
+      "correcao": "Derivar o universo de `secoes[i].pessoas.length` e escrever '8 de 513 em exercício' quando houver filtro."
+    },
+    {
+      "onde": "https://monitor-de-gravata.vercel.app/politicos — seção 'Senadores'",
+      "arquivo": "app/politicos/page.tsx:38 e :153",
+      "texto_exibido": "(nenhum aviso; a seção some se a API do Senado falhar)",
+      "problema": "Só o erro da Câmara é avisado ('A API não respondeu — a lista de deputados federais pode estar incompleta'). Se `listSenadores()` falhar, `senadores` fica vazio, a seção é filtrada fora por `todos.length > 0` e o usuário vê uma página aparentemente normal, sem senadores e sem explicação. Mesmo padrão de ausência silenciosa nos prefeitos/vereadores.",
+      "fonte_real": "safe() capturou o erro em `sens.error`, que nunca é lido.",
+      "gravidade": "media",
+      "correcao": "Renderizar um Notice para `sens.error` igual ao da Câmara, e nunca esconder uma seção por lista vazia sem dizer por quê."
+    },
+    {
+      "onde": "https://monitor-de-gravata.vercel.app/politicos?municipio=… — blocos Prefeito(a) e Vereadores",
+      "arquivo": "app/politicos/page.tsx:205 e :210",
+      "texto_exibido": "Sem prefeito eleito localizado para este município em 2024. / Sem vereadores localizados para este município em 2024.",
+      "problema": "O mesmo texto aparece quando a API do TSE falha (`prefeitos.error`/`vereadores.error` nunca são checados). O leitor entende 'não há prefeito eleito registrado', que é uma afirmação sobre o TSE.",
+      "fonte_real": "Pode ser falha de rede/timeout do DivulgaCand, não ausência de registro.",
+      "gravidade": "media",
+      "correcao": "Separar 'consulta ao TSE falhou' de 'o TSE não devolveu eleitos'."
+    },
+    {
+      "onde": "Ficha do senador — KPI 'Cota (CEAPS) {ano}'",
+      "arquivo": "lib/senado.ts:97 (`r.data?.[0]`) e app/politicos/senador/[codigo]/page.tsx:122",
+      "texto_exibido": "Cota (CEAPS) 2026 — R$ 179.019,10 — 85 notas · 19 fornecedores · +R$ 75.036,63 fora da cota",
+      "problema": "Dois riscos. (1) O ano do valor não é conferido: pega-se `data[0]` do endpoint recursos-utilizados e rotula-se com `anoAtual`. Hoje bate (a API devolveu ano=2026 para os dois senadores testados), mas basta a ordem mudar para a ficha rotular o total de outro ano como se fosse deste. (2) O valor vem de `recursos` e o hint ('85 notas · 19 fornecedores') vem de outra fonte (arquivo CEAPS); se a segunda falhar, o hint imprime '0 notas · 0 fornecedores' ao lado de um total real.",
+      "fonte_real": "adm.senado.gov.br /senadores/{cod}/recursos-utilizados devolve o campo `ano` explicitamente.",
+      "gravidade": "media",
+      "correcao": "Filtrar `data.find(x => x.ano === anoAtual)` e, se `ceaps.error`, omitir o hint em vez de escrever zeros."
+    },
+    {
+      "onde": "Ficha do senador — painel §1, chips de distribuição de voto",
+      "arquivo": "app/politicos/senador/[codigo]/page.tsx:139-141",
+      "texto_exibido": "Votou · 153 | Sim · 136 | P-NRV · 66 | MIS · 32 | Não · 22 | AP · 12",
+      "problema": "Siglas internas do Senado publicadas cruas, sem legenda. O leitor não sabe que P-NRV é 'presente, não registrou voto', MIS é missão oficial e AP é atividade parlamentar — e pode ler 'MIS 32' como 32 faltas. Somado ao achado dos KPIs zerados, o painel é a única pista de que houve 110 não-votos justificados, e ela é ilegível.",
+      "fonte_real": "Senado, campo SiglaDescricaoVoto.",
+      "gravidade": "media",
+      "correcao": "Tabela de tradução das siglas ao lado dos chips."
+    },
+    {
+      "onde": "Ficha do deputado — KPI 'Comissões / frentes' e painel §6",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:171 e :295-304 (lib/camara.ts:102 `itens=50`)",
+      "texto_exibido": "Comissões / frentes — 4 / 208 — atuais / total de frentes (a lista inclui GTCL — Grupo de Trabalho e COETICA — Conselho de Ética)",
+      "problema": "O endpoint /orgaos devolve todo tipo de órgão (comissões, conselhos, grupos de trabalho, mesa, blocos); a UI chama tudo de 'Comissões'. E o denominador da consulta é limitado a 50 registros, de modo que para parlamentares antigos o filtro 'sem dataFim' pode perder órgãos vigentes.",
+      "fonte_real": "Câmara /deputados/{id}/orgaos — campo siglaOrgao/nomeOrgao mistura tipos de colegiado.",
+      "gravidade": "media",
+      "correcao": "Rotular 'Colegiados atuais' ou filtrar por tipo de órgão, e paginar /orgaos."
+    },
+    {
+      "onde": "Ficha do deputado — selo de situação no cabeçalho",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:138",
+      "texto_exibido": "{s.situacao ?? \"em exercício\"}",
+      "problema": "Se a Câmara não informar a situação, a página inventa 'em exercício'. Ausência de campo vira afirmação sobre o mandato de uma pessoa. Hoje o campo vem preenchido em todos os testes ('Exercício', 'Fim de Mandato' para ex-deputados), mas o default é uma afirmação sem fonte.",
+      "fonte_real": "Câmara ultimoStatus.situacao — quando ausente, não diz nada.",
+      "gravidade": "baixa",
+      "correcao": "Default 'situação não informada'."
+    },
+    {
+      "onde": "Ficha do deputado — painel §3 'Como votou'",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx:245 e lib/camara.ts:194-207",
+      "texto_exibido": "Como votou — últimas votações nominais do Plenário",
+      "problema": "Não diz o tamanho da amostra (teto de 12 votações, sondando até 60) nem o período varrido (~5 trimestres). Além disso o painel ignora o seletor 'Ano de referência' do topo da página: escolhendo 2023, a tabela continua trazendo votações recentes. O leitor supõe recorte anual.",
+      "fonte_real": "getVotacoesNominais(dataFim, alvo=12, maxSondagens=60) sobre 5 janelas de 90 dias.",
+      "gravidade": "baixa",
+      "correcao": "Título 'até 12 votações nominais mais recentes (últimos ~15 meses)' e desacoplar visualmente do seletor de ano."
+    },
+    {
+      "onde": "/politicos/deputado/204521, /74140, /122195, /154700",
+      "arquivo": "app/politicos/deputado/[id]/page.tsx (render completo)",
+      "texto_exibido": "(página em branco — HTTP 200, 36 KB, só cabeçalho e rodapé; título 'Deputado · Monitor de Gravata')",
+      "problema": "Algumas fichas retornam 200 com corpo vazio, de forma reprodutível (testado duas vezes). Não é desinformação, mas o usuário fica sem saber se a pessoa existe, se não tem dados ou se o site quebrou — e o título genérico 'Deputado' sugere que o parlamentar não foi identificado.",
+      "fonte_real": "getDeputado(204521) responde normalmente na API da Câmara (situacao 'Fim de Mandato').",
+      "gravidade": "baixa",
+      "correcao": "Error boundary com mensagem explícita e, para ex-parlamentares, aviso 'mandato encerrado — dados históricos'."
+    },
+    {
+      "onde": "Ficha do senador — KPI 'Votações registradas'",
+      "arquivo": "app/politicos/senador/[codigo]/page.tsx:123",
+      "texto_exibido": "421 — 57 em 2026 · desde o início do mandato",
+      "problema": "'desde o início do mandato' é uma afirmação sobre a cobertura da API que o código não verifica. Para Camilo Santana o registro mais antigo é 2023-12-13, embora o mandato tenha começado em fevereiro/2023 — o intervalo sem registro é apresentado como se o mandato inteiro estivesse coberto.",
+      "fonte_real": "Senado /votacoes: 66 registros de 2023-12-13 a 2026-08-12 (Camilo Santana).",
+      "gravidade": "baixa",
+      "correcao": "Trocar por 'registros de {data mínima} a {data máxima}'."
+    }
+  ],
+  "ok": [
+    "§8c 'Redes declaradas pelo gabinete' — painel separado, texto explícito de que são endereços informados pelo próprio gabinete e de que o Monitor não verifica autenticidade, com rel='nofollow ugc' (correção do incidente anterior, bem feita)",
+    "§8b 'Vínculos a verificar (hipóteses por sobrenome)' — rotulado como hipótese, com 'Sobrenome igual não prova parentesco' e 'Confirmação só com fonte primária'; nenhuma afirmação de parentesco",
+    "Emendas: os chips separam corretamente 'empenhado' de 'pago' por ano, sem tratar empenho como entrega",
+    "NoticiasList: aviso 'Manchetes agregadas automaticamente por busca de nome (podem incluir homônimos). Só título e link'",
+    "Red flags: texto 'são sinais objetivos calculados por regras públicas — não são acusações', com link para a regra e a fonte em cada achado; nenhuma regra usa 'suspeito'/'irregular' como veredito",
+    "§8 emendas sem chave: em vez de exibir zero, avisa que requer PORTAL_TRANSPARENCIA_KEY e oferece o link do Portal",
+    "/politicos: aviso 'Eleito em 2022 ≠ quem ocupa o cargo hoje' explicando renúncia, morte, cassação e suplente; kickers 'eleito na votação de 2022 · fonte TSE'",
+    "/politicos: separação clara entre fontes ao vivo (Câmara/Senado, com selo 'ficha completa') e índice derivado do TSE, com data de geração do índice",
+    "/politicos: prefeitos e vereadores rotulados 'eleitos em 2024 · fonte TSE', com 'Vereadores (N) — 30 primeiros'",
+    "Ficha do deputado §1: quando o fallback de arquivo é usado, há aviso próprio com link para o Ano-{ano}.json.zip e a data de coleta, e a tabela de notas individuais é ocultada porque o arquivo não as tem",
+    "Data e hora de coleta impressas em todas as fichas ('coletados em 18/08/2026, 12:22')",
+    "Painel §3 do deputado: nota de rodapé explicando que 'não votou/ausente' pode ser licença, missão oficial ou obstrução",
+    "Painel §4: nota de que requerimentos (REQ) contam como proposição na API",
+    "Checagens de fatos: estado vazio diz que é falta de cobertura do RSS/chave, não que não existem checagens"
+  ]
+}

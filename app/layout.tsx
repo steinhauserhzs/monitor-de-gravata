@@ -24,15 +24,22 @@ export const metadata: Metadata = {
     template: "%s · Monitor de Gravata",
   },
   description:
-    "Super app anticorrupção open source e comunitário: ficha do político, manual do candidato 2026, radar de contratos públicos com red flags, empresas sancionadas e catálogo de todas as APIs públicas do Brasil.",
+    "Portal da transparência feito pela sociedade: ficha de deputados, senadores e candidatos 2026, radar de contratos públicos com sinais de risco, comparador de preços e catálogo das fontes oficiais do Brasil. Open source, sem partido.",
   metadataBase: new URL("https://monitor-de-gravata.vercel.app"),
+  applicationName: "Monitor de Gravata",
   openGraph: {
-    title: "Monitor de Gravata — o Pesadelo de Brasília",
-    description:
-      "Dados públicos, regras abertas e comunidade auditando o poder. Ficha do político, manual do candidato, radar de contratos e red flags.",
+    title: "Monitor de Gravata — o pesadelo de Brasília",
+    description: "O dinheiro é seu. As contas são públicas. O que falta é gente olhando. Ficha de quem te representa, radar de contratos e comparador de preços — só com fonte oficial.",
     locale: "pt_BR",
     type: "website",
+    siteName: "Monitor de Gravata",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Monitor de Gravata — o pesadelo de Brasília",
+    description: "O dinheiro é seu. As contas são públicas. O que falta é gente olhando.",
+  },
+  icons: { icon: "/icon.svg", apple: "/apple-icon" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

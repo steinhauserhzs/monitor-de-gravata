@@ -1,9 +1,7 @@
 <p align="center">
-  <img src="public/gravata.svg" width="72" alt="Gravata vermelha — símbolo do Monitor de Gravata" />
+  <img src="public/logo.svg" width="420" alt="Monitor de Gravata — o pesadelo de Brasília" />
 </p>
 
-<h1 align="center">Monitor de Gravata</h1>
-<p align="center"><em>o pesadelo de Brasília</em></p>
 
 <p align="center">
   <strong>Portal da Transparência 2.0, open source e comunitário.</strong><br/>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Monitor de Gravata — a gravata como símbolo de quem decide, e o carimbo como marca de auditoria -->
+  <rect width="64" height="64" rx="10" fill="#141210"/>
+  <g transform="translate(20 8)">
+    <path d="M3 2h18l5 12-14 7-14-7z" fill="#c8102e"/>
+    <path d="M0 22h24l7 24-19 12L-7 46z" fill="#c8102e"/>
+    <path d="M7 25h5l-3 21-5-3z" fill="#ffffff" opacity=".22"/>
+  </g>
+</svg>

@@ -1,0 +1,281 @@
+{
+  "area": "Ficha do candidato — /candidatos/{ano}/{uf}/{id}",
+  "auditor": "QA de veracidade (agente)",
+  "data": "2026-08-18",
+  "site": "https://monitor-de-gravata.vercel.app",
+  "repo": "/Users/hari/Hari/monitor-de-gravata",
+  "commit_auditado": "45b2250",
+  "campos_auditados": 34,
+  "candidatos_testados": [
+    { "url": "/candidatos/2022/BR/280001607829", "quem": "LULA (presidente 2022, eleito)" },
+    { "url": "/candidatos/2022/BR/280001600167", "quem": "SOFIA MANZANO (presidente 2022, campanha pequena)" },
+    { "url": "/candidatos/2026/BR/280002551544", "quem": "FLAVIO BOLSONARO (presidente 2026, senador em exercício)" },
+    { "url": "/candidatos/2022/SP/250001615967", "quem": "TARCÍSIO (governador SP 2022, eleito)" },
+    { "url": "/candidatos/2026/SP/250002539612", "quem": "ERIKA HILTON (dep. federal SP em exercício, candidata 2026)" },
+    { "url": "/candidatos/2026/SP/250002546642", "quem": "KIM KATAGUIRI (dep. federal SP em exercício)" },
+    { "url": "/candidatos/2026/SP/250002539435", "quem": "TABATA AMARAL (dep. federal SP em exercício)" },
+    { "url": "/candidatos/2026/SP/250002536743", "quem": "EDINHO SILVA (sem mandato federal, nome comum)" },
+    { "url": "/candidatos/2026/SP/250002551620", "quem": "EDUARDO SILVA (sem mandato, nome comuníssimo)" }
+  ],
+  "achados": [
+    {
+      "onde": "/candidatos/2022/BR/280001600167 (e TODAS as fichas) — §3 Financiamento de campanha, campo 'Gasto declarado (1º turno)'",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:192",
+      "texto_exibido": "Gasto declarado (1º turno) — R$ 88.944.030,80 (na ficha de SOFIA MANZANO, cujo 'Total recebido' é R$ 25.940,50)",
+      "problema": "O campo gastoCampanha1T do DivulgaCandContas NÃO é o gasto declarado pelo candidato: é o LIMITE LEGAL DE GASTOS do cargo/UF/ano. Verificado na API: todos os presidenciáveis de 2022 têm exatamente R$ 88.944.030,80 (Lula, Bolsonaro, Sofia Manzano); todos os candidatos a governador de SP 2022 têm R$ 26.683.209,24 (Haddad e Altino); todos os candidatos a deputado federal por SP em 2026 têm R$ 3.176.572,53 (Kim, Tabata, Eduardo Silva). O 2º turno é sempre exatamente metade. O site rotula esse teto como dinheiro que a pessoa declarou ter gasto — e o coloca ao lado do 'Total recebido', induzindo o leitor a comparar gasto × receita.",
+      "fonte_real": "TSE/DivulgaCandContas: limite legal de gastos de campanha fixado para o cargo, na circunscrição, naquela eleição. Não é despesa realizada nem declarada pelo candidato.",
+      "gravidade": "alta",
+      "correcao": "Renomear para 'Limite legal de gastos (1º turno)' com nota 'teto fixado pelo TSE para o cargo — não é o que este candidato gastou'; o gasto real vem de prestador/consulta/despesas (totalDespesasContratadas/Pagas), hoje não usado."
+    },
+    {
+      "onde": "/candidatos/2022/BR/280001607829 (LULA) — §0 'O que já fez com o mandato — Câmara dos Deputados'",
+      "arquivo": "lib/mandato.ts:57-77 (acharMandato) + app/candidatos/[ano]/[uf]/[id]/page.tsx:43,143",
+      "texto_exibido": "O que já fez com o mandato — Câmara dos Deputados · Votou a favor 1 · Votou contra 1 · Verba pública movimentada R$ 96.638.898,00 · Presença no plenário 92% (60/65 sessões) · Emendas parlamentares (dinheiro público que direcionou) — PERNAMBUCO (UF) · Saúde R$ 1.688.766,00 …",
+      "problema": "Na ficha de LULA (presidente, candidato 2022) o painel §0 exibe o mandato, os votos, a presença, as proposições e ~R$ 96,6 milhões em emendas do deputado LULA DA FONTE (PP-PE) — outra pessoa. A API da Câmara faz busca por SUBSTRING no nome: nome=LULA devolve exatamente 1 resultado ('Lula da Fonte') e o código adota qualquer resultado único como o candidato. O selo 'vínculo provável' e o parágrafo de aviso aparecem, mas os KPIs grandes, a tabela de votos e as barras de emendas exibem os números de terceiro sob o título 'O que já fez com o mandato', na ficha de outra pessoa. É exatamente o padrão do incidente dos links do TSE, com consequência muito pior (dinheiro público atribuído a quem não o movimentou).",
+      "fonte_real": "Câmara dos Deputados / Portal da Transparência: dados do deputado id 220669 'Lula da Fonte' (PP-PE). Nada disso pertence a Luiz Inácio Lula da Silva.",
+      "gravidade": "alta",
+      "correcao": "Nunca renderizar o painel quando confianca !== 'exata': com match aproximado, mostrar só um card 'Possível parlamentar homônimo: <nome> (<partido>-<uf>) — confira' com link, sem nenhum número; e exigir também coincidência de UF/partido antes de aceitar match único."
+    },
+    {
+      "onde": "/candidatos/2026/SP/250002539612 (ERIKA HILTON), /250002546642 (KIM KATAGUIRI), /250002539435 (TABATA AMARAL) — bloco no lugar do §0",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:144-148 + lib/fetcher.ts:52-58 (safe engole o erro)",
+      "texto_exibido": "Sem mandato federal em exercício — Não localizamos ERIKA HILTON entre os deputados federais e senadores em exercício.",
+      "problema": "Afirmação factual falsa. Erika Hilton, Kim Kataguiri e Tabata Amaral são deputados federais por SP em exercício — a própria API da Câmara devolve 'Erika Hilton' (id 220645) para nome=ERIKA HILTON&siglaUf=SP, e a linha do tempo da MESMA página exibe 'deputado federal por São Paulo · 2023-02-01 → atual'. Reproduzido 2× por candidato, não é intermitência de cache. Como safe() converte qualquer falha (timeout, 4xx, exceção em analisarCEAP) em null, a UI transforma 'não consegui apurar' em 'a pessoa não tem mandato'. Efeito colateral grave: candidatos com mandato real escapam da auditoria de votos/emendas justamente na ficha eleitoral.",
+      "fonte_real": "Câmara dos Deputados (dados abertos) e Wikidata: mandato de deputado federal em curso.",
+      "gravidade": "alta",
+      "correcao": "Separar os três estados: 'mandato localizado', 'não localizado nas bases consultadas (Câmara/Senado)' e 'fonte indisponível no momento — tente de novo'; safe() deve devolver o erro à UI e o texto nunca deve afirmar ausência de mandato."
+    },
+    {
+      "onde": "/candidatos/2026/SP/250002551620 (EDUARDO SILVA) — §6 'Na mídia (manchetes recentes)'",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:40 (query) + components/ficha.tsx:103-123",
+      "texto_exibido": "Justiça suspende processo de homem suspeito de importunação sexual contra adolescente em mercado de condomínio (G1) · 'Um homem de 48 anos foi indiciado pela polícia após assediar uma adolescente de 14 anos… O suspeito foi identificado como Eduardo Silva Prado' (instagram.com) · Justiça aceita denúncia e suspeito de importunação sexual contra adolescente…",
+      "problema": "Notícias de crime sexual sobre OUTRO Eduardo Silva (Eduardo Silva Prado) aparecem no painel 'Na mídia' da ficha de um candidato a deputado federal, logo acima de '§7 Perguntas para fazer ao candidato'. Das 12 manchetes da página, praticamente nenhuma é sobre o candidato (as demais são de Eduardo Sanchez/MT, Eduardo Madruga/TO, Eduardo Santana, um ator homônimo). A busca é `\"NOME\" candidato UF` no Google Notícias RSS, sem nenhum filtro de precisão, e o único aviso é uma linha cinza de 0,68rem no rodapé do painel. Risco reputacional e jurídico direto contra pessoa identificável.",
+      "fonte_real": "Google Notícias RSS: resultado de busca textual por nome, sem qualquer garantia de que a matéria trate do candidato.",
+      "gravidade": "alta",
+      "correcao": "Renomear o painel para 'Resultados de busca por este nome (podem ser outra pessoa)', mover o aviso para o topo em destaque, e descartar itens cujo título/descrição contenham um nome próprio diferente do candidato ou outra UF/cargo; para nomes de alta ambiguidade (nome de urna com sobrenome muito comum), esconder o painel e oferecer só o link da busca."
+    },
+    {
+      "onde": "/candidatos/2026/BR/280002551544 (FLAVIO BOLSONARO) — §6b 'Checagens de fatos'",
+      "arquivo": "lib/checagens.ts:62-91 (viaRSS) + components/Checagens.tsx:3-23",
+      "texto_exibido": "Bolsonaro não foi inocentado de acusações da CPI da Covid-19 — Aos Fatos · 06/08/2026",
+      "problema": "Checagem sobre JAIR Bolsonaro exibida como checagem sobre FLÁVIO Bolsonaro. O filtro só exige que todas as palavras >3 letras do nome apareçam em título+descrição do item RSS — o texto da matéria cita ambos, então entra. Num painel intitulado 'Checagens de fatos', ligar o nome de alguém a uma checagem sobre outra pessoa insinua que a afirmação desmentida é dela. Agravante: no modo RSS os itens NÃO são ClaimReview e não têm veredito — são reportagens comuns dos checadores exibidas sob o rótulo 'checagem', e o rodapé diz 'O veredito é do checador' quando não há veredito algum.",
+      "fonte_real": "Aos Fatos: checagem sobre declarações a respeito de Jair Bolsonaro, não sobre Flávio Bolsonaro.",
+      "gravidade": "alta",
+      "correcao": "Exigir o nome completo como expressão contígua no título (não tokens espalhados pela descrição), rotular o bloco RSS como 'Matérias de checadores que citam este nome' (≠ 'checagem sobre'), e só usar 'veredito' quando o item vier do ClaimReview."
+    },
+    {
+      "onde": "TODAS as fichas com prestação de contas — §3 'Financiamento de campanha' (barras) e KPI 'Receitas de campanha'",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:133 e 181-191",
+      "texto_exibido": "SOFIA MANZANO: barras 'Partido/fundo R$ 580,00 · Pessoas físicas R$ 3.920,00 · Estimáveis R$ 580,00' e 'Total recebido R$ 25.940,50'; KPI '2% de partido/fundo · 15% de PF'. ERIKA HILTON: barra única 'Pessoas físicas R$ 100,00' e 'Total recebido R$ 68.670,00'; KPI '0% de partido/fundo · 0% de PF'",
+      "problema": "A decomposição por origem não fecha com o total e o site não avisa. O campo totalDoacaoFcc (financiamento coletivo de campanha) nunca é renderizado: são R$ 21.440,50 de R$ 25.940,50 em Sofia (83% do dinheiro invisível) e R$ 68.570,00 de R$ 68.670,00 em Erika (99,85%). Pior: a barra 'Financiamento coletivo (internet)' é alimentada por dc.totalInternet, que é 0 — ou seja, a página mostra ZERO justamente na categoria onde o dinheiro está. Também ficam de fora totalDoacaoAplicacaoFinanceira (R$ 65.002,55 em Lula) e outros. Percentuais sem base explicitada ('2% · 15%') levam o leitor a concluir que 83% veio 'de outro lugar' não informado.",
+      "fonte_real": "TSE/DivulgaCandContas dadosConsolidados: totalDoacaoFcc, totalDoacaoAplicacaoFinanceira, totalReceitaComercializacao e totalDoacaoBensMoveisImoveis existem e não são exibidos.",
+      "gravidade": "alta",
+      "correcao": "Mapear todos os campos total* do dadosConsolidados, incluir barra 'Financiamento coletivo (FCC)' e uma barra 'Outras origens' calculada como total − soma das exibidas, e nunca publicar a decomposição se ela não fechar com o total (exibir o resíduo explicitamente)."
+    },
+    {
+      "onde": "/candidatos/2022/BR/280001607829 e todas as fichas com §0 — KPI 'Verba pública movimentada' e nota das emendas",
+      "arquivo": "components/Mandato360.tsx:12-14, 37, 89 + lib/transparencia.ts:81-88",
+      "texto_exibido": "Verba pública movimentada R$ 96.638.898,00 — cota 2026: R$ 0,00 + emendas efetivamente pagas: R$ 96.638.898,00 … / Total empenhado localizado: R$ 114.623.640,53",
+      "problema": "Três problemas somados num número só. (1) emendasPorAutor só busca a PÁGINA 1 do Portal da Transparência (15 registros — exatamente os 3+7+5 exibidos): é uma amostra truncada apresentada como 'Total empenhado localizado' e somada no KPI. (2) O KPI mistura períodos incompatíveis: cota de UM ano corrente + emendas pagas de TODOS os anos encontrados (2024+2025+2026). (3) O casamento das emendas é por nomeAutor em texto livre no SIOP, sem qualquer verificação de homonímia, e herda o match errado do acharMandato (na ficha do Lula, são as emendas de Lula da Fonte).",
+      "fonte_real": "Portal da Transparência /emendas: resultado paginado (15 por página) filtrado por nome do autor em caixa alta; não é o total de emendas do parlamentar.",
+      "gravidade": "alta",
+      "correcao": "Paginar até o fim ou rotular 'primeiras 15 emendas encontradas (lista parcial)'; separar o KPI em 'cota <ano>' e 'emendas pagas <faixa de anos>' em vez de uma soma única; e não exibir emendas quando o vínculo com o parlamentar não for exato."
+    },
+    {
+      "onde": "Todas as fichas com §0 — KPIs 'Votou a favor' / 'Votou contra'",
+      "arquivo": "components/Mandato360.tsx:35-36 + lib/camara.ts:194-208 + lib/mandato.ts:162-175",
+      "texto_exibido": "Votou a favor 15 — 'de 20 votações nominais localizadas (varredura de ~9 meses)'; Votou contra 4 — '20% das localizadas'",
+      "problema": "A base do percentual e o período são falsos. (a) Para a Câmara a varredura é getVotacoesPlenario(hoje, 5) = 5 janelas de 90 dias ≈ 15 meses, não '~9 meses' — o texto ficou congelado numa versão antiga do código. (b) Para o Senado não há varredura por data nenhuma: o código faz slice(0,20) sobre a lista da API, então '20 votações localizadas' é apenas o teto do corte, e os votos exibidos na ficha do Flávio vão de 19/02/2025 a 16/06/2026 (16 meses). (c) A tabela é rotulada 'votações nominais mais recentes' mas o array não é ordenado por data (a ficha do Flávio lista 09/07/2025 antes de 17/09/2025 e 16/06/2026 no meio). (d) Há linha duplicada (PEC 137/2019 em 09/07/2025 aparece 2×) e a duplicata é contada nos totais.",
+      "fonte_real": "Câmara: 12 votações nominais mais recentes do Plenário em ~15 meses, iguais para todos os deputados. Senado: as 20 primeiras da lista devolvida pela API, sem recorte temporal.",
+      "gravidade": "media",
+      "correcao": "Trocar o hint por 'de N votações nominais amostradas entre <data> e <data>' calculado a partir dos dados reais, ordenar por data desc, deduplicar por id de votação e nunca prometer janela temporal que o código não aplica."
+    },
+    {
+      "onde": "/candidatos/2026/BR/280002551544 (FLAVIO BOLSONARO) — §0, bloco 'Pautas que apresenta (temas das proposições de autoria)'",
+      "arquivo": "lib/mandato.ts:176-179, 199 + components/Mandato360.tsx:43, 49",
+      "texto_exibido": "Pautas que apresenta (temas das proposições de autoria): Matérias RQS · 160 | Matérias PEC · 94 | Matérias REQ · 73 | Matérias PL · 59 … 'Temas classificados pela própria Câmara/Senado nas proposições que o parlamentar assinou'",
+      "problema": "Para senadores o site não tem tema nenhum: agrupa por Materia.Sigla, que é o TIPO DE DOCUMENTO (RQS = requerimento, PEC, REQ, PL, PDL, PRS), e o apresenta sob o rótulo 'Pautas que apresenta' com a legenda 'Temas classificados pela própria Câmara/Senado'. O leitor entende 'agenda temática do parlamentar' quando o dado é 'quantos requerimentos ele assinou'. Não há indicação de que, no Senado, esse bloco significa outra coisa que na Câmara (onde de fato são temas).",
+      "fonte_real": "Senado/dados abertos, autorias: sigla do tipo de matéria. O Senado não devolve classificação temática nesse endpoint.",
+      "gravidade": "alta",
+      "correcao": "No caso Senado, mudar título para 'Tipos de matéria que assina (não é classificação temática)' e remover a legenda sobre temas; ou não exibir o bloco enquanto não houver classificação temática real."
+    },
+    {
+      "onde": "Todas as fichas — §4 'Linha do tempo eleitoral e política'",
+      "arquivo": "components/ficha.tsx:84",
+      "texto_exibido": "2018 → atual · candidatura — Presidente · Indeferido · Concorrendo (ficha do LULA 2022) · 2022 → atual · candidatura — Governador · Deferido (ficha do TARCÍSIO)",
+      "problema": "Todo item sem data de fim ganha '→ atual'. Candidaturas encerradas (2018, 2022) aparecem como se estivessem em curso. Na ficha do Lula 2022 lê-se '2018 → atual · Presidente · Indeferido · Concorrendo' — três informações erradas de estado ao mesmo tempo: a candidatura de 2018 não é atual, e 'Concorrendo' é o valor de totalização congelado no registro do TSE. Uma candidatura é um evento pontual, não um período aberto.",
+      "fonte_real": "TSE DivulgaCand: ano da eleição e situação final do registro. Nada indica vigência 'até hoje'.",
+      "gravidade": "media",
+      "correcao": "Só aplicar '→ atual' a itens do tipo 'cargo'/'partido' vindos da Wikidata sem data de fim; para tipo 'candidatura' renderizar apenas o ano, e exibir descricaoTotalizacao com o rótulo 'situação no registro em <dataUltimaAtualizacao>'."
+    },
+    {
+      "onde": "Todas as fichas — KPI 'Variação patrimonial'",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:132",
+      "texto_exibido": "Variação patrimonial · -7% (LULA 2022) — KPI sem nenhum hint, sem período, sem fonte",
+      "problema": "É o único KPI da ficha sem linha de contexto. Não diz entre que anos, não diz que é nominal (sem correção pela inflação), não diz que compara duas AUTODECLARAÇÕES ao TSE a valor de aquisição, e não diz que o casamento com a eleição anterior é por nome completo + UF (podendo ser homônimo). Entre 2018 e 2022 a inflação acumulada passa de 25%: os -7% nominais do Lula são cerca de -26% reais, e um '+80%' nominal pode ser estabilidade real. Além disso o KPI ganha destaque vermelho (tone 'stamp') quando o patrimônio dobra, sinalizando juízo antes de qualquer contexto.",
+      "fonte_real": "TSE: dois totais de bens autodeclarados, a valor de aquisição, em anos diferentes. Não é medição de evolução de riqueza.",
+      "gravidade": "media",
+      "correcao": "Renomear 'Variação nominal do total declarado (2018→2022)' e acrescentar hint: 'valores de aquisição autodeclarados ao TSE, sem correção pela inflação; casamento por nome completo + UF'."
+    },
+    {
+      "onde": "Todas as fichas — KPI 'Eleição anterior' e hint 'sem candidatura anterior localizada (mesmo nome/UF)'",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:48-61, 131",
+      "texto_exibido": "Eleição anterior — · 'sem candidatura anterior localizada (mesmo nome/UF)' (FLAVIO BOLSONARO 2026, que foi candidato a senador pelo RJ em 2018)",
+      "problema": "A frase sugere uma busca ampla que não acontece. (1) cargosBusca.slice(0,3) corta a lista: para presidente busca só cargos [1,6,7], para deputado federal só [6,7,5] — Governador (3) nunca é consultado, e para presidente Senador (5) também não. (2) Para cargo=1 a UF é forçada a 'BR', então buscar deputado/senador em 'BR' devolve sempre vazio. (3) Só eleições da mesma abrangência entram, então mandatos municipais nunca aparecem. (4) Se listCandidatos falhar/estourar timeout, safe() devolve vazio e a página diz a mesma frase. Resultado: 'sem candidatura anterior localizada' é impreciso e, para presidenciáveis com histórico legislativo, praticamente sempre falso.",
+      "fonte_real": "TSE DivulgaCand: há candidaturas anteriores consultáveis que o app não chega a pedir.",
+      "gravidade": "media",
+      "correcao": "Ou consultar todos os cargos/UFs relevantes, ou trocar o texto por 'nenhuma candidatura anterior encontrada nas eleições <anos> para os cargos <lista> em <UF>' — dizendo exatamente o que foi procurado — e distinguir 'não achei' de 'a fonte falhou'."
+    },
+    {
+      "onde": "/candidatos/2022/BR/280001607829 (LULA) — §5 'Processos e certidões (registro)'",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:96, 215-220",
+      "texto_exibido": "Na ficha do Lula não aparece nenhuma linha de certidões (o bloco '<n> certidões anexadas ao registro' some por completo), embora o registro tenha 19 arquivos PDF anexados",
+      "problema": "O filtro de certidões é por NOME DE ARQUIVO (/certid|TRF|TJ|justi/i). Quando o candidato sobe arquivos com nome gerado ('11_1659542402298.pdf', '12_…','13_…','14_…'), nenhum casa e o bloco desaparece sem mensagem. Comparando a ficha do Flávio Bolsonaro ('23 certidões anexadas') com a do Lula (nada), o leitor conclui que um anexou certidões e o outro não — quando os dois anexaram. O campo codTipo, que classifica o arquivo, existe e é ignorado nesse filtro.",
+      "fonte_real": "TSE DivulgaCand, array arquivos: 19 documentos anexados ao registro de Lula, com codTipo 5/11/12/13/14.",
+      "gravidade": "media",
+      "correcao": "Classificar por codTipo (com legenda oficial) em vez de regex no nome, e sempre mostrar 'N arquivos anexados ao registro' mesmo quando o tipo não for reconhecido."
+    },
+    {
+      "onde": "Todas as fichas — §5, linha 'Cassação/desconstituição registradas'",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:210",
+      "texto_exibido": "Cassação/desconstituição registradas: 0 (em negrito)",
+      "problema": "Duas fragilidades. (a) O escopo é muito menor do que o rótulo sugere: são só os processos vinculados AO REGISTRO daquela candidatura no DivulgaCand, não o histórico de cassações da pessoa nem processos em outras instâncias — mas o texto em negrito lê como 'esta pessoa nunca teve cassação'. (b) `(cand.processosCassacao?.length ?? 0)` transforma campo ausente/nulo em 0, então falha de payload vira 'zero processos'.",
+      "fonte_real": "TSE DivulgaCand: processos de cassação/desconstituição atrelados a este registro de candidatura específico.",
+      "gravidade": "media",
+      "correcao": "Rotular 'Processos de cassação/desconstituição atrelados a ESTE registro (fonte: DivulgaCand)' e exibir '—' (não 0) quando o campo não vier na resposta."
+    },
+    {
+      "onde": "/candidatos/2026/SP/250002551620 (EDUARDO SILVA) e /250002536743 (EDINHO SILVA) — §5b 'Vínculos a verificar (hipóteses por sobrenome)'",
+      "arquivo": "lib/vinculos.ts:13-17 + app/candidatos/[ano]/[uf]/[id]/page.tsx:227, 230",
+      "texto_exibido": "Sobrenome(s) menos comum(ns): JOSE · Outros candidatos 2026 em SP com o mesmo sobrenome (108): … DATENA · JOSE LUIZ DATENA … / Sobrenome(s) menos comum(ns): ANTONIO, EDINHO · (71)",
+      "problema": "'JOSE', 'ANTONIO' e 'EDINHO' não são sobrenomes — são prenomes, e estão entre os mais frequentes do país. sobrenomesRaros() pega tudo depois do primeiro token e só exclui uma lista fixa de sobrenomes; prenomes compostos passam direto. O resultado é um painel que anuncia 'sobrenome menos comum' e monta 108 'vínculos a verificar' entre pessoas que não têm relação nenhuma (Eduardo José da Silva × José Luiz Datena). O aviso 'sobrenome igual não prova parentesco' não corrige o erro anterior: o dado nem é sobrenome, e a raridade alegada é falsa.",
+      "fonte_real": "TSE: lista de candidatos cujo nome completo contém o mesmo token — nada mais.",
+      "gravidade": "media",
+      "correcao": "Considerar apenas os 2 últimos tokens do nome como sobrenome, adicionar uma lista de prenomes frequentes ao filtro e trocar o rótulo por 'candidatos cujo nome contém o mesmo termo'; se nenhum sobrenome sobreviver ao filtro, não montar o painel."
+    },
+    {
+      "onde": "/candidatos/2022/SP/250001615967 (TARCÍSIO) — §6 'Na mídia (manchetes recentes)'",
+      "arquivo": "components/ficha.tsx:103-123",
+      "texto_exibido": "Datafolha: Tarcísio lidera em SP com 46% — Republicanos 10 · 18/08/2026",
+      "problema": "O site do próprio partido do candidato (Republicanos 10) aparece como 'veículo' num painel intitulado 'Na mídia (manchetes recentes)', lado a lado com G1, JOTA e Folha, sem nenhuma distinção. O mesmo acontece com instagram.com e prefeituras na ficha do Eduardo Silva. Material de campanha é apresentado com o mesmo peso visual de imprensa.",
+      "fonte_real": "Google Notícias RSS: o campo <source> é apenas o domínio agregado, sem juízo editorial.",
+      "gravidade": "media",
+      "correcao": "Marcar visualmente fontes partidárias/institucionais/redes sociais ('site de partido', 'rede social') ou excluí-las do painel de imprensa."
+    },
+    {
+      "onde": "Todas as fichas — §6 e §6b, estados vazios",
+      "arquivo": "lib/noticias.ts:27,43-47 · components/ficha.tsx:106 · lib/checagens.ts:98-104",
+      "texto_exibido": "Nenhuma manchete recente encontrada para “X”. / Nenhuma checagem publicada sobre este nome nas bases consultadas.",
+      "problema": "noticiasGoogle() devolve [] tanto quando não há notícias quanto quando o RSS retorna erro, dá timeout de 12s ou muda de formato — e a UI afirma que não há manchetes. Igual em checagensSobre(): feed fora do ar cai no catch silencioso (lib/checagens.ts:85-87) e a página conclui 'nenhuma checagem publicada sobre este nome'. Numa ficha de candidato em ano eleitoral, afirmar que não existe checagem sobre alguém é uma informação com peso próprio.",
+      "fonte_real": "Google Notícias RSS / RSS de Aos Fatos e Comprova: indisponibilidade da fonte, não ausência de conteúdo.",
+      "gravidade": "media",
+      "correcao": "Propagar o erro e distinguir 'nada encontrado nas fontes consultadas' de 'não foi possível consultar <fonte> agora (tente novamente)'."
+    },
+    {
+      "onde": "Todas as fichas — §1 'Patrimônio declarado' e KPI 'Bens declarados <ano>'",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:130, 149-164",
+      "texto_exibido": "Bens declarados 2026 · R$ 8.186.555,83 · 9 item(ns) — 'CASA, LAGO SUL, BRASÍLIA — Casa — R$ 6.226.043,80'",
+      "problema": "Os bens do TSE são declarados a VALOR DE AQUISIÇÃO (o mesmo critério da declaração de IR), não a valor de mercado. A ficha os apresenta como 'patrimônio' e ainda calcula variação percentual sobre eles, sem dizer isso em lugar nenhum — a nota 'Como ler' só informa que são autodeclarados. Uma casa no Lago Sul a R$ 6,2 mi pode valer múltiplos disso; a leitura 'este é o patrimônio dele' é induzida.",
+      "fonte_real": "TSE DivulgaCand: bens declarados pelo candidato a valor de aquisição/custo histórico.",
+      "gravidade": "media",
+      "correcao": "Acrescentar à nota 'Como ler' e ao §1: 'valores de aquisição declarados pelo candidato, não valor de mercado'."
+    },
+    {
+      "onde": "Cabeçalho de todas as fichas — ocupação e grau de instrução",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:112, 137-139",
+      "texto_exibido": "Torneiro Mecânico · Ensino Fundamental completo (LULA) / Servidor Público Federal · Superior completo (TARCÍSIO) / Deputado · Superior completo (ERIKA HILTON)",
+      "problema": "Ocupação e grau de instrução são AUTODECLARADOS no registro (mesma natureza do campo 'sites' que motivou a correção anterior) e o TSE não verifica diploma nem exercício profissional. Aparecem no cabeçalho, em linha de fato, junto de dados verificados como data de nascimento e município. A nota 'Como ler' declara autodeclaração apenas para os bens.",
+      "fonte_real": "TSE DivulgaCand: campos preenchidos pelo próprio candidato a partir de tabelas do sistema, sem verificação documental.",
+      "gravidade": "media",
+      "correcao": "Estender a nota 'Como ler' para 'bens, ocupação e grau de instrução são autodeclarados' e marcar a linha do cabeçalho como 'declarado ao TSE'."
+    },
+    {
+      "onde": "Todas as fichas — KPI 'Red flags' e §2 'Red flags automáticas'",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:134, 173-175 + components/ficha.tsx:46-53",
+      "texto_exibido": "Red flags 0 (em verde) · 'nenhum sinal automático' / 'sem sinais — Nenhuma red flag automática acionada com os dados disponíveis.'",
+      "problema": "Zero em VERDE lê como aprovação. Só existem 4 regras de candidato implementadas, e três delas dependem de dados que em 2026 ainda não existem (prestação de contas) ou que o app frequentemente não consegue buscar (eleições anteriores). ERIKA HILTON aparece com '0 red flags · verde' embora 99,85% da receita venha de uma origem que o app sequer exibe — e a regra 'candidato-financiado-100-por-fundo' não dispara porque olha só totalPartidos. O verde é emitido sobre ausência de dados, não sobre ausência de sinal.",
+      "fonte_real": "Motor de regras do próprio Monitor: 4 regras, com cobertura parcial dos dados disponíveis.",
+      "gravidade": "media",
+      "correcao": "Usar tom neutro (nunca verde) para 0 e escrever 'nenhuma das N regras aplicáveis disparou com os dados disponíveis hoje — X regras não puderam ser avaliadas por falta de dados'."
+    },
+    {
+      "onde": "Todas as fichas — §5, botão 'Plano de governo (PDF)'",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:97, 212-214",
+      "texto_exibido": "Plano de governo (PDF) ↗",
+      "problema": "O seletor é `codTipo === '5' || /plano|proposta/i.test(a.nome)`. O fallback por nome pode capturar qualquer anexo cujo nome contenha 'proposta' e apresentá-lo como plano de governo; e quando o candidato majoritário não tem arquivo com nome reconhecível o botão simplesmente some, sem dizer se o plano não foi entregue ou se não foi identificado. Também há candidatos com mais de um arquivo codTipo 5 e o código pega o primeiro, sem indicar que existem outros.",
+      "fonte_real": "TSE DivulgaCand, arquivos com codTipo '5' (proposta de governo).",
+      "gravidade": "baixa",
+      "correcao": "Usar apenas codTipo '5', listar todos os arquivos desse tipo e, na ausência, escrever 'nenhuma proposta de governo identificada nos anexos do registro'."
+    },
+    {
+      "onde": "Todas as fichas — §1, tabela de bens item a item",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:160",
+      "texto_exibido": "tabela com no máximo 25 linhas, sem rodapé de truncamento",
+      "problema": "`bens.slice(0, 25)` corta a lista sem avisar. O KPI acima informa o número real de itens ('23 item(ns)'), mas para quem declara 40, 60 bens a tabela mostra 25 e nada indica que faltam linhas — o leitor pode concluir que a lista está completa (as barras 'Por tipo' e o total, esses sim, usam tudo).",
+      "fonte_real": "TSE DivulgaCand: lista completa de bens declarados.",
+      "gravidade": "baixa",
+      "correcao": "Acrescentar 'mostrando 25 de N bens' e link para a lista completa no DivulgaCand."
+    },
+    {
+      "onde": "Cabeçalho de todas as fichas — foto de urna",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:99, 107 + lib/tse.ts:48-49, 165-166",
+      "texto_exibido": "<img alt='Foto de urna de <NOME>'> exibida em todas as fichas",
+      "problema": "O DivulgaCand devolve o campo fotoUrlPublicavel, que sinaliza se a foto pode ser republicada. O código nunca o consulta: monta a URL da imagem incondicionalmente, inclusive quando fotoUrl vem nulo (fallback fotoCandidato()). Se a foto não for publicável ou não existir, a página exibe uma imagem quebrada ou uma imagem que a fonte não autoriza republicar, sob legenda afirmativa 'Foto de urna de X'.",
+      "fonte_real": "TSE DivulgaCand: fotoUrl + fotoUrlPublicavel (booleano de autorização).",
+      "gravidade": "baixa",
+      "correcao": "Só renderizar a foto quando fotoUrlPublicavel === true; caso contrário exibir placeholder com 'foto não disponibilizada para republicação pelo TSE'."
+    },
+    {
+      "onde": "Todas as fichas — §4, itens vindos da Wikidata",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:90-92, 138 + components/ficha.tsx:82-96",
+      "texto_exibido": "2019-01-01 → 2022-03-31 · cargo Ministro da Infraestrutura — Wikidata / 2023-01-01 → 2026-12-31 · cargo governador de São Paulo — Wikidata / 2005-01-01 → 2005-01-01 · partido Partido da Frente Liberal",
+      "problema": "Datas com precisão de ano na Wikidata são renderizadas como datas exatas ('2001-01-01'), e prazos futuros previstos aparecem como fato ('→ 2026-12-31'). Além disso a Wikidata é uma base editável por qualquer pessoa: na nota 'Como ler' ela é citada em pé de igualdade com o TSE, sem dizer que é colaborativa e não oficial. Há itens degenerados ('2005-01-01 → 2005-01-01') expostos sem tratamento.",
+      "fonte_real": "Wikidata: base colaborativa, com precisão de data variável (ano/mês/dia) declarada no próprio dado.",
+      "gravidade": "baixa",
+      "correcao": "Respeitar a precisão da Wikidata (exibir só o ano quando for o caso), marcar os itens como 'fonte colaborativa — não oficial' e omitir intervalos degenerados."
+    },
+    {
+      "onde": "Todas as fichas — §0, KPI 'Verba pública movimentada', parcela da cota",
+      "arquivo": "components/Mandato360.tsx:37 + lib/mandato.ts:82, 145, 201",
+      "texto_exibido": "cota 2026: R$ 76.028,21 (ficha do Flávio Bolsonaro, consultada em 18/08/2026)",
+      "problema": "A cota é sempre a do ano corrente (new Date().getFullYear()) e é acumulada até a data da consulta, mas é rotulada apenas 'cota 2026', sem 'acumulado até <mês>'. Um leitor compara esse valor com a cota anual de outro parlamentar e conclui gasto baixo. Agravante: em fichas de eleições PASSADAS (ex.: /candidatos/2022/...) o painel §0 exibe a cota de 2026 — dado do presente numa página sobre a candidatura de 2022, sem aviso de que o período não corresponde.",
+      "fonte_real": "Câmara (CEAP) / Senado (CEAPS): despesas reembolsadas acumuladas no ano corrente até a data da consulta.",
+      "gravidade": "media",
+      "correcao": "Rotular 'cota 2026 (acumulado até <mês/ano>)' e, em fichas de eleições anteriores, deixar explícito que o painel §0 descreve o mandato ATUAL, não o período da candidatura exibida."
+    },
+    {
+      "onde": "/candidatos/2024/... e /candidatos/2020/... (eleições municipais)",
+      "arquivo": "app/candidatos/[ano]/[uf]/[id]/page.tsx:32 + lib/tse.ts:10-16, 54-62",
+      "texto_exibido": "rota aceita ano=2024/2020 e valida uf contra a lista de 27 UFs",
+      "problema": "Nas eleições municipais o DivulgaCand indexa por CÓDIGO DE MUNICÍPIO, não por UF: a listagem 2024/SP/13 devolve 0 candidatos (verificado). Como a rota só aceita siglas de UF, nenhuma ficha municipal é acessível, embora 2024 e 2020 estejam no mapa ELEICOES e apareçam nos filtros. O usuário recebe 404 sem explicação de que a cobertura municipal não existe.",
+      "fonte_real": "TSE DivulgaCand: unidade eleitoral municipal identificada por código IBGE/TSE do município.",
+      "gravidade": "baixa",
+      "correcao": "Aceitar código de município na rota ou remover 2024/2020 dos filtros até haver cobertura, com aviso explícito de escopo."
+    }
+  ],
+  "ok": [
+    "§5c 'Links declarados por quem se candidatou' — correção anterior está sólida: aviso em destaque antes da lista, rel='nofollow ugc', validação de formato do endereço, fonte nomeada e canal para reportar link de terceiro.",
+    "Nome de urna (H1) × nome completo (subtítulo) — ambos exibidos, sem confundir um com o outro.",
+    "Situação da candidatura (descricaoSituacao) e totalização (descricaoTotalizacao) — vêm literais do TSE, sem reinterpretação.",
+    "Cargo, UF, número de urna, partido e coligação — literais do registro, coerentes com a API.",
+    "Nota 'Como ler' existe, traz data/hora de coleta e diz que bens são autodeclarados e que o casamento por nome pode falhar em homônimos.",
+    "§1 tem Source com link direto para o JSON do DivulgaCand daquele candidato.",
+    "§2 Red flags — cada finding mostra severidade, evidência factual, fonte e link para a regra em /radar; nenhum texto afirma culpa.",
+    "§5b abre com 'Sobrenome igual NÃO prova parentesco' e fecha com a exigência de fonte primária para virar caso.",
+    "§0 tem selo 'vínculo provável' + parágrafo de aviso quando o match não é exato (o problema é o painel continuar exibindo números apesar disso).",
+    "Rodapé do §0 explica que votações simbólicas não registram voto individual e que a lista é amostra.",
+    "Nota das emendas diz 'Emenda empenhada ≠ paga ≠ obra entregue' — distinção correta e rara.",
+    "KPI 'Verba pública movimentada' explicita 'não é dinheiro embolsado'.",
+    "§5 encerra com 'Presunção de inocência sempre' e explica por que DataJud/CNJ ainda não entra.",
+    "§3 em 2026 explica corretamente que a prestação parcial só sai em setembro, em vez de mostrar R$ 0.",
+    "§6 e §6b avisam que a busca é por nome e pode incluir homônimos, e que o veredito é do checador (o problema é o peso e a posição do aviso, não sua ausência).",
+    "§8 oferece direito de resposta ao candidato/assessoria."
+  ],
+  "prioridade_sugerida": [
+    "1. Trocar 'Gasto declarado' por 'Limite legal de gastos' (page.tsx:192) — informação financeira falsa sobre pessoa identificada, em todas as fichas.",
+    "2. Não renderizar números do §0 com confianca='provavel' (Mandato360.tsx) — R$ 96,6 mi de emendas de terceiro na ficha do Lula.",
+    "3. Corrigir 'Sem mandato federal em exercício' para não afirmar ausência quando a busca falha (page.tsx:144-148) — hoje nega o mandato de deputados em exercício.",
+    "4. Endurecer §6 (notícias) e §6b (checagens) contra homônimos e parentes — notícia de crime sexual de terceiro em ficha de candidato.",
+    "5. Incluir totalDoacaoFcc e um bucket 'Outras origens' no §3 — hoje some 99,85% da receita de uma candidata."
+  ]
+}

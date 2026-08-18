@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 120" width="560" height="120" role="img" aria-label="Monitor de Gravata">
+  <rect width="560" height="120" fill="#141210"/>
+  <g transform="translate(28 18)">
+    <path d="M12 0h26l7 17-20 10-20-10z" fill="#c8102e"/>
+    <path d="M6 31h38l10 34-27 19L-4 65z" fill="#c8102e"/>
+    <path d="M16 35h7l-4 30-7-4z" fill="#fff" opacity=".22"/>
+  </g>
+  <text x="112" y="62" font-family="Impact, 'Arial Black', sans-serif" font-size="42" fill="#f3ede0" letter-spacing="1">MONITOR DE GRAVATA</text>
+  <text x="113" y="90" font-family="Georgia, serif" font-style="italic" font-size="22" fill="#ffd400">o pesadelo de Brasília</text>
+</svg>
