@@ -81,7 +81,7 @@ Não temos lado. A mesma regra roda para todo partido, todo órgão, toda empres
 
 * **Sem banco de dados na v1.** O repo é o banco. Sem login, sem PII. Isso é uma escolha de segurança e de governança (ver [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md)).
 * **Sem IA gerando "fatos".** IA (agentes/LLM) é usada apenas para *pesquisar e testar* fontes e para *sugerir* regras — tudo o que aparece no site é dado oficial ou regra determinística com fonte. Ver [docs/POLITICA-EDITORIAL.md](docs/POLITICA-EDITORIAL.md).
-* **Chaves opcionais** destravam mais: `PORTAL_TRANSPARENCIA_KEY` (grátis, [cadastro aqui](https://portaldatransparencia.gov.br/api-de-dados/cadastrar-email)) liga sanções CEIS/CNEP, contratos federais por CNPJ, emendas por parlamentar e servidores por sobrenome.
+* **Chaves opcionais** destravam mais: `PORTAL_TRANSPARENCIA_KEY` (grátis, [cadastro aqui](https://portaldatransparencia.gov.br/api-de-dados/cadastrar-email)) liga sanções CEIS/CNEP, contratos federais por CNPJ e emendas por parlamentar (o endpoint de servidores exige órgão ou CPF — sem busca por nome).
 
 ## 🚀 Rodando localmente
 

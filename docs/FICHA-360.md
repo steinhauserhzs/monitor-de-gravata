@@ -20,7 +20,7 @@ Legenda: **auto** = ao vivo hoje · **chave** = requer `PORTAL_TRANSPARENCIA_KEY
 | Processos (TSE: cassação; certidões) | — | — | ✓ | TSE `processosCassacao`, `arquivos` | auto |
 | Processos judiciais (DataJud) | — | — | — | CNJ DataJud (chave pública) por nome/CPF mascarado | lote |
 | Sanções em empresas ligadas (CEIS/CNEP) | — | — | — | QSA (Receita) × Portal Transparência | chave + lote |
-| Vínculos a verificar (sobrenome × servidores/fornecedores/candidatos) | ✓ | — | ✓ | heurística + Portal `/servidores?nome` (chave) + TSE listas | auto (hipótese) |
+| Vínculos a verificar (sobrenome × servidores/fornecedores/candidatos) | ✓ | — | ✓ | heurística + links (Portal, PNCP, Querido Diário) + listas TSE; a API `/servidores` do Portal exige órgão/CPF (sem busca por nome) | auto (hipótese) |
 | Equipe de gabinete / nepotismo | link | link | — | Câmara pessoal-gabinete · Senado transparência | comun. |
 | Notícias (manchetes) | ✓ | ✓ | ✓ | Google News RSS | auto |
 | Checagens (ClaimReview) | — | — | — | Google Fact Check Tools API | roadmap |
