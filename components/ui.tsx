@@ -137,3 +137,56 @@ export function Crumbs({ items }: { items: { href?: string; label: string }[] })
     </nav>
   );
 }
+
+/**
+ * Aviso inline de falha de fonte, para listas e painéis parciais.
+ *
+ * Diferente de <FonteIndisponivel/> (que ocupa a página inteira quando não há
+ * nada a mostrar), este entra ao lado do conteúdo que ainda deu certo.
+ * Regra: dizer o que falhou, o que isso NÃO significa, e o que dá para fazer.
+ */
+export function AvisoFonte({
+  fonte,
+  resultado,
+  oQue,
+  siteOficial,
+}: {
+  fonte: string;
+  resultado: { error: string | null; motivo: "nao-encontrado" | "bloqueado" | "instavel" | "timeout" | null };
+  /** o que ficou faltando, ex.: "a lista de candidatos" */
+  oQue: string;
+  siteOficial?: { href: string; label: string };
+}) {
+  if (!resultado.error) return null;
+  const m = resultado.motivo;
+  const causa =
+    m === "bloqueado"
+      ? "o órgão está limitando consultas automatizadas agora"
+      : m === "timeout"
+        ? "a consulta passou do tempo limite"
+        : m === "nao-encontrado"
+          ? "a fonte respondeu que não há esse registro"
+          : "o sistema do órgão devolveu erro";
+  return (
+    <Notice tone="warn" title={`${fonte} — ${oQue} não veio`}>
+      Não foi possível carregar {oQue}: {causa}.{" "}
+      {m !== "nao-encontrado" && (
+        <>
+          Isso <strong>não</strong> quer dizer que o dado não existe — quer dizer que não conseguimos
+          verificar agora. Recarregue em alguns segundos.{" "}
+        </>
+      )}
+      {siteOficial && (
+        <a href={siteOficial.href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 decoration-stamp">
+          {siteOficial.label} ↗
+        </a>
+      )}
+      <details className="mt-2">
+        <summary className="cursor-pointer font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-3">
+          Detalhe técnico
+        </summary>
+        <span className="quebra font-mono text-[0.65rem] text-ink-3">{resultado.error}</span>
+      </details>
+    </Notice>
+  );
+}

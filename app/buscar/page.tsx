@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { PageHead, Section, Empty, Notice } from "@/components/ui";
+import { PageHead, Section, Empty, Notice, AvisoFonte } from "@/components/ui";
 import { listDeputados } from "@/lib/camara";
 import { listSenadores } from "@/lib/senado";
 import { searchPNCP } from "@/lib/pncp";
@@ -120,8 +120,8 @@ export default async function Buscar({ searchParams }: PageProps<"/buscar">) {
 
       {buscarPoliticos && (
         <Section kicker="Em exercício" title={`Deputados e senadores (${(deps.data?.length ?? 0) + senadores.length})`}>
-          {deps.error && <Notice tone="warn" title="Fonte indisponível — resultado incompleto">A API da Câmara não respondeu ({deps.error}); os deputados podem estar faltando nesta lista. Recarregue em alguns segundos.</Notice>}
-          {sens.error && <Notice tone="warn" title="Fonte indisponível — resultado incompleto">A API do Senado não respondeu ({sens.error}).</Notice>}
+          {deps.error && <AvisoFonte fonte="Câmara dos Deputados" resultado={deps} oQue="os deputados desta busca" />}
+          {sens.error && <AvisoFonte fonte="Senado Federal" resultado={sens} oQue="os senadores desta busca" />}
           {partidos.length > 1 && <div className="mb-3 flex flex-wrap gap-1">{partidos.map((p) => <Link key={p} href={`/buscar?q=${encodeURIComponent(q)}&uf=${uf}&partido=${p}&onde=politicos`} className="tab">{p}</Link>)}</div>}
           {!deps.data?.length && !senadores.length && <Empty>Nenhum parlamentar em exercício com esses filtros.</Empty>}
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -151,7 +151,7 @@ export default async function Buscar({ searchParams }: PageProps<"/buscar">) {
 
       {buscarContratos && (
         <Section kicker="Contratos" title="No PNCP (objeto, órgão ou fornecedor)">
-          {pncp.error && <Notice tone="warn" title="PNCP">A busca do PNCP não respondeu: {pncp.error}</Notice>}
+          {pncp.error && <AvisoFonte fonte="PNCP" resultado={pncp} oQue="os contratos desta busca" siteOficial={{ href: "https://pncp.gov.br", label: "Abrir o PNCP" }} />}
           {pncp.data && !pncp.data.items.length && <Empty>Nada no PNCP para esse termo.</Empty>}
           {pncp.data?.items.length ? (
             <div className="overflow-x-auto card">

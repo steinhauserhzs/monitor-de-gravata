@@ -6,6 +6,8 @@ import { getEmpresa } from "@/lib/cnpj";
 import { searchPNCP } from "@/lib/pncp";
 import { sancoesPorCNPJ, contratosFederaisPorCNPJ, temChavePortal } from "@/lib/transparencia";
 import { safe } from "@/lib/fetcher";
+import { inexistente } from "@/lib/fetcher";
+import { FonteIndisponivel } from "@/components/FonteIndisponivel";
 import { runRules } from "@/lib/rules";
 import { brl, dateBR, fmtCNPJ, onlyDigits, validCNPJ, nowBR } from "@/lib/format";
 import { noticiasGoogle } from "@/lib/noticias";
@@ -25,20 +27,32 @@ export default async function FichaEmpresa({ params }: PageProps<"/empresas/[cnp
   const cnpj = onlyDigits(raw);
   if (!validCNPJ(cnpj)) notFound();
   const emp = await safe(getEmpresa(cnpj));
-  if (!emp.data) notFound();
+  if (!emp.data) {
+    if (inexistente(emp)) notFound();
+    return (
+      <FonteIndisponivel
+        motivo={emp.motivo}
+        fonte={emp.fonte}
+        detalhe={emp.error}
+        oQue="a ficha desta empresa"
+        voltarHref="/empresas"
+        voltarLabel="Consultar outro CNPJ"
+      />
+    );
+  }
   const e = emp.data;
 
   const [pncp, editais, sanc, fed, noticias, cota] = await Promise.all([
     safe(searchPNCP({ q: cnpj, tipo: "contrato", tam: 30 })),
     safe(searchPNCP({ q: cnpj, tipo: "edital", tam: 10 })),
-    sancoesPorCNPJ(cnpj).catch(() => null),
+    sancoesPorCNPJ(cnpj).catch((e) => ({ ok: false as const, motivo: "falha" as const, erro: String(e) })),
     temChavePortal() ? contratosFederaisPorCNPJ(cnpj).catch(() => null) : Promise.resolve(null),
     noticiasGoogle(`"${e.razao_social}"`, 8),
     cotaRecebidaPorEmpresa(cnpj),
   ]);
   const contratos = (pncp.data?.items ?? []).map((it) => ({ valor: it.valor_global ?? 0, orgao: it.orgao_nome, data: it.data_assinatura ?? it.data_publicacao_pncp, it }));
   const somaPNCP = contratos.reduce((a, c) => a + c.valor, 0);
-  const findings = runRules("empresa", { empresa: e, contratos, sancoes: sanc ? { ceis: sanc.ceis, cnep: sanc.cnep } : null });
+  const findings = runRules("empresa", { empresa: e, contratos, sancoes: sanc.ok ? { ceis: sanc.ceis, cnep: sanc.cnep } : null });
   const idadeAnos = e.data_inicio_atividade ? ((Date.now() - new Date(e.data_inicio_atividade).getTime()) / (365.25 * 86400000)).toFixed(1) : "—";
 
   return (
@@ -51,7 +65,7 @@ export default async function FichaEmpresa({ params }: PageProps<"/empresas/[cnp
         <div className="mt-2 flex flex-wrap gap-2">
           <span className={`stamp stamp--flat ${(e.descricao_situacao_cadastral || "").toUpperCase() === "ATIVA" ? "stamp--verde" : ""}`}>{e.descricao_situacao_cadastral}</span>
           {findings.some((f) => f.severidade === "alta") && <span className="stamp stamp--flat">red flag alta</span>}
-          {sanc && sanc.ceis + sanc.cnep > 0 && <span className="stamp stamp--flat">sancionada</span>}
+          {sanc.ok && sanc.ceis + sanc.cnep > 0 && <span className="stamp stamp--flat">sancionada</span>}
         </div>
         <div className="mt-3 flex flex-wrap gap-3 font-mono text-[0.62rem] uppercase tracking-[0.12em]">
           <a className="underline underline-offset-2" href={`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`} target="_blank" rel="noopener noreferrer">json (BrasilAPI) ↗</a>
@@ -66,7 +80,7 @@ export default async function FichaEmpresa({ params }: PageProps<"/empresas/[cnp
           <KPI label="Abertura" value={dateBR(e.data_inicio_atividade)} hint={`${idadeAnos} anos`} />
           <KPI label="Capital social" value={brl(e.capital_social)} />
           <KPI label="Contratos no PNCP" value={pncp.data?.total ?? "—"} hint={contratos.length ? `${brl(somaPNCP)} nos ${contratos.length} mais recentes` : pncp.error ? "índice PNCP indisponível" : "nenhum localizado"} />
-          <KPI label="Sanções" value={sanc ? sanc.ceis + sanc.cnep : "—"} hint={sanc ? `CEIS ${sanc.ceis} · CNEP ${sanc.cnep}` : "requer chave do Portal da Transparência"} tone={sanc && sanc.ceis + sanc.cnep > 0 ? "stamp" : undefined} />
+          <KPI label="Sanções" value={sanc.ok ? sanc.ceis + sanc.cnep : "?"} hint={sanc.ok ? `CEIS ${sanc.ceis} · CNEP ${sanc.cnep}` : sanc.motivo === "sem-chave" ? "não consultado — requer chave do Portal da Transparência" : "não foi possível consultar CEIS/CNEP agora — isto NÃO significa ausência de sanção"} tone={sanc.ok && sanc.ceis + sanc.cnep > 0 ? "stamp" : undefined} />
           <KPI label="Cota parlamentar recebida" value={cota ? brl(Number(cota.valor_total)) : "—"} hint={cota ? `${cota.n_deputados} deputado(s) · ${cota.n_notas} nota(s)` : "nenhuma nota localizada"} tone={cota ? "stamp" : undefined} />
           <KPI label="Red flags" value={findings.length} tone={findings.some((f) => f.severidade === "alta") ? "stamp" : "verde"} />
         </div>
@@ -118,8 +132,18 @@ export default async function FichaEmpresa({ params }: PageProps<"/empresas/[cnp
             )}
             <Panel kicker="§2" title="Red flags automáticas">
               <Flags findings={findings} />
+              {!sanc.ok && (
+                <Notice tone="warn" title="Sanções não verificadas">
+                  {sanc.motivo === "sem-chave"
+                    ? "Este site está sem a chave do Portal da Transparência, então CEIS e CNEP não foram consultados."
+                    : "A consulta ao CEIS/CNEP falhou agora."}{" "}
+                  As red flags acima foram calculadas <strong>sem</strong> essa informação — a ausência de
+                  sanção listada aqui não é atestado de que não existe sanção.{" "}
+                  <a className="underline" href={`https://portaldatransparencia.gov.br/busca?termo=${cnpj}`} target="_blank" rel="noopener noreferrer">Conferir no Portal da Transparência ↗</a>
+                </Notice>
+              )}
             </Panel>
-            {sanc && sanc.ceis + sanc.cnep > 0 && (
+            {sanc.ok && sanc.ceis + sanc.cnep > 0 && (
               <Panel kicker="§3" title="Sanções registradas (CGU)">
                 <ul className="text-sm space-y-2">
                   {[...sanc.ceisLista, ...sanc.cnepLista].map((s) => <li key={s.id} className="card p-3"><div className="font-semibold">{s.tipoSancao?.descricaoResumida}</div><div className="text-xs text-ink-2">{s.orgaoSancionador?.nome} · {dateBR(s.dataInicioSancao)} → {dateBR(s.dataFimSancao)} · {s.fundamentacao?.map((f) => f.descricao).join("; ")}</div></li>)}

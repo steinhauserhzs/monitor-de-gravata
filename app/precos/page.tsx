@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PageHead, Section, Notice, Empty, Sev } from "@/components/ui";
+import { PageHead, Section, Notice, Empty, Sev, AvisoFonte } from "@/components/ui";
 import { KPI } from "@/components/ficha";
 import { buscarCatalogo, precosAmostra, estatisticas, estatisticasPorFaixa, faixaDe, classificar, loadPDMs, loadServicos, COMPRAS, linkCompraGov, termoObjeto, idCompraDe } from "@/lib/precos";
 import { Veredito, FaixasQuantidade, ComoLer } from "@/components/Veredito";
@@ -84,7 +84,7 @@ export default async function Precos({ searchParams }: PageProps<"/precos">) {
       {selecionado && (
         <>
           <Section kicker="Passo 2" title={`${selecionado.nome} — preços praticados${uf ? ` em ${uf}` : " no Brasil"} desde ${dateBR(desde)}`}>
-            {precos.error && <Notice tone="warn" title="Compras.gov.br">API não respondeu: {precos.error}</Notice>}
+            {precos.error && <AvisoFonte fonte="Compras.gov.br" resultado={precos} oQue="a amostra de preços" />}
             {precos.data && !lista.length && <Empty>Nenhuma compra homologada registrada para este padrão no período/UF. Amplie a data ou tire o filtro de UF.</Empty>}
             {est && (
               <>
