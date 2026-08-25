@@ -15,6 +15,7 @@
     "db:cota": "node scripts/ingerir-cota.mjs",
     "db:fornecedores": "node scripts/ingerir-fornecedores.mjs",
     "eleitos": "node scripts/gerar-eleitos.mjs",
+    "candidatos": "node scripts/gerar-candidatos.mjs",
     "municipios": "node scripts/gerar-municipios.mjs",
     "design": "node scripts/verificar-design.mjs"
   },

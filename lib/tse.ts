@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { getJSON } from "./fetcher";
 
 /**
@@ -51,7 +53,61 @@ export type CandidatoResumo = {
   descricaoTotalizacao?: string | null;
 };
 
+/* ─────────── Índice local de candidatos ───────────
+ * O DivulgaCand fica atrás de um WAF que limita consultas automatizadas: de
+ * dentro da Vercel a listagem dá 403 sempre, e a lista de SP para deputado
+ * federal sozinha tem 2,6 MB. Por isso a LISTAGEM lê de um índice derivado
+ * (gerado por `npm run candidatos`, fora da produção) e só cai para a API ao
+ * vivo quando o índice não existe. A FICHA individual continua ao vivo.
+ * O índice é derivado, nunca fonte da verdade — carrega fonte e data da coleta.
+ */
+type CandidatoEnxuto = { i: number; n: string; c: string; u: number; p: string; pn?: number; s: string; t?: string | null };
+type IndiceCandidatos = {
+  ano: number; uf: string; cargo: number; coletado_em: string; fonte: string;
+  total: number; candidatos: CandidatoEnxuto[];
+};
+
+const _indices = new Map<string, IndiceCandidatos | null>();
+
+function carregarIndice(ano: number, uf: string, cargo: number): IndiceCandidatos | null {
+  const chave = `${ano}/${cargo}-${uf}`;
+  const cache = _indices.get(chave);
+  if (cache !== undefined) return cache;
+  let lido: IndiceCandidatos | null = null;
+  try {
+    const f = path.join(process.cwd(), "data", "derivados", `candidatos-${ano}`, `${cargo}-${uf}.json`);
+    if (fs.existsSync(f)) lido = JSON.parse(fs.readFileSync(f, "utf8")) as IndiceCandidatos;
+  } catch {
+    lido = null;
+  }
+  _indices.set(chave, lido);
+  return lido;
+}
+
+/** De onde veio a lista — para a UI dizer a fonte e a data, como manda a regra do projeto. */
+export type OrigemLista = { via: "indice"; coletado_em: string } | { via: "ao-vivo" } | { via: "indisponivel" };
+
+export function origemDaLista(ano: number, uf: string, cargo: number): OrigemLista {
+  const ix = carregarIndice(ano, uf, cargo);
+  return ix ? { via: "indice", coletado_em: ix.coletado_em } : { via: "ao-vivo" };
+}
+
+const expandir = (c: CandidatoEnxuto, uf: string, cargo: number): CandidatoResumo => ({
+  id: c.i,
+  nomeUrna: c.n,
+  nomeCompleto: c.c,
+  numero: c.u,
+  descricaoSituacao: c.s,
+  descricaoTotalizacao: c.t ?? null,
+  ufCandidatura: uf,
+  partido: { sigla: c.p, numero: c.pn ?? 0, nome: c.p },
+  cargo: { codigo: cargo, nome: CARGOS[cargo] ?? String(cargo) },
+});
+
 export async function listCandidatos(ano: number, uf: string, cargo: number) {
+  const ix = carregarIndice(ano, uf, cargo);
+  if (ix) return ix.candidatos.map((c) => expandir(c, uf, cargo));
+
   const el = ELEICOES[ano];
   if (!el) throw new Error(`Eleição ${ano} não mapeada`);
   const r = await getJSON<{ candidatos: CandidatoResumo[]; cargo: { nome: string } }>(
