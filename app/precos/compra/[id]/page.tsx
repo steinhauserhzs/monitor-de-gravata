@@ -5,6 +5,7 @@ import { KPI, Panel } from "@/components/ficha";
 import { precosAmostra, estatisticas, classificar, loadPDMs, loadServicos, COMPRAS, linkCompraGov, termoObjeto, idCompraDe } from "@/lib/precos";
 import { searchPNCP } from "@/lib/pncp";
 import { safe } from "@/lib/fetcher";
+import { FonteIndisponivel } from "@/components/FonteIndisponivel";
 import { brl, dateBR, nowBR } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,28 @@ export default async function CompraDetalhe({ params, searchParams }: PageProps<
   const itens = (amostra.data?.resultado ?? []).filter((p) => idCompraDe(p) === id);
   const ref = itens[0];
   if (!ref) {
+    // A amostra vazia tem duas causas MUITO diferentes: ou a compra não está
+    // nesta fatia (fato), ou a API não respondeu (não sabemos). Dizer a
+    // primeira quando é a segunda é afirmar o que a fonte não garante.
+    if (amostra.error) {
+      return (
+        <>
+          <Crumbs items={[{ href: "/precos", label: "Preços" }, { label: `Compra ${id}` }]} />
+          <FonteIndisponivel
+            motivo={amostra.motivo}
+            fonte={amostra.fonte}
+            detalhe={amostra.error}
+            oQue="os itens desta compra"
+            voltarHref="/precos"
+            voltarLabel="Voltar ao comparador"
+            siteOficial={{
+              href: `https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-web/public/compras/acompanhamento-compra?compra=${id}`,
+              label: "Abrir a compra no Compras.gov.br",
+            }}
+          />
+        </>
+      );
+    }
     return (
       <>
         <Crumbs items={[{ href: "/precos", label: "Preços" }, { label: `Compra ${id}` }]} />

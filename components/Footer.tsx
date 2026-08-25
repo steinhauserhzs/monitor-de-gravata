@@ -70,15 +70,15 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
   return (
     <div>
       <div className="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-marker mb-3">{title}</div>
-      <ul className="space-y-2 text-sm">
+      <ul className="text-sm">
         {links.map(([href, label]) => (
           <li key={href}>
             {href.startsWith("http") ? (
-              <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline underline-offset-4 decoration-stamp">
+              <a href={href} target="_blank" rel="noopener noreferrer" className="inline-block py-1.5 hover:underline underline-offset-4 decoration-stamp">
                 {label}
               </a>
             ) : (
-              <Link href={href} className="hover:underline underline-offset-4 decoration-stamp">
+              <Link href={href} className="inline-block py-1.5 hover:underline underline-offset-4 decoration-stamp">
                 {label}
               </Link>
             )}

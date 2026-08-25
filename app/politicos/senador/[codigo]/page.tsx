@@ -7,6 +7,8 @@ import { analisarCEAP, type Despesa } from "@/lib/camara";
 import { runRules } from "@/lib/rules";
 import { onlyDigits } from "@/lib/format";
 import { safe } from "@/lib/fetcher";
+import { inexistente } from "@/lib/fetcher";
+import { FonteIndisponivel } from "@/components/FonteIndisponivel";
 import { brl, dateBR, nowBR, pct } from "@/lib/format";
 import { noticiasGoogle } from "@/lib/noticias";
 import { checagensSobre } from "@/lib/checagens";
@@ -29,7 +31,20 @@ export async function generateMetadata({ params }: PageProps<"/politicos/senador
 export default async function FichaSenador({ params }: PageProps<"/politicos/senador/[codigo]">) {
   const { codigo } = await params;
   const sen = await safe(getSenador(codigo));
-  if (!sen.data) notFound();
+  if (!sen.data) {
+    if (inexistente(sen)) notFound();
+    return (
+      <FonteIndisponivel
+        motivo={sen.motivo}
+        fonte={sen.fonte}
+        detalhe={sen.error}
+        oQue="a ficha deste senador"
+        voltarHref="/politicos"
+        voltarLabel="Ver todos os políticos"
+        siteOficial={{ href: `https://www25.senado.leg.br/web/senadores/senador/-/perfil/${codigo}`, label: "Abrir no Senado" }}
+      />
+    );
+  }
   const idp = sen.data.IdentificacaoParlamentar;
   const basicos = sen.data.DadosBasicosParlamentar;
 

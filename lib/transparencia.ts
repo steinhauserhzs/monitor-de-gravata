@@ -28,16 +28,32 @@ export type SancaoCEIS = {
 };
 
 /** Conta sanções CEIS + CNEP para um CNPJ. Retorna null se não houver chave. */
-export async function sancoesPorCNPJ(cnpjInput: string): Promise<{ ceis: number; cnep: number; ceisLista: SancaoCEIS[]; cnepLista: SancaoCEIS[] } | null> {
-  if (!temChavePortal()) return null;
+export type Sancoes =
+  | { ok: true; ceis: number; cnep: number; ceisLista: SancaoCEIS[]; cnepLista: SancaoCEIS[] }
+  | { ok: false; motivo: "sem-chave" | "falha"; erro: string | null };
+
+/**
+ * Sanções (CEIS/CNEP) de um CNPJ.
+ *
+ * ATENÇÃO — este campo exonera alguém quando dá errado.
+ * A versão antiga fazia `a.data ?? []` e devolvia `ceis: 0` quando a consulta
+ * falhava: a ficha então afirmava "Sanções: 0" para uma empresa que ninguém
+ * conseguiu checar. Dizer "não tem sanção" sem ter olhado é pior do que não
+ * dizer nada. Por isso a falha agora sai tipada, e quem exibe é obrigado a
+ * tratar `ok: false` como DESCONHECIDO — nunca como zero.
+ */
+export async function sancoesPorCNPJ(cnpjInput: string): Promise<Sancoes> {
+  if (!temChavePortal()) return { ok: false, motivo: "sem-chave", erro: null };
   const cnpj = onlyDigits(cnpjInput);
   const [a, b] = await Promise.all([
     safe(pt<SancaoCEIS[]>(`/ceis?codigoSancionado=${cnpj}&pagina=1`)),
     safe(pt<SancaoCEIS[]>(`/cnep?codigoSancionado=${cnpj}&pagina=1`)),
   ]);
-  const ceisLista = a.data ?? [];
-  const cnepLista = b.data ?? [];
-  return { ceis: ceisLista.length, cnep: cnepLista.length, ceisLista, cnepLista };
+  // qualquer uma das duas listas faltando já torna a contagem não confiável
+  if (!a.data || !b.data) {
+    return { ok: false, motivo: "falha", erro: a.error ?? b.error };
+  }
+  return { ok: true, ceis: a.data.length, cnep: b.data.length, ceisLista: a.data, cnepLista: b.data };
 }
 
 export type ContratoPT = {

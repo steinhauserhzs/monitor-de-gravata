@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { PageHead, Section, Notice, Empty } from "@/components/ui";
-import { listCandidatos, ELEICOES, CARGOS, UFS, fotoCandidato } from "@/lib/tse";
+import { PageHead, Section, Notice, Empty, AvisoFonte } from "@/components/ui";
+import { listCandidatos, origemDaLista, ELEICOES, CARGOS, UFS, fotoCandidato } from "@/lib/tse";
 import { safe } from "@/lib/fetcher";
 
 export const revalidate = 3600;
@@ -22,6 +22,7 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
   const pagina = Math.max(1, Number(Array.isArray(sp.pagina) ? sp.pagina[0] : sp.pagina) || 1);
   const POR_PAGINA = 240;
   const lista = uf && cargo ? await safe(listCandidatos(ano, ufEfetiva, cargo)) : { data: null, error: null };
+  const origem = uf && cargo ? origemDaLista(ano, ufEfetiva, cargo) : null;
   const base = lista.data ?? [];
   const partidosDisponiveis = [...new Set(base.map((c) => c.partido?.sigla).filter(Boolean))].sort();
   const situacoesDisponiveis = [...new Set(base.map((c) => c.descricaoSituacao).filter(Boolean))].sort();
@@ -152,7 +153,14 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
         </Section>
       ) : (
         <Section kicker={`${el?.nome ?? ano}`} title={`${CARGOS[cargo] ?? `Cargo ${cargo}`} · ${ufEfetiva} (${todos.length})`}>
-          {lista.error && <Notice tone="warn" title="TSE">O DivulgaCand não respondeu: {lista.error}</Notice>}
+          {origem?.via === "indice" && !!todos.length && (
+            <p className="mb-4 font-mono text-[0.62rem] uppercase leading-relaxed tracking-[0.12em] text-ink-3">
+              Lista do índice do Monitor · coletada do TSE em {origem.coletado_em} ·{" "}
+              <a className="underline" href="https://divulgacandcontas.tse.jus.br/divulga/" target="_blank" rel="noopener noreferrer">conferir no DivulgaCand ↗</a>
+              <br />A ficha de cada candidato é consultada no TSE na hora que você abre.
+            </p>
+          )}
+          {lista.error && <AvisoFonte fonte="TSE (DivulgaCand)" resultado={lista} oQue="a lista de candidatos" siteOficial={{ href: "https://divulgacandcontas.tse.jus.br/divulga/", label: "Consultar direto no TSE" }} />}
           {el?.abrangencia === "M" && !todos.length && (
             <Notice tone="warn" title="Eleição municipal: listagem por município">
               Para prefeito e vereador o TSE organiza os candidatos <strong>por município</strong>, não por estado — a consulta por UF volta vazia.

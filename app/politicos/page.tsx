@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PageHead, Section, Notice, Empty } from "@/components/ui";
+import { PageHead, Section, Notice, Empty, AvisoFonte } from "@/components/ui";
 import { listDeputados } from "@/lib/camara";
 import { listSenadores } from "@/lib/senado";
 import { safe } from "@/lib/fetcher";
@@ -150,7 +150,7 @@ export default async function Politicos({ searchParams }: PageProps<"/politicos"
         </div>
       </Section>
 
-      {deps.error && <Section><Notice tone="warn" title="Câmara dos Deputados">A API não respondeu ({deps.error}) — a lista de deputados federais pode estar incompleta.</Notice></Section>}
+      {deps.error && <Section><AvisoFonte fonte="Câmara dos Deputados" resultado={deps} oQue="a lista de deputados federais" /></Section>}
       {!visiveis.length && <Section><Empty>Ninguém com esses filtros. <Link href="/politicos" className="underline">Limpar</Link>.</Empty></Section>}
 
       {visiveis.map((s) => {

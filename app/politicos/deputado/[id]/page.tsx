@@ -20,6 +20,8 @@ import {
   CAMARA,
 } from "@/lib/camara";
 import { safe } from "@/lib/fetcher";
+import { inexistente } from "@/lib/fetcher";
+import { FonteIndisponivel } from "@/components/FonteIndisponivel";
 import { runRules } from "@/lib/rules";
 import { brl, pct, dateBR, nowBR } from "@/lib/format";
 import { noticiasGoogle } from "@/lib/noticias";
@@ -45,7 +47,21 @@ export default async function FichaDeputado({ params, searchParams }: PageProps<
   const sp = await searchParams;
   const ano = Number(Array.isArray(sp.ano) ? sp.ano[0] : sp.ano) || ANO_ATUAL;
   const dep = await safe(getDeputado(id));
-  if (!dep.data) notFound();
+  if (!dep.data) {
+    // 404 só quando a Câmara respondeu que esse id não existe. Fonte fora do ar não é "não existe".
+    if (inexistente(dep)) notFound();
+    return (
+      <FonteIndisponivel
+        motivo={dep.motivo}
+        fonte={dep.fonte}
+        detalhe={dep.error}
+        oQue="a ficha deste deputado"
+        voltarHref="/politicos"
+        voltarLabel="Ver todos os políticos"
+        siteOficial={{ href: `https://www.camara.leg.br/deputados/${id}`, label: "Abrir na Câmara" }}
+      />
+    );
+  }
   const d = dep.data;
   const s = d.ultimoStatus;
   const ini = `${ano}-01-01`;

@@ -6,6 +6,8 @@ import { getContrato, getItensCompra, PNCP_API, type ContratoPNCP } from "@/lib/
 import { getEmpresa } from "@/lib/cnpj";
 import { sancoesPorCNPJ, temChavePortal } from "@/lib/transparencia";
 import { safe } from "@/lib/fetcher";
+import { inexistente } from "@/lib/fetcher";
+import { FonteIndisponivel } from "@/components/FonteIndisponivel";
 import { runRules } from "@/lib/rules";
 import { brl, dateBR, fmtCNPJ, nowBR } from "@/lib/format";
 
@@ -15,7 +17,20 @@ export const maxDuration = 60;
 export default async function ContratoDetalhe({ params }: PageProps<"/contratos/[cnpj]/[ano]/[seq]">) {
   const { cnpj, ano, seq } = await params;
   const c = await safe(getContrato(cnpj, ano, seq));
-  if (!c.data) notFound();
+  if (!c.data) {
+    if (inexistente(c)) notFound();
+    return (
+      <FonteIndisponivel
+        motivo={c.motivo}
+        fonte={c.fonte}
+        detalhe={c.error}
+        oQue="a ficha deste contrato"
+        voltarHref="/contratos"
+        voltarLabel="Voltar ao radar de contratos"
+        siteOficial={{ href: "https://pncp.gov.br", label: "Abrir o PNCP" }}
+      />
+    );
+  }
   const k = c.data as ContratoPNCP & Record<string, unknown>;
 
   const compraSeq = k.numeroControlePncpCompra ? Number(k.numeroControlePncpCompra.split("-")[2]?.split("/")[0]) : null;
@@ -25,10 +40,12 @@ export default async function ContratoDetalhe({ params }: PageProps<"/contratos/
   const [emp, itens, sanc] = await Promise.all([
     k.tipoPessoa === "PJ" && k.niFornecedor ? safe(getEmpresa(k.niFornecedor)) : Promise.resolve({ data: null, error: "fornecedor pessoa física" }),
     compraCnpj && compraAno && compraSeq ? safe(getItensCompra(compraCnpj, compraAno, compraSeq)) : Promise.resolve({ data: null, error: null }),
-    k.niFornecedor && k.tipoPessoa === "PJ" ? sancoesPorCNPJ(k.niFornecedor).catch(() => null) : Promise.resolve(null),
+    k.niFornecedor && k.tipoPessoa === "PJ"
+      ? sancoesPorCNPJ(k.niFornecedor).catch((e) => ({ ok: false as const, motivo: "falha" as const, erro: String(e) }))
+      : Promise.resolve({ ok: false as const, motivo: "sem-chave" as const, erro: null }),
   ]);
 
-  const findings = runRules("contrato", { contrato: k, empresa: emp.data, itens: itens.data, sancoes: sanc ? { ceis: sanc.ceis, cnep: sanc.cnep } : null });
+  const findings = runRules("contrato", { contrato: k, empresa: emp.data, itens: itens.data, sancoes: sanc.ok ? { ceis: sanc.ceis, cnep: sanc.cnep } : null });
   const orgao = k.orgaoEntidade;
   const un = k.unidadeOrgao;
 
@@ -59,7 +76,7 @@ export default async function ContratoDetalhe({ params }: PageProps<"/contratos/
           <KPI label="Assinatura" value={dateBR(k.dataAssinatura)} hint={`vigência ${dateBR(k.dataVigenciaInicio)} → ${dateBR(k.dataVigenciaFim)}`} />
           <KPI label="Fornecedor" value={<span className="text-xl">{k.nomeRazaoSocialFornecedor}</span>} hint={k.tipoPessoa === "PJ" ? <Link href={`/empresas/${k.niFornecedor}`} className="underline font-mono">{fmtCNPJ(k.niFornecedor)}</Link> : "pessoa física (CPF mascarado)"} />
           <KPI label="Idade do CNPJ na assinatura" value={emp.data?.data_inicio_atividade ? `${Math.floor((new Date(k.dataAssinatura).getTime() - new Date(emp.data.data_inicio_atividade).getTime()) / 86400000 / 30)} m` : "—"} hint={emp.data ? `aberto em ${dateBR(emp.data.data_inicio_atividade)} · ${emp.data.descricao_situacao_cadastral}` : emp.error ?? ""} />
-          <KPI label="Red flags" value={findings.length} tone={findings.some((f) => f.severidade === "alta") ? "stamp" : "verde"} hint={sanc === null ? "sanções CEIS/CNEP: sem chave do Portal" : `CEIS ${sanc.ceis} · CNEP ${sanc.cnep}`} />
+          <KPI label="Red flags" value={findings.length} tone={findings.some((f) => f.severidade === "alta") ? "stamp" : "verde"} hint={sanc.ok ? `CEIS ${sanc.ceis} · CNEP ${sanc.cnep}` : sanc.motivo === "sem-chave" ? "sanções CEIS/CNEP não consultadas (sem chave do Portal)" : "sanções CEIS/CNEP não consultadas — a fonte falhou"} />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">

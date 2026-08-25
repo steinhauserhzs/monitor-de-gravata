@@ -109,15 +109,24 @@ body > * {
 }
 
 /* Marca-texto */
+/*
+ * Marca-texto.
+ *
+ * O amarelo PRECISA cobrir a altura inteira dos glifos: quem usa .marker
+ * costuma trocar a cor do texto para tinta escura, e qualquer pedaço de letra
+ * que o amarelo não cobrir vira preto-no-preto sobre .ink-block (invisível).
+ * Por isso o gradiente vai de 0 a 100% e o padding vertical dá a folga que
+ * antes era feita cortando o topo — o traço continua com cara de caneta, mas
+ * nunca come a letra. box-decoration-break: clone repinta a faixa em cada
+ * linha quando o texto quebra (acontece sempre no celular).
+ */
 .marker {
-  background: linear-gradient(
-    180deg,
-    transparent 40%,
-    var(--marker) 40%,
-    var(--marker) 92%,
-    transparent 92%
-  );
-  padding: 0 0.15em;
+  background-image: linear-gradient(180deg, var(--marker) 0%, var(--marker) 100%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  padding: 0.12em 0.18em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 /* Linhas de pauta (folha de caderno) */
@@ -296,29 +305,37 @@ select.input {
     transform: rotate(-3deg) scale(1);
   }
 }
-.rise {
-  animation: rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-.rise-1 {
-  animation-delay: 80ms;
-}
-.rise-2 {
-  animation-delay: 180ms;
-}
-.rise-3 {
-  animation-delay: 280ms;
-}
-.rise-4 {
-  animation-delay: 380ms;
-}
-.stamp-in {
-  animation: stampIn 700ms cubic-bezier(0.2, 0.9, 0.2, 1) 500ms both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rise,
+/*
+ * MOVIMENTO É ENFEITE, NUNCA REQUISITO DE LEITURA.
+ *
+ * Estas animações partem de opacity/scale/background-size zerados. Se elas
+ * declarassem `animation` no estado base, qualquer situação em que a animação
+ * não roda — aba em segundo plano, impressão, motor de animação travado —
+ * deixaria o conteúdo permanentemente invisível. Foi assim que o hero inteiro
+ * sumiu na primeira auditoria.
+ *
+ * Por isso a lógica é invertida: sem media query o elemento já está legível, e
+ * a animação só entra quando o sistema diz que movimento é bem-vindo. De quebra
+ * isso já cobre prefers-reduced-motion, sem precisar de regra de exceção.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .rise-1 {
+    animation-delay: 80ms;
+  }
+  .rise-2 {
+    animation-delay: 180ms;
+  }
+  .rise-3 {
+    animation-delay: 280ms;
+  }
+  .rise-4 {
+    animation-delay: 380ms;
+  }
   .stamp-in {
-    animation: none;
+    animation: stampIn 700ms cubic-bezier(0.2, 0.9, 0.2, 1) 500ms both;
   }
 }
 
@@ -477,15 +494,23 @@ select.input {
   60% { transform: scale(1.03); opacity: 1; }
   100% { transform: scale(1); }
 }
-.pulso { animation: pulso 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@media (prefers-reduced-motion: no-preference) {
+  .pulso { animation: pulso 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+}
 
 /* Barras que crescem da esquerda */
 @keyframes crescer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.barra-anim { transform-origin: left; animation: crescer 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.barra-anim { transform-origin: left; }
+@media (prefers-reduced-motion: no-preference) {
+  .barra-anim { animation: crescer 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+}
 
 /* Linha que se desenha (usada em gráficos e divisórias) */
 @keyframes traco { from { stroke-dashoffset: var(--dash, 1000); } to { stroke-dashoffset: 0; } }
-.traco-anim { stroke-dasharray: var(--dash, 1000); animation: traco 1.4s ease-out both; }
+.traco-anim { stroke-dasharray: var(--dash, 1000); }
+@media (prefers-reduced-motion: no-preference) {
+  .traco-anim { animation: traco 1.4s ease-out both; }
+}
 
 /* Botões: brilho que atravessa no hover */
 .btn { position: relative; overflow: hidden; }
@@ -515,10 +540,20 @@ select.input {
 /* Marca-texto que "pinta" ao aparecer */
 @keyframes pintar { from { background-size: 0 100%; } to { background-size: 100% 100%; } }
 .marker-anim {
-  background-image: linear-gradient(transparent 40%, var(--marker) 40%, var(--marker) 92%, transparent 92%);
+  /* mesma regra de cobertura total do .marker — ver comentário lá em cima.
+     A faixa nasce PINTADA: o texto aqui é tinta escura sobre fundo escuro, e
+     sem o amarelo ele simplesmente não existe para quem lê. */
+  background-image: linear-gradient(180deg, var(--marker) 0%, var(--marker) 100%);
   background-repeat: no-repeat;
-  animation: pintar 900ms ease-out 300ms both;
-  padding: 0 0.15em;
+  background-size: 100% 100%;
+  padding: 0.12em 0.18em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .marker-anim {
+    animation: pintar 900ms ease-out 300ms both;
+  }
 }
 
 /* Carimbo batendo (usado nos vereditos) */
@@ -528,7 +563,9 @@ select.input {
   75% { transform: rotate(-3deg) scale(1.04); }
   100% { transform: rotate(-3deg) scale(1); }
 }
-.bater { animation: bater 620ms cubic-bezier(0.2, 0.9, 0.2, 1) both; }
+@media (prefers-reduced-motion: no-preference) {
+  .bater { animation: bater 620ms cubic-bezier(0.2, 0.9, 0.2, 1) both; }
+}
 
 /* Ticker horizontal (fatos correndo) */
 @keyframes correr { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -536,15 +573,17 @@ select.input {
 .ticker:hover { animation-play-state: paused; }
 
 /* Revelar em cascata sem JS */
-.cascata > * { animation: rise 620ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-.cascata > *:nth-child(1) { animation-delay: 40ms; }
-.cascata > *:nth-child(2) { animation-delay: 110ms; }
-.cascata > *:nth-child(3) { animation-delay: 180ms; }
-.cascata > *:nth-child(4) { animation-delay: 250ms; }
-.cascata > *:nth-child(5) { animation-delay: 320ms; }
-.cascata > *:nth-child(6) { animation-delay: 390ms; }
-.cascata > *:nth-child(7) { animation-delay: 460ms; }
-.cascata > *:nth-child(8) { animation-delay: 530ms; }
+@media (prefers-reduced-motion: no-preference) {
+  .cascata > * { animation: rise 620ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .cascata > *:nth-child(1) { animation-delay: 40ms; }
+  .cascata > *:nth-child(2) { animation-delay: 110ms; }
+  .cascata > *:nth-child(3) { animation-delay: 180ms; }
+  .cascata > *:nth-child(4) { animation-delay: 250ms; }
+  .cascata > *:nth-child(5) { animation-delay: 320ms; }
+  .cascata > *:nth-child(6) { animation-delay: 390ms; }
+  .cascata > *:nth-child(7) { animation-delay: 460ms; }
+  .cascata > *:nth-child(8) { animation-delay: 530ms; }
+}
 
 /* Foco visível de verdade (acessibilidade) */
 a:focus-visible, button:focus-visible, summary:focus-visible, .input:focus-visible {
@@ -553,7 +592,9 @@ a:focus-visible, button:focus-visible, summary:focus-visible, .input:focus-visib
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vivo::before, .vivo::after, .pulso, .barra-anim, .traco-anim, .marker-anim, .bater, .ticker, .cascata > * {
+  /* as animações de conteúdo já não são declaradas fora de
+     `no-preference`; aqui sobra só o que é decoração de fundo/hover */
+  .vivo::before, .vivo::after, .ticker {
     animation: none !important;
   }
   .card--hover:hover { transform: none; }

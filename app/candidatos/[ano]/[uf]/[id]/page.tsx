@@ -4,6 +4,8 @@ import { Crumbs, Notice, Source } from "@/components/ui";
 import { KPI, Bars, Flags, NoticiasList, Panel, Timeline, type TLItem } from "@/components/ficha";
 import { getCandidato, getPrestacao, listCandidatos, ELEICOES, CARGOS, UFS, DIVULGA, fotoCandidato } from "@/lib/tse";
 import { safe } from "@/lib/fetcher";
+import { inexistente } from "@/lib/fetcher";
+import { FonteIndisponivel } from "@/components/FonteIndisponivel";
 import { runRules } from "@/lib/rules";
 import { brl, dateBR, nowBR, pct } from "@/lib/format";
 import { noticiasGoogle } from "@/lib/noticias";
@@ -31,7 +33,22 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
   const el = ELEICOES[ano];
   if (!el || (uf !== "BR" && !UFS.includes(uf)) || !/^\d{6,}$/.test(id)) notFound();
   const c = await safe(getCandidato(ano, uf, id));
-  if (!c.data?.nomeUrna) notFound();
+  if (!c.data) {
+    if (inexistente(c)) notFound();
+    return (
+      <FonteIndisponivel
+        motivo={c.motivo}
+        fonte={c.fonte}
+        detalhe={c.error}
+        oQue="a ficha deste candidato"
+        voltarHref={`/candidatos?ano=${ano}&uf=${uf}`}
+        voltarLabel="Voltar à lista de candidatos"
+        siteOficial={{ href: "https://divulgacandcontas.tse.jus.br/divulga/", label: "Abrir no TSE" }}
+      />
+    );
+  }
+  // respondeu, mas sem nome de urna: registro realmente não existe nessa eleição
+  if (!c.data.nomeUrna) notFound();
   const cand = c.data;
   const cargo = cand.cargo?.codigo;
 

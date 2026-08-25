@@ -26,13 +26,13 @@ export function Header() {
             <Link
               key={n.href}
               href={n.href}
-              className="font-mono text-[0.68rem] uppercase tracking-[0.14em] px-3 py-2 hover:bg-paper hover:text-ink transition-colors"
+              className="shrink-0 whitespace-nowrap font-mono text-[0.68rem] uppercase tracking-[0.14em] px-2.5 py-2 hover:bg-paper hover:text-ink transition-colors"
             >
               {n.label}
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <a
             href="https://github.com/steinhauserhzs/monitor-de-gravata"
             target="_blank"
@@ -44,14 +44,14 @@ export function Header() {
         </div>
       </div>
       <nav
-        className="flex gap-1 overflow-x-auto px-3 pb-2 lg:hidden [scrollbar-width:none]"
+        className="flex gap-1 overflow-x-auto overscroll-x-contain px-3 pb-2 lg:hidden [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden"
         aria-label="Principal (mobile)"
       >
         {NAV.map((n) => (
           <Link
             key={n.href}
             href={n.href}
-            className="whitespace-nowrap font-mono text-[0.62rem] uppercase tracking-[0.14em] px-2.5 py-1.5 border border-paper/30"
+            className="shrink-0 whitespace-nowrap font-mono text-[0.62rem] uppercase tracking-[0.14em] px-3 py-2 border border-paper/30"
           >
             {n.label}
           </Link>
