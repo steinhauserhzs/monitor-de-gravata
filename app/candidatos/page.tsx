@@ -36,7 +36,8 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
   const totalPaginas = Math.max(1, Math.ceil(todos.length / POR_PAGINA));
   const cands = todos.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
   const porSituacao = new Map<string, number>();
-  for (const c of todos) porSituacao.set(c.descricaoSituacao, (porSituacao.get(c.descricaoSituacao) ?? 0) + 1);
+  // situação vazia = o TSE marcou "#NE" (não especificado) no export — não vira chip
+  for (const c of todos) if (c.descricaoSituacao) porSituacao.set(c.descricaoSituacao, (porSituacao.get(c.descricaoSituacao) ?? 0) + 1);
   const qs = (extra: Record<string, string | number>) => {
     const u = new URLSearchParams({ ano: String(ano), uf, cargo: String(cargo) });
     if (nome) u.set("nome", nome);
@@ -200,7 +201,7 @@ export default async function Candidatos({ searchParams }: PageProps<"/candidato
                 <img src={c.fotoUrl || fotoCandidato(el.id, c.id, ufEfetiva)} alt="" loading="lazy" className="h-12 w-10 object-cover grayscale contrast-125 bg-paper-2" />
                 <div className="min-w-0">
                   <div className="truncate text-sm font-semibold">{c.nomeUrna}</div>
-                  <div className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-3">{c.numero} · {c.partido?.sigla} · {c.descricaoSituacao}</div>
+                  <div className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-3">{[c.numero, c.partido?.sigla, c.descricaoSituacao].filter(Boolean).join(" · ")}</div>
                 </div>
               </Link>
             ))}

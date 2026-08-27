@@ -47,14 +47,23 @@ despercebido justamente porque só quebra no ambiente de produção.
 **Não fazemos** rodízio de IP, proxy de contorno ou disfarce de cliente para furar o limite.
 O que fazemos é o caminho previsto:
 
-1. **Índice local.** `npm run candidatos [ano] [cargo] [uf]` roda **fora da produção** (máquina do
-   mantenedor ou CI), com 3 s entre requisições e recuo de 30 s → 4 min quando bloqueado. Grava
-   `data/derivados/candidatos-<ano>/<cargo>-<uf>.json` com só os campos da listagem, mais `fonte`
-   e `coletado_em`. Um arquivo por UF/cargo: dá para regerar só o que falhou, e o script imprime
-   a linha de comando exata de cada combinação que não veio.
+1. **Índice local — caminho preferido: o arquivo oficial de dados abertos.** O TSE publica o
+   mesmo conteúdo em um único zip (licença CC-BY):
+   `https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_<ano>.zip`
+   (conjunto: `https://dadosabertos.tse.jus.br/dataset/candidatos-<ano>`). Baixe **no navegador**
+   (o WAF aceita navegador; `curl`/`fetch` são recusados pelo fingerprint TLS) e rode
+   `npm run candidatos:zip -- ~/Downloads/consulta_cand_<ano>.zip` — 1 download substitui 136
+   chamadas de API. Atenção ao dicionário do TSE: `#NE`/`#NULO` significam "não especificado" e
+   viram campo vazio, nunca um valor inventado; datas `DD/MM/AAAA` são convertidas para ISO no
+   gerador (o `new Date()` interpretaria `05/08/1962` na ordem americana e exibiria a data errada).
+   Alternativa via API: `npm run candidatos [ano] [cargo] [uf]`, com 3 s entre requisições e recuo
+   de 30 s → 4 min quando bloqueado — incremental, e imprime o comando de cada combinação que falhou.
 2. **O site lê o índice primeiro** (`listCandidatos` em `lib/tse.ts`) e só cai para a API ao vivo
    se o arquivo não existir.
-3. **A ficha individual continua ao vivo** — é uma requisição pequena, por candidato.
+3. **A ficha individual continua ao vivo**, e quando o ao-vivo falha ela cai para a ficha
+   mínima do índice (identificação completa, com aviso de procedência) em vez de "fonte
+   indisponível" — bens, prestação e certidões seguem exclusivos da consulta ao vivo, e a tela
+   diz isso explicitamente.
 4. **A tela diz de onde veio.** Quando a lista sai do índice, aparece a data da coleta e o link
    para conferir no DivulgaCand. O índice é **derivado, nunca fonte da verdade**.
 

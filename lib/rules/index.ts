@@ -535,16 +535,18 @@ const candidatoPatrimonioSalto = r<"candidato">({
   fonte: "TSE DivulgaCand",
   check: ({ candidato, anteriores }) => {
     if (!anteriores?.length) return null;
-    const ant = anteriores.filter((a) => a.ano < candidato.eleicao.ano).sort((a, b) => b.ano - a.ano)[0];
+    // sem bens/eleição carregados (ficha mínima do índice) não há o que comparar — ausente ≠ zero
+    if (candidato.totalDeBens == null || !candidato.eleicao) return null;
+    const ant = anteriores.filter((a) => a.ano < candidato.eleicao!.ano).sort((a, b) => b.ano - a.ano)[0];
     if (!ant || !ant.totalDeBens) return null;
-    const ratio = candidato.totalDeBens / ant.totalDeBens;
+    const ratio = candidato.totalDeBens! / ant.totalDeBens;
     return ratio > 2
       ? {
           regra: "candidato-patrimonio-salto",
           nome: "Salto patrimonial",
           categoria: "eleitoral",
           severidade: ratio > 5 ? "alta" : "media",
-          evidencia: `Bens declarados: ${brl(ant.totalDeBens)} (${ant.ano}) → ${brl(candidato.totalDeBens)} (${candidato.eleicao.ano}), ${((ratio - 1) * 100).toFixed(0)}% de aumento.`,
+          evidencia: `Bens declarados: ${brl(ant.totalDeBens)} (${ant.ano}) → ${brl(candidato.totalDeBens)} (${candidato.eleicao!.ano}), ${((ratio - 1) * 100).toFixed(0)}% de aumento.`,
           valor: ratio,
           fonte: "TSE DivulgaCand",
         }
@@ -561,7 +563,8 @@ const candidatoSemBens = r<"candidato">({
   descricao: "Declaração zerada é legal, mas frequente em laranjas e em quem esconde patrimônio em terceiros.",
   fonte: "TSE",
   check: ({ candidato }) =>
-    candidato.totalDeBens === 0
+    // dispara só com o dado carregado E igual a zero — undefined é "não sabemos"
+    candidato.totalDeBens === 0 && candidato.eleicao
       ? {
           regra: "candidato-sem-bens-declarados",
           nome: "Sem bens declarados",
