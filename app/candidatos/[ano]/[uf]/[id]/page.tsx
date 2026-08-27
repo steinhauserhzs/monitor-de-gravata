@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Crumbs, Notice, Source } from "@/components/ui";
 import { KPI, Bars, Flags, NoticiasList, Panel, Timeline, type TLItem } from "@/components/ficha";
-import { getCandidato, getPrestacao, listCandidatos, ELEICOES, CARGOS, UFS, DIVULGA, fotoCandidato } from "@/lib/tse";
+import { getCandidato, getPrestacao, listCandidatos, candidatoDoIndice, ELEICOES, CARGOS, UFS, DIVULGA, fotoCandidato } from "@/lib/tse";
 import { safe } from "@/lib/fetcher";
 import { inexistente } from "@/lib/fetcher";
 import { FonteIndisponivel } from "@/components/FonteIndisponivel";
@@ -33,7 +33,10 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
   const el = ELEICOES[ano];
   if (!el || (uf !== "BR" && !UFS.includes(uf)) || !/^\d{6,}$/.test(id)) notFound();
   const c = await safe(getCandidato(ano, uf, id));
-  if (!c.data) {
+  // TSE ao vivo falhou e NÃO foi "não existe": antes de desistir, tenta a ficha
+  // mínima do índice oficial (consulta_cand) — identificação sem bens/prestação
+  const doIndice = !c.data && !inexistente(c) ? candidatoDoIndice(ano, uf, id) : null;
+  if (!c.data && !doIndice) {
     if (inexistente(c)) notFound();
     return (
       <FonteIndisponivel
@@ -48,8 +51,8 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
     );
   }
   // respondeu, mas sem nome de urna: registro realmente não existe nessa eleição
-  if (!c.data.nomeUrna) notFound();
-  const cand = c.data;
+  if (c.data && !c.data.nomeUrna) notFound();
+  const cand = c.data ?? doIndice!.candidato;
   const cargo = cand.cargo?.codigo;
 
   const [prest, noticias, checagens, wd, mandato] = await Promise.all([
@@ -107,7 +110,7 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
   const wdHit = wd.data?.[0];
   const wdTl = wdHit ? await safe(wdTimeline(wdHit.id)) : { data: null, error: null };
   for (const e of wdTl.data ?? []) tl.push({ data: e.inicio, fim: e.fim, tipo: e.tipo, titulo: e.titulo, detalhe: e.detalhe, fonte: e.fonte, url: e.url });
-  tl.push({ data: String(ano), tipo: "candidatura", titulo: `${cand.cargo?.nome} · ${cand.descricaoSituacao}`, detalhe: `bens declarados: ${brl(cand.totalDeBens)}`, fonte: "TSE DivulgaCand", url: `https://divulgacandcontas.tse.jus.br/divulga/#/candidato/${ano}/${el.id}/${uf}/${cand.id}` });
+  tl.push({ data: String(ano), tipo: "candidatura", titulo: [cand.cargo?.nome, cand.descricaoSituacao].filter(Boolean).join(" · "), detalhe: `bens declarados: ${brl(cand.totalDeBens)}`, fonte: "TSE DivulgaCand", url: `https://divulgacandcontas.tse.jus.br/divulga/#/candidato/${ano}/${el.id}/${uf}/${cand.id}` });
   tl.sort((a, b) => (a.data ?? "0").localeCompare(b.data ?? "0"));
 
   const certidoes = (cand.arquivos ?? []).filter((a) => /certid|TRF|TJ|justi/i.test(a.nome));
@@ -118,6 +121,17 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
   return (
     <>
       <Crumbs items={[{ href: "/candidatos", label: "Candidatos" }, { href: `/candidatos?ano=${ano}&uf=${uf}&cargo=${cargo}`, label: `${ano} · ${uf} · ${cand.cargo?.nome}` }, { label: cand.nomeUrna }]} />
+      {doIndice && (
+        <div className="mx-auto max-w-7xl px-4 pt-4">
+          <Notice tone="warn" title="TSE ao vivo indisponível — mostrando o registro do arquivo oficial">
+            O DivulgaCand está limitando consultas automatizadas agora. A identificação abaixo vem do arquivo
+            de dados abertos do TSE (consulta_cand, coletado em {doIndice.coletado_em}). Bens declarados,
+            prestação de contas, certidões e plano de governo dependem da consulta ao vivo e não puderam ser
+            carregados — isso <strong>não</strong> significa que não existam. Recarregue mais tarde ou{" "}
+            <a className="underline" href={`https://divulgacandcontas.tse.jus.br/divulga/#/candidato/${ano}/${el.id}/${uf}/${cand.id}`} target="_blank" rel="noopener noreferrer">confira no DivulgaCand ↗</a>.
+          </Notice>
+        </div>
+      )}
       <div className="mx-auto max-w-7xl px-4 pt-6 pb-8 border-b-2 border-ink">
         <div className="flex flex-col gap-6 md:flex-row md:items-end">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -128,7 +142,7 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
             <div className="mt-2 text-sm text-ink-2">{cand.nomeCompleto} · {cand.partido?.sigla} ({cand.partido?.nome}) {cand.nomeColigacao && cand.nomeColigacao !== cand.partido?.sigla ? `· ${cand.nomeColigacao}` : ""}</div>
             <div className="mt-1 text-sm text-ink-2">{cand.ocupacao ?? "ocupação n/i"} · {cand.grauInstrucao ?? "instrução n/i"} · nasc. {dateBR(cand.dataDeNascimento)} {cand.nomeMunicipioNascimento ? `em ${cand.nomeMunicipioNascimento}/${cand.sgUfNascimento}` : ""}</div>
             <div className="mt-2 flex flex-wrap gap-2">
-              <span className={`stamp stamp--flat ${/deferid|apto/i.test(cand.descricaoSituacao) && !/indefer/i.test(cand.descricaoSituacao) ? "stamp--verde" : /indefer|cassad|renunc/i.test(cand.descricaoSituacao) ? "" : "stamp--azul"}`}>{cand.descricaoSituacao}</span>
+              {cand.descricaoSituacao && <span className={`stamp stamp--flat ${/deferid|apto/i.test(cand.descricaoSituacao) && !/indefer/i.test(cand.descricaoSituacao) ? "stamp--verde" : /indefer|cassad|renunc/i.test(cand.descricaoSituacao) ? "" : "stamp--azul"}`}>{cand.descricaoSituacao}</span>}
               {cand.descricaoTotalizacao && <span className="stamp stamp--flat stamp--ink">{cand.descricaoTotalizacao}</span>}
               {findings.some((f) => f.severidade === "alta") && <span className="stamp stamp--flat">red flag alta</span>}
             </div>
@@ -144,9 +158,9 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
 
       <div className="mx-auto max-w-7xl px-4 py-8 space-y-6">
         <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
-          <KPI label={`Bens declarados ${ano}`} value={brl(cand.totalDeBens)} hint={`${bens.length} item(ns)`} />
+          <KPI label={`Bens declarados ${ano}`} value={doIndice ? "?" : brl(cand.totalDeBens)} hint={doIndice ? "não carregados — TSE ao vivo bloqueado; não significa ausência de bens" : `${bens.length} item(ns)`} />
           <KPI label="Eleição anterior" value={anteriores.length ? brl(anteriores[anteriores.length - 1].totalDeBens) : "—"} hint={anteriores.length ? `${anteriores[anteriores.length - 1].ano} · ${anteriores[anteriores.length - 1].cargo}` : "sem candidatura anterior localizada (mesmo nome/UF)"} />
-          <KPI label="Variação patrimonial" value={anteriores.length && anteriores[anteriores.length - 1].totalDeBens ? `${(((cand.totalDeBens ?? 0) / anteriores[anteriores.length - 1].totalDeBens - 1) * 100).toFixed(0)}%` : "—"} tone={anteriores.length && cand.totalDeBens > 2 * anteriores[anteriores.length - 1].totalDeBens ? "stamp" : undefined} />
+          <KPI label="Variação patrimonial" value={anteriores.length && anteriores[anteriores.length - 1].totalDeBens ? `${(((cand.totalDeBens ?? 0) / anteriores[anteriores.length - 1].totalDeBens - 1) * 100).toFixed(0)}%` : "—"} tone={anteriores.length && (cand.totalDeBens ?? 0) > 2 * anteriores[anteriores.length - 1].totalDeBens ? "stamp" : undefined} />
           <KPI label="Receitas de campanha" value={dc?.totalRecebido ? brl(dc.totalRecebido) : "—"} hint={dc ? `de ${brl(dc.totalRecebido)}: ${pct(((Number(dc.totalPartidos ?? 0) + Number(dc.totalDoacaoFcc ?? 0)) / (Number(dc.totalRecebido) || 1)))} de partido/fundos públicos · ${pct(Number(dc.totalReceitaPF ?? 0) / (Number(dc.totalRecebido) || 1))} de pessoas físicas` : ano >= 2026 ? "contas a partir de set/2026" : "sem prestação localizada"} />
           <KPI label="Red flags" value={findings.length} tone={findings.some((f) => f.severidade === "alta") ? "stamp" : "verde"} hint={findings.length ? findings.map((f) => f.nome).slice(0, 2).join(" · ") : "nenhum sinal automático"} />
         </div>
@@ -191,7 +205,7 @@ export default async function FichaCandidato({ params }: PageProps<"/candidatos/
               {anteriores.length > 0 && (
                 <div className="mt-5">
                   <div className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-ink-3 mb-2">Evolução declarada</div>
-                  <Bars rows={[...anteriores.map((a) => ({ label: `${a.ano} · ${a.cargo}`, sub: a.situacao, value: a.totalDeBens, href: a.url })), { label: `${ano} · ${cand.cargo?.nome}`, sub: cand.descricaoSituacao, value: cand.totalDeBens }]} />
+                  <Bars rows={[...anteriores.map((a) => ({ label: `${a.ano} · ${a.cargo}`, sub: a.situacao, value: a.totalDeBens, href: a.url })), { label: `${ano} · ${cand.cargo?.nome}`, sub: cand.descricaoSituacao, value: cand.totalDeBens ?? 0 }]} />
                 </div>
               )}
             </Panel>

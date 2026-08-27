@@ -61,7 +61,11 @@ export type CandidatoResumo = {
  * vivo quando o índice não existe. A FICHA individual continua ao vivo.
  * O índice é derivado, nunca fonte da verdade — carrega fonte e data da coleta.
  */
-type CandidatoEnxuto = { i: number; n: string; c: string; u: number; p: string; pn?: number; s: string; t?: string | null };
+type CandidatoEnxuto = {
+  i: number; n: string; c: string; u: number; p: string; pn?: number; s: string; t?: string | null;
+  // extras do consulta_cand (dados abertos) — permitem uma ficha mínima quando o ao-vivo está bloqueado
+  nasc?: string; ocu?: string; inst?: string; gen?: string; cor?: string; ufn?: string; munn?: string; colig?: string;
+};
 type IndiceCandidatos = {
   ano: number; uf: string; cargo: number; coletado_em: string; fonte: string;
   total: number; candidatos: CandidatoEnxuto[];
@@ -104,6 +108,43 @@ const expandir = (c: CandidatoEnxuto, uf: string, cargo: number): CandidatoResum
   cargo: { codigo: cargo, nome: CARGOS[cargo] ?? String(cargo) },
 });
 
+/**
+ * Ficha mínima a partir do índice local — o plano B da ficha do candidato.
+ *
+ * Quando o DivulgaCand ao vivo está bloqueado (WAF), em vez de "fonte
+ * indisponível" a ficha renderiza o registro oficial do consulta_cand:
+ * identificação completa, sem bens/prestação (esses só existem no ao-vivo).
+ * A tela é obrigada a rotular a procedência — por isso devolvemos coletado_em.
+ */
+export function candidatoDoIndice(
+  ano: number,
+  uf: string,
+  id: string,
+): { candidato: CandidatoDetalhe; coletado_em: string } | null {
+  const cargos = uf === "BR" ? [1] : [3, 5, 6, 7, 8];
+  for (const cargo of cargos) {
+    const ix = carregarIndice(ano, uf, cargo);
+    const c = ix?.candidatos.find((x) => String(x.i) === String(id));
+    if (ix && c) {
+      return {
+        coletado_em: ix.coletado_em,
+        candidato: {
+          ...expandir(c, uf, cargo),
+          dataDeNascimento: c.nasc,
+          ocupacao: c.ocu,
+          grauInstrucao: c.inst,
+          descricaoSexo: c.gen,
+          descricaoCorRaca: c.cor,
+          sgUfNascimento: c.ufn,
+          nomeMunicipioNascimento: c.munn,
+          nomeColigacao: c.colig,
+        },
+      };
+    }
+  }
+  return null;
+}
+
 export async function listCandidatos(ano: number, uf: string, cargo: number) {
   const ix = carregarIndice(ano, uf, cargo);
   if (ix) return ix.candidatos.map((c) => expandir(c, uf, cargo));
@@ -138,10 +179,10 @@ export type CandidatoDetalhe = CandidatoResumo & {
   numeroProcessoPrestContas?: string;
   processosCassacao?: unknown[];
   processosDesconstituicao?: unknown[];
-  bens: Bem[];
-  totalDeBens: number;
+  bens?: Bem[];
+  totalDeBens?: number;
   vices?: unknown;
-  eleicao: { id: number; ano: number };
+  eleicao?: { id: number; ano: number };
   emails?: string[] | null;
   sites?: string[];
   arquivos?: { idArquivo: number; nome: string; url: string; tipo: string; codTipo: string }[];
