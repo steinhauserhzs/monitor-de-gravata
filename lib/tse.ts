@@ -84,7 +84,7 @@ function carregarIndice(ano: number, uf: string, cargo: number): IndiceCandidato
   } catch {
     lido = null;
   }
-  _indices.set(chave, lido);
+  if (lido) _indices.set(chave, lido); // ausência não é memorizada
   return lido;
 }
 
@@ -126,7 +126,7 @@ function carregarBens(ano: number, uf: string): IndiceBens | null {
   } catch {
     lido = null;
   }
-  _bens.set(chave, lido);
+  if (lido) _bens.set(chave, lido); // ausência não é memorizada
   return lido;
 }
 
