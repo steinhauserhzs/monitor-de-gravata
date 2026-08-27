@@ -36,7 +36,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^7"
   },
   "description": "Monitor de Gravata — o Pesadelo de Brasília. Super app anticorrupção open source e comunitário.",
   "license": "MIT",
