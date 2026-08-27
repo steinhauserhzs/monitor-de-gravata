@@ -25,7 +25,7 @@ export type CtxDeputado = { deputado: DeputadoDetalhe; ano: number; despesas: De
 /** Cota parlamentar de qualquer casa (CEAP Câmara / CEAPS Senado) — regras de gasto rodam sobre a análise. */
 export type CtxCota = { analise: AnaliseCEAP; ano: number; casa: "camara" | "senado"; mediaBancada?: number | null };
 export type CtxEmpresa = { empresa: Empresa; contratos?: { valor: number; orgao: string; data: string }[]; sancoes?: { ceis: number; cnep: number } | null };
-export type CtxCandidato = { candidato: CandidatoDetalhe; prestacao?: Prestacao | null; anteriores?: { ano: number; totalDeBens: number }[] };
+export type CtxCandidato = { candidato: CandidatoDetalhe; prestacao?: Prestacao | null; anteriores?: { ano: number; totalDeBens: number | null }[] };
 
 export type Contexts = {
   contrato: CtxContrato;
