@@ -108,6 +108,36 @@ const expandir = (c: CandidatoEnxuto, uf: string, cargo: number): CandidatoResum
   cargo: { codigo: cargo, nome: CARGOS[cargo] ?? String(cargo) },
 });
 
+/* ── Índice de bens (bem_candidato, dados abertos) ──
+ * Quando o arquivo de um ano existe, a ausência de linhas para um candidato é
+ * um FATO ("declarou zero bens"); quando o arquivo não existe, é "não sabemos".
+ * bensDoIndice devolve null só no segundo caso — nunca inventa um zero. */
+type IndiceBens = { ano: number; uf: string; coletado_em: string; bens: Record<string, [string, string, number][]> };
+const _bens = new Map<string, IndiceBens | null>();
+
+function carregarBens(ano: number, uf: string): IndiceBens | null {
+  const chave = `${ano}/${uf}`;
+  const cache = _bens.get(chave);
+  if (cache !== undefined) return cache;
+  let lido: IndiceBens | null = null;
+  try {
+    const f = path.join(process.cwd(), "data", "derivados", `bens-${ano}`, `${uf}.json`);
+    if (fs.existsSync(f)) lido = JSON.parse(fs.readFileSync(f, "utf8")) as IndiceBens;
+  } catch {
+    lido = null;
+  }
+  _bens.set(chave, lido);
+  return lido;
+}
+
+export function bensDoIndice(ano: number, uf: string, id: string | number): { bens: Bem[]; totalDeBens: number } | null {
+  const ix = carregarBens(ano, uf);
+  if (!ix) return null;
+  const linhas = ix.bens[String(id)] ?? [];
+  const bens: Bem[] = linhas.map(([tipo, desc, valor], i) => ({ ordem: i + 1, descricaoDeTipoDeBem: tipo, descricao: desc, valor }));
+  return { bens, totalDeBens: bens.reduce((a, b) => a + b.valor, 0) };
+}
+
 /**
  * Ficha mínima a partir do índice local — o plano B da ficha do candidato.
  *
@@ -126,10 +156,12 @@ export function candidatoDoIndice(
     const ix = carregarIndice(ano, uf, cargo);
     const c = ix?.candidatos.find((x) => String(x.i) === String(id));
     if (ix && c) {
+      const bx = bensDoIndice(ano, uf, c.i);
       return {
         coletado_em: ix.coletado_em,
         candidato: {
           ...expandir(c, uf, cargo),
+          ...(bx ? { bens: bx.bens, totalDeBens: bx.totalDeBens } : {}),
           dataDeNascimento: c.nasc,
           ocupacao: c.ocu,
           grauInstrucao: c.inst,

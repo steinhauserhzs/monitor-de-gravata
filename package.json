@@ -17,6 +17,7 @@
     "eleitos": "node scripts/gerar-eleitos.mjs",
     "candidatos": "node scripts/gerar-candidatos.mjs",
     "candidatos:zip": "node scripts/gerar-candidatos-do-zip.mjs",
+    "bens:zip": "node scripts/gerar-bens-do-zip.mjs",
     "municipios": "node scripts/gerar-municipios.mjs",
     "design": "node scripts/verificar-design.mjs"
   },
